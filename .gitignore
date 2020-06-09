@@ -2,13 +2,9 @@
 .vs/
 .vscode/
 
-<<<<<<< HEAD
 bin/
 obj/
-=======
-bin/Debug/
-obj/Debug/
->>>>>>> master
+
 packages/
 
 config/
