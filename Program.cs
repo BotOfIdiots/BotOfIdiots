@@ -27,7 +27,7 @@ namespace DiscordBot
 
             if ((int) Environment.OSVersion.Platform == 4)
             {
-                _configPath = "/etc/DiscordBot/";
+                _configPath = "~/";
             }
             else if ((int) Environment.OSVersion.Platform == 2)
             {
