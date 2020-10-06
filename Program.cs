@@ -27,7 +27,7 @@ namespace DiscordBot
 
             if ((int) Environment.OSVersion.Platform == 4)
             {
-                _configPath = "~/";
+                _configPath = "/home/botofidiots/";
             }
             else if ((int) Environment.OSVersion.Platform == 2)
             {
