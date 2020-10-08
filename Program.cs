@@ -34,7 +34,7 @@ namespace DiscordBot
             }
             else if ((int) Environment.OSVersion.Platform == 2) //Location of the Windows Config
             {
-                _configPath = "D:/config/";
+                _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
             }
 
             _services = new ServiceCollection()
