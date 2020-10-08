@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -14,6 +15,7 @@ namespace DiscordBot
     {
         public static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
+        private static string _version = "0.0.1";
         private DiscordSocketClient _client;
         private CommandService _commands;
         private IServiceProvider _services;
@@ -24,12 +26,13 @@ namespace DiscordBot
         {
             _client = new DiscordSocketClient();
             _commands = new CommandService();
-
-            if ((int) Environment.OSVersion.Platform == 4)
+            
+            //Checks OS version to determine te location of the Config file.
+            if ((int) Environment.OSVersion.Platform == 4) //Location of the Linux Config
             {
                 _configPath = "/home/botofidiots/";
             }
-            else if ((int) Environment.OSVersion.Platform == 2)
+            else if ((int) Environment.OSVersion.Platform == 2) //Location of the Windows Config
             {
                 _configPath = "D:/config/";
             }
@@ -39,6 +42,7 @@ namespace DiscordBot
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
+            //Get the config options
             var _builder = new ConfigurationBuilder()
                 .SetBasePath(_configPath)
                 .AddJsonFile(path: "config.json");            
@@ -54,7 +58,7 @@ namespace DiscordBot
 
             await Task.Delay(-1);
         }
-
+        
         private Task _client_log(LogMessage arg)
         {
             Console.WriteLine(arg);
@@ -67,6 +71,12 @@ namespace DiscordBot
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
+        //Returns the Version String
+        public static string Version()
+        {
+            return _version;
+        }
+        
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
@@ -74,7 +84,7 @@ namespace DiscordBot
             if (message.Author.IsBot) return;
 
             int argPos = 0;
-            if (message.HasStringPrefix("$", ref argPos))
+            if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
                 if(!result.IsSuccess) Console.WriteLine(result.Error);
