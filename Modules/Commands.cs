@@ -44,7 +44,7 @@ namespace DiscordBot.Modules
             {
                 if (userAccount == null)
                 {
-                    throw new NullReferenceException();
+                    userAccount = Context.Guild.GetUser(Context.User.Id);
                 }
 
                 embed = new EmbedBuilder {}
@@ -57,6 +57,7 @@ namespace DiscordBot.Modules
                     .WithFooter("UserID: " + userAccount.Id)
                     .WithCurrentTimestamp()
                     .Build();
+                
                 await ReplyAsync(embed: embed);
             }
             catch (NullReferenceException)
@@ -74,38 +75,6 @@ namespace DiscordBot.Modules
             {
                 Console.WriteLine(e);   
             }
-            
         }
-        //TODO: Userinfo of own account without mentioning it
-        /*
-        public async Task Userinfo()
-        {
-            IGuildUser useraccount =  
-            try
-            {
-                var user = message.Author;
-                embed = new EmbedBuilder 
-                    {
-                        Title = message.Author.Mention
-                    }
-                    .AddField("Created At", user.CreatedAt, true)
-                    .AddField("Joined At", userAccount.JoinedAt, true)
-                    .AddField("Roles", userAccount.RoleIds.ToString())
-                    .WithCurrentTimestamp()
-                    .Build();  
-            }
-            catch (Exception)
-            {
-                 embed = new EmbedBuilder
-                    {
-                        Title = "User Not Found"
-                    }
-                    .WithCurrentTimestamp()
-                    .Build();
-            }
-
-            await ReplyAsync(embed: embed);
-        } 
-        */
     }
 }
