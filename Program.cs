@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace DiscordBot
         private static string _version = "0.0.1";
         private DiscordSocketClient _client;
         private CommandService _commands;
-        private IServiceProvider _services;
+        public static IServiceProvider Services;
         private string _configPath;
         public static IConfiguration Config;
 
@@ -27,17 +28,18 @@ namespace DiscordBot
             _client = new DiscordSocketClient();
             _commands = new CommandService();
             
-            //Checks OS version to determine te location of the Config file.
-            if ((int) Environment.OSVersion.Platform == 4) //Location of the Linux Config
+            //Checks OS type to determine the location of the Config file.
+            switch((int) Environment.OSVersion.Platform)
             {
-                _configPath = "/home/botofidiots/";
-            }
-            else if ((int) Environment.OSVersion.Platform == 2) //Location of the Windows Config
-            {
-                _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
+                case 4: //Location of the Linux Config
+                    _configPath = "/home/botofidiots/";
+                    break;
+                case 2: //Location of the Windows Config
+                    _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
+                    break;
             }
 
-            _services = new ServiceCollection()
+            Services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
@@ -68,7 +70,7 @@ namespace DiscordBot
         public async Task RegisterCommandsAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
         }
 
         //Returns the Version String
@@ -86,8 +88,8 @@ namespace DiscordBot
             int argPos = 0;
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
-                var result = await _commands.ExecuteAsync(context, argPos, _services);
-                if(!result.IsSuccess) Console.WriteLine(result.Error);
+                var result = await _commands.ExecuteAsync(context, argPos, Services);
+                if(!result.IsSuccess) Console.WriteLine(result.ToString());
             }
         }
     }
