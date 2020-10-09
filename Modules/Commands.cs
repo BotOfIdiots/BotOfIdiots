@@ -115,19 +115,49 @@ namespace DiscordBot.Modules
             int prune = 0;
             if (bannedUser == null)
             {
+                embed = new EmbedBuilder 
+                {
+                    Title = "User Not Found"
+                }
+                    .Build();
+            }
+            else if(bannedUser == Context.User)
+            {
                 embed = new EmbedBuilder
-                    {
-                            Title = "User Not Found"
-                    }
+                {
+                  Title  = "You can't ban that user"
+                }
                     .Build();
             }
             else
             {
                 string reason = "test";
                 embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
-                await bannedUser.BanAsync(0, reason);
+                await bannedUser.SendMessageAsync(embed: embed);
+                await bannedUser.BanAsync(prune, reason);
+              
             }
             await ReplyAsync(embed: embed);
+        }
+
+        [Command("unban")]
+        public async Task Unban(ulong bannedUserId)
+        {
+            Embed embed = new EmbedBuilder
+                {
+                    Title = "User Unbanned",
+                    Color = Color.Red
+                }
+                    .AddField("User:", "<@!" + bannedUserId + ">", true)
+                    .AddField("Date", DateTime.Now, true)
+                    .AddField("Moderator:", Context.User.Mention)
+                    .WithCurrentTimestamp()
+                    .WithFooter("UserID: " + bannedUserId)
+                    .Build();
+            
+            await Context.Guild.RemoveBanAsync(bannedUserId);
+            await ReplyAsync(embed: embed);
+
         }
     }
 }

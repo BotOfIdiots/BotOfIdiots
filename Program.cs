@@ -17,7 +17,7 @@ namespace DiscordBot
         public static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
         private static string _version = "0.0.1";
-        public static DiscordSocketClient Client;
+        private DiscordSocketClient _client;
         private CommandService _commands;
         public static IServiceProvider Services;
         private string _configPath;
@@ -25,7 +25,7 @@ namespace DiscordBot
 
         public async Task RunBotAsync()
         {
-            Client = new DiscordSocketClient();
+            _client = new DiscordSocketClient();
             _commands = new CommandService();
             
             //Checks OS type to determine the location of the Config file.
@@ -40,7 +40,7 @@ namespace DiscordBot
             }
 
             Services = new ServiceCollection()
-                .AddSingleton(Client)
+                .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
@@ -50,13 +50,13 @@ namespace DiscordBot
                 .AddJsonFile(path: "config.json");            
             Config = _builder.Build();
             
-            Client.Log += _client_log;
+            _client.Log += _client_log;
             
             await RegisterCommandsAsync();
 
-            await Client.LoginAsync(TokenType.Bot, Config["Token"]);
+            await _client.LoginAsync(TokenType.Bot, Config["Token"]);
 
-            await Client.StartAsync();
+            await _client.StartAsync();
 
             await Task.Delay(-1);
         }
@@ -69,7 +69,7 @@ namespace DiscordBot
 
         public async Task RegisterCommandsAsync()
         {
-            Client.MessageReceived += HandleCommandAsync;
+            _client.MessageReceived += HandleCommandAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
         }
 
@@ -82,14 +82,14 @@ namespace DiscordBot
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(Client, message);
+            var context = new SocketCommandContext(_client, message);
             if (message.Author.IsBot) return;
 
             int argPos = 0;
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, Services);
-                if(!result.IsSuccess) Console.WriteLine(result.Error);
+                if(!result.IsSuccess) Console.WriteLine(result.ToString());
             }
         }
     }

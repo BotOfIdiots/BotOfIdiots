@@ -23,7 +23,6 @@ namespace DiscordBot.Modules
                 //TODO Ban registration in database
                 
                 Embed violaitionEmbed = Embed(user, reason, violationID, context, violationType);
-                user.SendMessageAsync(embed: violaitionEmbed);
                 return violaitionEmbed;
             }
             catch (NullReferenceException e)
