@@ -107,5 +107,27 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         } 
         */
+
+        [Command("ban")]
+        public async Task Ban(IGuildUser bannedUser, params String[] parameters)
+        {
+            Embed embed;
+            int prune = 0;
+            if (bannedUser == null)
+            {
+                embed = new EmbedBuilder
+                    {
+                            Title = "User Not Found"
+                    }
+                    .Build();
+            }
+            else
+            {
+                string reason = "test";
+                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
+                await bannedUser.BanAsync(0, reason);
+            }
+            await ReplyAsync(embed: embed);
+        }
     }
 }
