@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Discord;
 using Discord.Commands;
+
 
 namespace DiscordBot.Modules
 
@@ -15,15 +18,22 @@ namespace DiscordBot.Modules
         /// <param name="reason">Reason for the violation</param>
         /// <param name="context">Command Context</param>
         /// <returns>Embed</returns>
-        public static Embed NewViolation(IGuildUser user, string reason, SocketCommandContext context, int violationType = 0)
+        public static Embed NewViolation(IGuildUser user, string reason, SocketCommandContext context, string violationType = "0")
         {
-            try{
-                int violationID = 0;
+            try
+            {
+                string date = context.Message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+
+                string violationQuery =
+                    "INSERT INTO Violations (UserID, ViolationDate, ViolationType, Reason) VALUES (@0, @1, @2, @3)";
+                SqlHandler.Query(violationQuery, user.Id.ToString(), date, violationType, reason);
+
+                string violationIDQuery = "SELECT ViolationID FROM Violations WHERE ViolationDate = @0";
+                List<object> result = SqlHandler.SelectQuery(violationIDQuery, date);
+                string violationId = result[0].ToString();
                 
-                //TODO Ban registration in database
-                
-                Embed violaitionEmbed = Embed(user, reason, violationID, context, violationType);
-                return violaitionEmbed;
+                Embed violationEmbed = ViolationEmbed(user, reason, violationId, context, violationType);
+                return violationEmbed;
             }
             catch (NullReferenceException e)
             {
@@ -38,19 +48,20 @@ namespace DiscordBot.Modules
                 return error;
             }
             catch (IndexOutOfRangeException)
-            { 
+            {
                 Embed error = new EmbedBuilder
                     {
                         Title = "Te weinig argumenten"
                     }
                     .WithDescription("Commando is uitgevoerd met te weinig argumenten")
-                    .AddField("Example", Program.Config["CommandPrefix"]+"ban [user] {reason}")
+                    .AddField("Example", DiscordBot.Config["CommandPrefix"]+"ban [user] {reason}")
                     .Build();
                 
                 return error;
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.ToString());
                 Embed error = new EmbedBuilder
                     {
                         Title = "Exception"
@@ -63,23 +74,31 @@ namespace DiscordBot.Modules
             }
         }
 
+        public static string ViolationCount(string userId)
+        {
+            string getCountQuery = "SELECT COUNT(ViolationID) FROM Violations WHERE UserID = @0";
+            List<object> result = SqlHandler.SelectQuery(getCountQuery, userId);
+            string violationCount = result[0].ToString();
+            return violationCount;
+        }
+
 //        private static Embed GetViolation(int violationID)
 //        {
 //            return Embed(user, reason, violationID, context, violationType);
 //        }
 
-        private static Embed Embed(IGuildUser user, string reason, int violationId, SocketCommandContext context, int violationType)
+        private static Embed ViolationEmbed(IGuildUser user, string reason, string violationId, SocketCommandContext context, string violationType)
         {
             String violationTitle;
             switch (violationType)
             {
-                case 1:
+                case "1":
                     violationTitle = "Banned";
                     break;
-                case 2:
+                case "2":
                     violationTitle = "Kicked";
                     break;
-                case 3:
+                case "3":
                     violationTitle = "Muted";
                     break;
                 default:
