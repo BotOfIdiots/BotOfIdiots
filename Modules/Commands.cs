@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using DiscordBot.Modules;
 
 namespace DiscordBot.Modules
 {
@@ -25,10 +20,10 @@ namespace DiscordBot.Modules
         {
             Embed embed = new EmbedBuilder
             {
-                Title = "Version: " + Program.Version(),
+                Title = "Version: " + DiscordBot.Version(),
             }
                 .WithAuthor(Context.Client.CurrentUser)
-                .WithFooter(Program.Version())
+                .WithFooter(DiscordBot.Version())
                 .WithCurrentTimestamp()
                 .Build();
             
@@ -67,6 +62,7 @@ namespace DiscordBot.Modules
                 embed = new EmbedBuilder {}
                     .AddField("User", userAccount.Mention)
                     .WithThumbnailUrl(userAccount.GetAvatarUrl())
+                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
                     .AddField("Created At", userAccount.CreatedAt.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Joined At", userAccount.JoinedAt?.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Roles", userRoles)
@@ -93,7 +89,7 @@ namespace DiscordBot.Modules
                 Console.WriteLine(e);   
             }
         }
-[Command("ban")]
+        [Command("ban")]
         public async Task Ban(IGuildUser bannedUser, params String[] parameters)
         {
             Embed embed;
@@ -116,11 +112,19 @@ namespace DiscordBot.Modules
             }
             else
             {
-                string reason = "test";
-                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
-                await bannedUser.SendMessageAsync(embed: embed);
-                await bannedUser.BanAsync(prune, reason);
-              
+                string reason = parameters[0];
+                for (int i = 1; i < parameters.Length; i++)
+                {
+                    reason += " " + parameters[i];
+                }
+                
+                embed = ViolationManager.NewViolation(bannedUser, reason, Context, "1");
+
+                if (embed.Title == "Banned")
+                {
+                    await bannedUser.SendMessageAsync(embed: embed);
+                    await bannedUser.BanAsync(prune, reason);
+                }
             }
             await ReplyAsync(embed: embed);
         }
@@ -144,5 +148,17 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
 
         }
+
+        [Command("test")]
+        public async Task Test(IGuildUser test)
+        {
+            Embed embed = new EmbedBuilder
+            {
+                Title = test.Id.ToString()
+            }.Build();
+
+            await ReplyAsync(embed: embed);
+        }
+        
     }
 }
