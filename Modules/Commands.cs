@@ -128,6 +128,44 @@ namespace DiscordBot.Modules
             }
             await ReplyAsync(embed: embed);
         }
+        
+        [Command("warn")]
+        public async Task Warn(IGuildUser warnedUser, params String[] parameters)
+        {
+            Embed embed;
+            if (warnedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't warn that user"
+                }.Build();
+            }
+            else if(warnedUser == null)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "User not found"
+                }
+                    .Build();
+            }
+            else
+            {
+                string reason = parameters[0];
+                for (int i = 1; i < parameters.Length; i++)
+                {
+                    reason += " " + parameters[i];
+                }
+                
+                embed = ViolationManager.NewViolation(warnedUser, reason, Context, "4");
+                    
+                if (embed.Title == "Banned")
+                {
+                    await warnedUser.SendMessageAsync(embed: embed);
+                }
+                
+            }
+            await ReplyAsync(embed: embed);
+        }
 
         [Command("unban")]
         public async Task Unban(ulong bannedUserId)
@@ -159,6 +197,5 @@ namespace DiscordBot.Modules
 
             await ReplyAsync(embed: embed);
         }
-        
     }
 }
