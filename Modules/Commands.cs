@@ -129,6 +129,37 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
+        [Command("kick")]
+        public async Task Kick(IGuildUser kickedUser, params String[] parameters)
+        {
+            Embed embed;
+            if (kickedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't kick that user"
+                }.Build();
+            }
+            else
+            {
+                string reason = parameters[0];
+                for (int i = 1; i < parameters.Length; i++)
+                {
+                    reason += " " + parameters[i];
+                }
+                
+                embed = ViolationManager.NewViolation(kickedUser, reason, Context, "2");
+                
+                if (embed.Title == "Kicked")
+                {
+                    await kickedUser.SendMessageAsync(embed: embed);
+                    await kickedUser.KickAsync(reason);
+                }
+            }
+
+            await ReplyAsync(embed: embed);
+        }
+        
         [Command("unban")]
         public async Task Unban(ulong bannedUserId)
         {
