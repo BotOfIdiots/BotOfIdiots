@@ -158,7 +158,7 @@ namespace DiscordBot.Modules
                 
                 embed = ViolationManager.NewViolation(warnedUser, reason, Context, "4");
                     
-                if (embed.Title == "Banned")
+                if (embed.Title == "Warned")
                 {
                     await warnedUser.SendMessageAsync(embed: embed);
                 }
