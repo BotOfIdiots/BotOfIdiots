@@ -227,7 +227,7 @@ namespace DiscordBot.Modules
             {
                 embed = new EmbedBuilder
                 {
-                    Title = "You can't mute that user"
+                    Title = "You can't mute that user."
                 }.Build();
             }
             else
