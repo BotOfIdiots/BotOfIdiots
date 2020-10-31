@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace DiscordBot.Modules
 {
@@ -216,6 +217,31 @@ namespace DiscordBot.Modules
             await Context.Guild.RemoveBanAsync(bannedUserId);
             await ReplyAsync(embed: embed);
 
+        }
+
+        [Command("mute")]
+        public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
+        {
+            Embed embed;
+            if (mutedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't mute that user"
+                }.Build();
+            }
+            else
+            {
+                embed = ViolationManager.NewViolation(mutedUser, reason, Context, "3");
+
+                if (embed.Title == "Muted")
+                {
+                    await mutedUser.SendMessageAsync(embed: embed);
+                    await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                }
+            }
+
+            await ReplyAsync(embed: embed);
         }
 
         [Command("test")]
