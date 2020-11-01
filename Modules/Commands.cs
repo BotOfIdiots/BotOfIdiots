@@ -244,6 +244,31 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
+        [Command("unmute")]
+        public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
+        {
+            Embed embed;
+            if (unmutedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't unmute that user."
+                }.Build();
+            }
+            else
+            {
+                embed = ViolationManager.NewViolation(unmutedUser, reason, Context, "4");
+
+                if (embed.Title == "Unmuted")
+                {
+                    await unmutedUser.SendMessageAsync(embed: embed);
+                    await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
+                }
+            }
+
+            await ReplyAsync(embed: embed);
+        }
+
         [Command("test")]
         public async Task Test(IGuildUser test)
         {
