@@ -71,7 +71,7 @@ namespace DiscordBot.Modules
                         roles += role.Mention;
                     }
                 }
-                
+
                 embed = new EmbedBuilder { }
                     .AddField("User", user.Mention)
                     .WithThumbnailUrl(user.GetAvatarUrl())

@@ -23,7 +23,7 @@ namespace DiscordBot
         private static IServiceProvider _services;
         public string ConfigPath;
         public static IConfiguration Config;
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -32,15 +32,16 @@ namespace DiscordBot
         {
             _client = new DiscordSocketClient();
             _commands = new CommandService();
-            
+
             //Checks OS type to determine the location of the Config file.
-            switch((int) Environment.OSVersion.Platform)
+            switch ((int) Environment.OSVersion.Platform)
             {
                 case 4: //Location of the Linux Config
                     ConfigPath = "/home/botofidiots/";
                     break;
                 case 2: //Location of the Windows Config
-                    ConfigPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
+                    ConfigPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                                 "/.discordtestbot";
                     break;
             }
 
@@ -52,11 +53,11 @@ namespace DiscordBot
             //Get the config options
             var builder = new ConfigurationBuilder()
                 .SetBasePath(ConfigPath)
-                .AddJsonFile(path: "config.json");            
+                .AddJsonFile(path: "config.json");
             Config = builder.Build();
-            
+
             _client.Log += _client_log;
-            
+
             await RegisterCommandsAsync();
 
             await _client.LoginAsync(TokenType.Bot, Config["Token"]);
@@ -65,12 +66,12 @@ namespace DiscordBot
 
             await Task.Delay(-1);
         }
-        
+
         /// <summary>
-         /// 
-         /// </summary>
-         /// <param name="arg"></param>
-         /// <returns></returns>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         private Task _client_log(LogMessage arg)
         {
             Console.WriteLine(arg);
@@ -95,13 +96,12 @@ namespace DiscordBot
         {
             return _version;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
-        
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
@@ -112,10 +112,8 @@ namespace DiscordBot
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
-                if(!result.IsSuccess) Console.WriteLine(result.ToString());
+                if (!result.IsSuccess) Console.WriteLine(result.ToString());
             }
         }
     }
 }
-
-
