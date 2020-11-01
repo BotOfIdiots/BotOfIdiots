@@ -73,7 +73,21 @@ namespace DiscordBot.Modules
             }
         }
 
-        
+        /// <summary>
+        /// Returns the total ammount of violations for a specified user
+        /// </summary>
+        /// <param name="userId">id of the user to return the violation count of</param>
+        /// <returns>int</returns>
+        public static int CountUserViolations(ulong userId)
+        {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                return table.Count(x => x.UserId == userId);
+            }
+        }
+
         /// <summary>
         /// Create a List of Violations commited by user
         /// </summary>
@@ -97,7 +111,7 @@ namespace DiscordBot.Modules
             return violations;
         }
 
-        
+
         /// <summary>
         /// Get a specific violation
         /// </summary>
@@ -111,7 +125,7 @@ namespace DiscordBot.Modules
             return ViolationEmbed(violation, context);
         }
 
-        
+
         /// <summary>
         /// This functions returns an embed with the information of the committed violation
         /// </summary>
