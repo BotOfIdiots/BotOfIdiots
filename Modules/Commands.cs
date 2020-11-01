@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Models;
 
 namespace DiscordBot.Modules
 {
@@ -90,81 +92,54 @@ namespace DiscordBot.Modules
                 Console.WriteLine(e);   
             }
         }
-        [Command("ban")]
-        public async Task Ban(SocketGuildUser bannedUser, params String[] parameters)
-        {
-            Embed embed;
-            int prune = 0;
-            if (bannedUser == null)
-            {
-                embed = new EmbedBuilder 
-                {
-                    Title = "User Not Found"
-                }
-                    .Build();
-            }
-            else if(bannedUser == Context.User)
-            {
-                embed = new EmbedBuilder
-                {
-                  Title  = "You can't ban that user"
-                }
-                    .Build();
-            }
-            else
-            {
-                string reason = parameters[0];
-                for (int i = 1; i < parameters.Length; i++)
-                {
-                    reason += " " + parameters[i];
-                }
-                
-                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
 
-                if (embed.Title == "Banned")
+        [Command("violations")]
+        public async Task Violations(SocketGuildUser guildUser)
+        {
+            List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
+
+            EmbedBuilder embedBuilder= new EmbedBuilder();
+            embedBuilder.WithTitle("Violations")
+                .AddField("User:", guildUser.Mention)
+                .AddField("ViolationCount", violations.Count)
+                .WithCurrentTimestamp()
+                .WithFooter("UserID: " + guildUser.Id)
+                ;
+
+            foreach (Violation violation in violations)
+            {
+                string violationType;
+                switch (violation.Type)
                 {
-                    await bannedUser.SendMessageAsync(embed: embed);
-                    await bannedUser.BanAsync(prune, reason);
+                    case 1:
+                        violationType = "Ban";
+                        break;
+                    case 2:
+                        violationType = "Kick";
+                        break;
+                    case 3:
+                        violationType = "Mute";
+                        break;
+                    case 4:
+                        violationType = "Unmute";
+                        break;
+                    default:
+                        violationType = "Warn";
+                        break;
                 }
+                embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
             }
+
+            Embed embed = embedBuilder.Build();
+            
             await ReplyAsync(embed: embed);
         }
-        
-        [Command("warn")]
-        public async Task Warn(SocketGuildUser warnedUser, params String[] parameters)
+
+      [Command("violation")]
+        public async Task Violation(int violationId)
         {
-            Embed embed;
-            if (warnedUser == Context.User)
-            {
-                embed = new EmbedBuilder
-                {
-                    Title = "You can't warn that user"
-                }.Build();
-            }
-            else if(warnedUser == null)
-            {
-                embed = new EmbedBuilder
-                {
-                    Title = "User not found"
-                }
-                    .Build();
-            }
-            else
-            {
-                string reason = parameters[0];
-                for (int i = 1; i < parameters.Length; i++)
-                {
-                    reason += " " + parameters[i];
-                }
-                
-                embed = ViolationManager.NewViolation(warnedUser, reason, Context, 4);
-                    
-                if (embed.Title == "Warned")
-                {
-                    await warnedUser.SendMessageAsync(embed: embed);
-                }
-                
-            }
+            Embed embed = ViolationManager.GetViolation(violationId, Context);
+
             await ReplyAsync(embed: embed);
         }
 
@@ -196,6 +171,84 @@ namespace DiscordBot.Modules
                 }
             }
 
+            await ReplyAsync(embed: embed);
+        }
+
+        [Command("warn")]
+        public async Task Warn(SocketGuildUser warnedUser, params String[] parameters)
+        {
+            Embed embed;
+            if (warnedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't warn that user"
+                }.Build();
+            }
+            else if(warnedUser == null)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "User not found"
+                }
+                    .Build();
+            }
+            else
+            {
+                string reason = parameters[0];
+                for (int i = 1; i < parameters.Length; i++)
+                {
+                    reason += " " + parameters[i];
+                }
+                
+                embed = ViolationManager.NewViolation(warnedUser, reason, Context);
+                    
+                if (embed.Title == "Warned")
+                {
+                    await warnedUser.SendMessageAsync(embed: embed);
+                }
+                
+            }
+            await ReplyAsync(embed: embed);
+        }
+         
+        [Command("ban")]
+        public async Task Ban(SocketGuildUser bannedUser, params String[] parameters)
+        {
+            Embed embed;
+            int prune = 0;
+            if (bannedUser == null)
+            {
+                embed = new EmbedBuilder 
+                    {
+                        Title = "User Not Found"
+                    }
+                    .Build();
+            }
+            else if(bannedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                    {
+                        Title  = "You can't ban that user"
+                    }
+                    .Build();
+            }
+            else
+            {
+                string reason = parameters[0];
+                for (int i = 1; i < parameters.Length; i++)
+                {
+                    reason += " " + parameters[i];
+                }
+                
+                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
+
+                if (embed.Title == "Banned")
+                {
+                    await bannedUser.SendMessageAsync(embed: embed);
+                    await bannedUser.BanAsync(prune, reason);
+                }
+            }
             await ReplyAsync(embed: embed);
         }
         
@@ -232,7 +285,7 @@ namespace DiscordBot.Modules
             }
             else
             {
-                embed = ViolationManager.NewViolation(mutedUser, reason, Context, "3");
+                embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
 
                 if (embed.Title == "Muted")
                 {
@@ -257,7 +310,7 @@ namespace DiscordBot.Modules
             }
             else
             {
-                embed = ViolationManager.NewViolation(unmutedUser, reason, Context, "4");
+                embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
 
                 if (embed.Title == "Unmuted")
                 {
