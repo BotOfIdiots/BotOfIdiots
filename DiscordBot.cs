@@ -17,7 +17,7 @@ namespace DiscordBot
         private DiscordSocketClient _client;
         private CommandService _commands;
         private static IServiceProvider _services;
-        private string _configPath;
+        public string ConfigPath;
         public static IConfiguration Config;
 
         public async Task RunBotAsync()
@@ -29,10 +29,10 @@ namespace DiscordBot
             switch((int) Environment.OSVersion.Platform)
             {
                 case 4: //Location of the Linux Config
-                    _configPath = "/home/botofidiots/";
+                    ConfigPath = "/home/botofidiots/";
                     break;
                 case 2: //Location of the Windows Config
-                    _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
+                    ConfigPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/.discordtestbot";
                     break;
             }
 
@@ -43,7 +43,7 @@ namespace DiscordBot
 
             //Get the config options
             var builder = new ConfigurationBuilder()
-                .SetBasePath(_configPath)
+                .SetBasePath(ConfigPath)
                 .AddJsonFile(path: "config.json");            
             Config = builder.Build();
             

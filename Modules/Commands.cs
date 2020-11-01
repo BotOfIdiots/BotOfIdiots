@@ -63,7 +63,7 @@ namespace DiscordBot.Modules
                 embed = new EmbedBuilder {}
                     .AddField("User", userAccount.Mention)
                     .WithThumbnailUrl(userAccount.GetAvatarUrl())
-                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
+//                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
                     .AddField("Created At", userAccount.CreatedAt.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Joined At", userAccount.JoinedAt?.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Roles", userRoles)
@@ -91,7 +91,7 @@ namespace DiscordBot.Modules
             }
         }
         [Command("ban")]
-        public async Task Ban(IGuildUser bannedUser, params String[] parameters)
+        public async Task Ban(SocketGuildUser bannedUser, params String[] parameters)
         {
             Embed embed;
             int prune = 0;
@@ -119,7 +119,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(bannedUser, reason, Context, "1");
+                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
 
                 if (embed.Title == "Banned")
                 {
@@ -131,7 +131,7 @@ namespace DiscordBot.Modules
         }
         
         [Command("warn")]
-        public async Task Warn(IGuildUser warnedUser, params String[] parameters)
+        public async Task Warn(SocketGuildUser warnedUser, params String[] parameters)
         {
             Embed embed;
             if (warnedUser == Context.User)
@@ -157,7 +157,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(warnedUser, reason, Context, "4");
+                embed = ViolationManager.NewViolation(warnedUser, reason, Context, 4);
                     
                 if (embed.Title == "Warned")
                 {
@@ -169,7 +169,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("kick")]
-        public async Task Kick(IGuildUser kickedUser, params String[] parameters)
+        public async Task Kick(SocketGuildUser kickedUser, params String[] parameters)
         {
             Embed embed;
             if (kickedUser == Context.User)
@@ -187,7 +187,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(kickedUser, reason, Context, "2");
+                embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
                 
                 if (embed.Title == "Kicked")
                 {
