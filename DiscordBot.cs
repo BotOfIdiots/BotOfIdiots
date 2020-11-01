@@ -11,6 +11,10 @@ namespace DiscordBot
 {
     internal class DiscordBot
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
         private static string _version = "0.0.1";
@@ -19,7 +23,11 @@ namespace DiscordBot
         private static IServiceProvider _services;
         public string ConfigPath;
         public static IConfiguration Config;
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async Task RunBotAsync()
         {
             _client = new DiscordSocketClient();
@@ -58,23 +66,41 @@ namespace DiscordBot
             await Task.Delay(-1);
         }
         
+        /// <summary>
+         /// 
+         /// </summary>
+         /// <param name="arg"></param>
+         /// <returns></returns>
         private Task _client_log(LogMessage arg)
         {
             Console.WriteLine(arg);
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async Task RegisterCommandsAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
-        //Returns the Version String
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public static string Version()
         {
             return _version;
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         
         private async Task HandleCommandAsync(SocketMessage arg)
         {

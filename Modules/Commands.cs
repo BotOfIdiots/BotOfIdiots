@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -11,94 +12,108 @@ namespace DiscordBot.Modules
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
+        /// <summary>
+        /// Replies with pong
+        /// </summary>
+        /// <returns></returns>
         [Command("ping")]
         public async Task Ping()
         {
             await ReplyAsync("Pong");
         }
 
+        /// <summary>
+        /// Return the current version of the bot
+        /// </summary>
+        /// <returns></returns>
         [Command("version")]
         // Return the current version of the bot
         public async Task Version()
         {
             Embed embed = new EmbedBuilder
-            {
-                Title = "Version: " + DiscordBot.Version(),
-            }
+                {
+                    Title = "Version: " + DiscordBot.Version(),
+                }
                 .WithAuthor(Context.Client.CurrentUser)
                 .WithFooter(DiscordBot.Version())
                 .WithCurrentTimestamp()
                 .Build();
-            
+
             await ReplyAsync(embed: embed);
         }
 
+        /// <summary>
+        /// Get the account information of a user
+        /// </summary>
+        /// <param name="user">user to return userinfo of</param>
+        /// <returns></returns>
         [Command("userinfo")]
-        // Get the account information of a user
-        public async Task Userinfo(IGuildUser userAccount = null)
+        public async Task Userinfo(SocketGuildUser user = null)
         {
             Embed embed;
-            string userRoles = null;
-            IReadOnlyCollection<ulong> userRoleIDs;
+            String roles = null;
 
             try
             {
-                if (userAccount == null)
+                if (user == null)
                 {
-                    userAccount = Context.Guild.GetUser(Context.User.Id);
+                    user = Context.Guild.GetUser(Context.User.Id);
                 }
 
-                userRoleIDs = userAccount.RoleIds;
-
-                foreach (ulong roleID in userRoleIDs)
+                foreach (IRole role in user.Roles.Distinct())
                 {
-                    if (userRoles == null)
+                    if (roles == null)
                     {
-                        userRoles = Context.Guild.GetRole(roleID).Mention;
+                        roles = role.Mention;
                     }
                     else
                     {
-                        userRoles = userRoles + ", " + Context.Guild.GetRole(roleID).Mention;
+                        roles += role.Mention;
                     }
                 }
-
-                embed = new EmbedBuilder {}
-                    .AddField("User", userAccount.Mention)
-                    .WithThumbnailUrl(userAccount.GetAvatarUrl())
-//                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
-                    .AddField("Created At", userAccount.CreatedAt.ToString("MM-dd-yy HH:mm:ss"), true)
-                    .AddField("Joined At", userAccount.JoinedAt?.ToString("MM-dd-yy HH:mm:ss"), true)
-                    .AddField("Roles", userRoles)
-                    .WithAuthor(userAccount)
-                    .WithFooter("UserID: " + userAccount.Id)
+                
+                embed = new EmbedBuilder { }
+                    .AddField("User", user.Mention)
+                    .WithThumbnailUrl(user.GetAvatarUrl())
+                    .AddField("Violation Count:", ViolationManager.CountUserViolations(user.Id))
+                    .AddField("Created At", user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true)
+                    .AddField("Joined At", user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true)
+                    .AddField("Roles", roles)
+                    .WithAuthor(user)
+                    .WithFooter("UserID: " + user.Id)
                     .WithCurrentTimestamp()
                     .Build();
-                
+
                 await ReplyAsync(embed: embed);
             }
             catch (NullReferenceException)
             {
                 embed = new EmbedBuilder
 
-                {
-                    Title = "Missing Username/Snowflake"
-                }
+                    {
+                        Title = "Missing Username/Snowflake"
+                    }
                     .AddField("Example", "$userinfo [username/snowflake]")
                     .Build();
                 await ReplyAsync(embed: embed);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine(e);   
+                Console.WriteLine(e);
             }
         }
 
+        /// <summary>
+        /// Get the violations of a user
+        /// </summary>
+        /// <param name="guildUser"></param>
+        /// <returns></returns>
         [Command("violations")]
         public async Task Violations(SocketGuildUser guildUser)
         {
             List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
 
-            EmbedBuilder embedBuilder= new EmbedBuilder();
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Violations")
                 .AddField("User:", guildUser.Mention)
                 .AddField("ViolationCount", violations.Count)
@@ -127,15 +142,21 @@ namespace DiscordBot.Modules
                         violationType = "Warn";
                         break;
                 }
+
                 embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
             }
 
             Embed embed = embedBuilder.Build();
-            
+
             await ReplyAsync(embed: embed);
         }
 
-      [Command("violation")]
+        /// <summary>
+        /// Get a specific violation
+        /// </summary>
+        /// <param name="violationId"></param>
+        /// <returns></returns>
+        [Command("violation")]
         public async Task Violation(int violationId)
         {
             Embed embed = ViolationManager.GetViolation(violationId, Context);
@@ -143,8 +164,14 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
+        /// <summary>
+        /// Kick a user
+        /// </summary>
+        /// <param name="kickedUser">User to kick</param>
+        /// <param name="reason" default="No reason specified">Reason for the kick</param>
+        /// <returns></returns>
         [Command("kick")]
-        public async Task Kick(SocketGuildUser kickedUser, params String[] parameters)
+        public async Task Kick(SocketGuildUser kickedUser, [Remainder] string reason = "No reason specified.")
         {
             Embed embed;
             if (kickedUser == Context.User)
@@ -156,14 +183,8 @@ namespace DiscordBot.Modules
             }
             else
             {
-                string reason = parameters[0];
-                for (int i = 1; i < parameters.Length; i++)
-                {
-                    reason += " " + parameters[i];
-                }
-                
                 embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
-                
+
                 if (embed.Title == "Kicked")
                 {
                     await kickedUser.SendMessageAsync(embed: embed);
@@ -174,8 +195,14 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
+        /// <summary>
+        /// Warn a user
+        /// </summary>
+        /// <param name="warnedUser">User to warn</param>
+        /// <param name="reason" default="No reason specified">Reason for the warn</param>
+        /// <returns></returns>
         [Command("warn")]
-        public async Task Warn(SocketGuildUser warnedUser, params String[] parameters)
+        public async Task Warn(SocketGuildUser warnedUser, [Remainder] string reason = "No reason specified.")
         {
             Embed embed;
             if (warnedUser == Context.User)
@@ -185,62 +212,56 @@ namespace DiscordBot.Modules
                     Title = "You can't warn that user"
                 }.Build();
             }
-            else if(warnedUser == null)
+            else if (warnedUser == null)
             {
                 embed = new EmbedBuilder
-                {
-                    Title = "User not found"
-                }
+                    {
+                        Title = "User not found"
+                    }
                     .Build();
             }
             else
             {
-                string reason = parameters[0];
-                for (int i = 1; i < parameters.Length; i++)
-                {
-                    reason += " " + parameters[i];
-                }
-                
                 embed = ViolationManager.NewViolation(warnedUser, reason, Context);
-                    
+
                 if (embed.Title == "Warned")
                 {
                     await warnedUser.SendMessageAsync(embed: embed);
                 }
-                
             }
+
             await ReplyAsync(embed: embed);
         }
-         
+
+        /// <summary>
+        /// Ban a user
+        /// </summary>
+        /// <param name="bannedUser">user to ban</param>
+        /// <param name="reason" default="No reason specified"></param>
+        /// <returns></returns>
         [Command("ban")]
-        public async Task Ban(SocketGuildUser bannedUser, params String[] parameters)
+        public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason = "No reason specified.")
         {
             Embed embed;
             int prune = 0;
             if (bannedUser == null)
             {
-                embed = new EmbedBuilder 
+                embed = new EmbedBuilder
                     {
                         Title = "User Not Found"
                     }
                     .Build();
             }
-            else if(bannedUser == Context.User)
+            else if (bannedUser == Context.User)
             {
                 embed = new EmbedBuilder
                     {
-                        Title  = "You can't ban that user"
+                        Title = "You can't ban that user"
                     }
                     .Build();
             }
             else
             {
-                string reason = parameters[0];
-                for (int i = 1; i < parameters.Length; i++)
-                {
-                    reason += " " + parameters[i];
-                }
-                
                 embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
 
                 if (embed.Title == "Banned")
@@ -249,9 +270,15 @@ namespace DiscordBot.Modules
                     await bannedUser.BanAsync(prune, reason);
                 }
             }
+
             await ReplyAsync(embed: embed);
         }
-        
+
+        /// <summary>
+        /// unban a user
+        /// </summary>
+        /// <param name="bannedUserId">the user to unban</param>
+        /// <returns></returns>
         [Command("unban")]
         public async Task Unban(ulong bannedUserId)
         {
@@ -260,18 +287,23 @@ namespace DiscordBot.Modules
                     Title = "User Unbanned",
                     Color = Color.Red
                 }
-                    .AddField("User:", "<@!" + bannedUserId + ">", true)
-                    .AddField("Date", DateTime.Now, true)
-                    .AddField("Moderator:", Context.User.Mention)
-                    .WithCurrentTimestamp()
-                    .WithFooter("UserID: " + bannedUserId)
-                    .Build();
-            
+                .AddField("User:", "<@!" + bannedUserId + ">", true)
+                .AddField("Date", DateTime.Now, true)
+                .AddField("Moderator:", Context.User.Mention)
+                .WithCurrentTimestamp()
+                .WithFooter("UserID: " + bannedUserId)
+                .Build();
+
             await Context.Guild.RemoveBanAsync(bannedUserId);
             await ReplyAsync(embed: embed);
-
         }
 
+        /// <summary>
+        /// Mute a user
+        /// </summary>
+        /// <param name="mutedUser">User to mute</param>
+        /// <param name="reason" default="No reason specified"> The reason for the mute</param>
+        /// <returns></returns>
         [Command("mute")]
         public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
         {
@@ -297,6 +329,12 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
+        /// <summary>
+        /// Unmute a user
+        /// </summary>
+        /// <param name="unmutedUser">user to unmute</param>
+        /// <param name="reason" default="No reason specified"> reason for the unmute</param>
+        /// <returns></returns>
         [Command("unmute")]
         public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
         {
@@ -322,13 +360,19 @@ namespace DiscordBot.Modules
             await ReplyAsync(embed: embed);
         }
 
-        [Command("test")]
-        public async Task Test(IGuildUser test)
+        /// <summary>
+        /// Returns
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        [Command("snowflake")]
+        public async Task Test(SocketGuildUser user)
         {
             Embed embed = new EmbedBuilder
-            {
-                Title = test.Id.ToString()
-            }.Build();
+                {
+                    Title = "Snowflake for user " + user.Username
+                }.AddField("snowflake", user.Id)
+                .Build();
 
             await ReplyAsync(embed: embed);
         }

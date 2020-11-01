@@ -73,6 +73,15 @@ namespace DiscordBot.Modules
             }
         }
 
+        public static int CountUserViolations(ulong userId)
+        {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                return table.Count(x => x.UserId == userId);
+            }
+        }
         
         /// <summary>
         /// Create a List of Violations commited by user

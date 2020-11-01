@@ -2,6 +2,9 @@
 
 namespace DiscordBot.Models
 {
+    /// <summary>
+    /// This object Contains all the information for a violation
+    /// </summary>
     public class Violation
     {
         public int Id { get; set; }
