@@ -18,7 +18,7 @@ namespace DiscordBot.Modules
         /// <param name="reason">Reason for the violation</param>
         /// <param name="context">Command Context</param>
         /// <returns>Embed</returns>
-        public static Embed NewViolation(IGuildUser user, string reason, SocketCommandContext context, string violationType = "0")
+        public static Embed NewViolation(IUser user, string reason, SocketCommandContext context, string violationType = "0")
         {
             try
             {
@@ -31,41 +31,41 @@ namespace DiscordBot.Modules
                 string violationIDQuery = "SELECT ViolationID FROM Violations WHERE ViolationDate = @0";
                 List<object> result = SqlHandler.SelectQuery(violationIDQuery, date);
                 string violationId = result[0].ToString();
-                
+
                 Embed violationEmbed = ViolationEmbed(user, reason, violationId, context, violationType);
                 return violationEmbed;
             }
             catch (NullReferenceException e)
             {
-                Embed error = new EmbedBuilder 
-                    {
-                        Title = "NullReferenceException"
-                    }
+                Embed error = new EmbedBuilder
+                {
+                    Title = "NullReferenceException"
+                }
                     .WithDescription(e.ToString())
                     .AddField("Time", DateTime.Now)
                     .Build();
-                
+
                 return error;
             }
             catch (IndexOutOfRangeException)
             {
                 Embed error = new EmbedBuilder
-                    {
-                        Title = "Te weinig argumenten"
-                    }
+                {
+                    Title = "Te weinig argumenten"
+                }
                     .WithDescription("Commando is uitgevoerd met te weinig argumenten")
-                    .AddField("Example", DiscordBot.Config["CommandPrefix"]+"ban [user] {reason}")
+                    .AddField("Example", DiscordBot.Config["CommandPrefix"] + "ban [user] {reason}")
                     .Build();
-                
+
                 return error;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
                 Embed error = new EmbedBuilder
-                    {
-                        Title = "Exception"
-                    }
+                {
+                    Title = "Exception"
+                }
                     .WithDescription(e.ToString())
                     .AddField("Time", DateTime.Now)
                     .Build();
@@ -82,12 +82,12 @@ namespace DiscordBot.Modules
             return violationCount;
         }
 
-//        private static Embed GetViolation(int violationID)
-//        {
-//            return Embed(user, reason, violationID, context, violationType);
-//        }
+        // private static Embed GetViolation(int violationID)
+        // {
+        //     return Embed(user, reason, violationID, context, violationType);
+        // }
 
-        private static Embed ViolationEmbed(IGuildUser user, string reason, string violationId, SocketCommandContext context, string violationType)
+        private static Embed ViolationEmbed(IUser user, string reason, string violationId, SocketCommandContext context, string violationType)
         {
             String violationTitle;
             switch (violationType)
@@ -104,17 +104,19 @@ namespace DiscordBot.Modules
                 case "4":
                     violationTitle = "Unmuted";
                     break;
+                case "5":
+                    violationTitle = "Unbanned";
+                    break;
                 default:
                     violationTitle = "Warned";
                     break;
             }
 
             Embed embed = new EmbedBuilder
-                {
-                    
-                    Title = violationTitle,
-                    Color = Color.Red
-                }
+            {
+                Title = violationTitle,
+                Color = Color.Red
+            }
                 .WithAuthor(context.Client.CurrentUser)
                 .AddField("User:", user.Mention, true)
                 .AddField("Date:", DateTime.Now, true)

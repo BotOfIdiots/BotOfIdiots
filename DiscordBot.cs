@@ -24,9 +24,9 @@ namespace DiscordBot
         {
             _client = new DiscordSocketClient();
             _commands = new CommandService();
-            
+
             //Checks OS type to determine the location of the Config file.
-            switch((int) Environment.OSVersion.Platform)
+            switch ((int)Environment.OSVersion.Platform)
             {
                 case 4: //Location of the Linux Config
                     _configPath = "/home/botofidiots/";
@@ -44,11 +44,11 @@ namespace DiscordBot
             //Get the config options
             var builder = new ConfigurationBuilder()
                 .SetBasePath(_configPath)
-                .AddJsonFile(path: "config.json");            
+                .AddJsonFile(path: "config.json");
             Config = builder.Build();
-            
+
             _client.Log += _client_log;
-            
+
             await RegisterCommandsAsync();
 
             await _client.LoginAsync(TokenType.Bot, Config["Token"]);
@@ -57,7 +57,7 @@ namespace DiscordBot
 
             await Task.Delay(-1);
         }
-        
+
         private Task _client_log(LogMessage arg)
         {
             Console.WriteLine(arg);
@@ -75,7 +75,7 @@ namespace DiscordBot
         {
             return _version;
         }
-        
+
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
@@ -86,7 +86,7 @@ namespace DiscordBot
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
-                if(!result.IsSuccess) Console.WriteLine(result.ToString());
+                if (!result.IsSuccess) Console.WriteLine(result.ToString());
             }
         }
     }
