@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
+using DiscordBot.Models;
+using LiteDB;
 
 
 namespace DiscordBot.Modules
@@ -14,38 +15,39 @@ namespace DiscordBot.Modules
         /// 
         /// </summary>
         /// <param name="violationType"> Violation type. 1 = Ban, 2 = Kick, 3 = mute, 4 = warn </param>
-        /// <param name="user">User that committed the violation</param>
+        /// <param name="violator">User that committed the violation</param>
         /// <param name="reason">Reason for the violation</param>
         /// <param name="context">Command Context</param>
         /// <returns>Embed</returns>
-        public static Embed NewViolation(IGuildUser user, string reason, SocketCommandContext context, string violationType = "0")
+        public static Embed NewViolation(SocketGuildUser violator, string reason, SocketCommandContext context, int violationType = 0)
         {
             try
             {
-                string date = context.Message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+                DateTime date = DateTime.Now;
 
-                string violationQuery =
-                    "INSERT INTO Violations (UserID, ViolationDate, ViolationType, Reason) VALUES (@0, @1, @2, @3)";
-                SqlHandler.Query(violationQuery, user.Id.ToString(), date, violationType, reason);
+//                string violationQuery =
+//                    "INSERT INTO Violations (UserID, ViolationDate, ViolationType, Reason) VALUES (@0, @1, @2, @3)";
+//                SqlHandler.NewViolationQuery(violationQuery, user.Id, date, violationType, reason);
+//
+//                string violationIDQuery = "SELECT ViolationID FROM Violations WHERE ViolationDate = @0";
+//                List<object> result = SqlHandler.SelectQuery(violationIDQuery, date);
+//                string violationId = result[0].ToString();
 
-                string violationIDQuery = "SELECT ViolationID FROM Violations WHERE ViolationDate = @0";
-                List<object> result = SqlHandler.SelectQuery(violationIDQuery, date);
-                string violationId = result[0].ToString();
+                Violation violation = new Violation
+                {
+                    UserId = violator.Id,
+                    ModeratorId = context.User.Id,
+                    Type = violationType,
+                    Reason = reason,
+                    Date = date
+                };
                 
-                Embed violationEmbed = ViolationEmbed(user, reason, violationId, context, violationType);
+                InsertViolation(violation);
+                
+                violation = GetCreatedRecord(date);
+                
+                Embed violationEmbed = ViolationEmbed(violation, context);
                 return violationEmbed;
-            }
-            catch (NullReferenceException e)
-            {
-                Embed error = new EmbedBuilder 
-                    {
-                        Title = "NullReferenceException"
-                    }
-                    .WithDescription(e.ToString())
-                    .AddField("Time", DateTime.Now)
-                    .Build();
-                
-                return error;
             }
             catch (IndexOutOfRangeException)
             {
@@ -66,7 +68,7 @@ namespace DiscordBot.Modules
                     {
                         Title = "Exception"
                     }
-                    .WithDescription(e.ToString())
+                    .WithDescription(Format.Sanitize(e.ToString()))
                     .AddField("Time", DateTime.Now)
                     .Build();
 
@@ -74,31 +76,26 @@ namespace DiscordBot.Modules
             }
         }
 
-        public static string ViolationCount(string userId)
-        {
-            string getCountQuery = "SELECT COUNT(ViolationID) FROM Violations WHERE UserID = @0";
-            List<object> result = SqlHandler.SelectQuery(getCountQuery, userId);
-            string violationCount = result[0].ToString();
-            return violationCount;
-        }
-
-//        private static Embed GetViolation(int violationID)
+//        public static string ViolationCount(ulong userId)
 //        {
-//            return Embed(user, reason, violationID, context, violationType);
+//            string getCountQuery = "SELECT COUNT(ViolationID) FROM Violations WHERE UserID = @0";
+//            List<object> result = SqlHandler.SelectQuery(getCountQuery, userId);
+//            string violationCount = result[0].ToString();
+//            return violationCount;
 //        }
 
-        private static Embed ViolationEmbed(IGuildUser user, string reason, string violationId, SocketCommandContext context, string violationType)
+        private static Embed ViolationEmbed(Violation violation, SocketCommandContext context)
         {
             String violationTitle;
-            switch (violationType)
+            switch (violation.Type)
             {
-                case "1":
+                case 1:
                     violationTitle = "Banned";
                     break;
-                case "2":
+                case 2:
                     violationTitle = "Kicked";
                     break;
-                case "3":
+                case 3:
                     violationTitle = "Muted";
                     break;
                 default:
@@ -113,16 +110,54 @@ namespace DiscordBot.Modules
                     Color = Color.Red
                 }
                 .WithAuthor(context.Client.CurrentUser)
-                .AddField("User:", user.Mention, true)
+                .AddField("User:", "<@!"+ violation.UserId+">", true)
                 .AddField("Date:", DateTime.Now, true)
                 .AddField("Moderator:", context.User.Mention)
-                .AddField("Reason:", reason)
-                .AddField("Violation ID:", violationId, true)
+                .AddField("Reason:", violation.Reason)
+                .AddField("Violation ID:", violation.Id, true)
                 .WithCurrentTimestamp()
-                .WithFooter("UserID: " + user.Id)
+                .WithFooter("UserID: " + violation.UserId)
                 .Build();
 
             return embed;
         }
+        
+        public static void InsertViolation(Violation record) {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                table.Insert(record);
+            }
+        }
+
+//        public static void DeleteViolationRecord() {
+//            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+//            {
+//                var table = db.GetCollection<Violation>("violations");
+//
+//                table.Delete();
+//            }
+//        }
+//        
+        public static Violation GetCreatedRecord(DateTime date) {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                return table.FindOne(x => x.Date == date);
+            }
+        }
+        
+        public static Violation GetViolationRecord(int id) {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                return table.FindOne(x => x.Id == id);
+            }
+        }
+        
+        
     }
 }
