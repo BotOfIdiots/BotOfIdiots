@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace DiscordBot.Modules
 {
@@ -62,7 +63,7 @@ namespace DiscordBot.Modules
                 embed = new EmbedBuilder {}
                     .AddField("User", userAccount.Mention)
                     .WithThumbnailUrl(userAccount.GetAvatarUrl())
-                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
+//                    .AddField("Violation Count:", ViolationManager.ViolationCount(userAccount.Id.ToString()))
                     .AddField("Created At", userAccount.CreatedAt.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Joined At", userAccount.JoinedAt?.ToString("MM-dd-yy HH:mm:ss"), true)
                     .AddField("Roles", userRoles)
@@ -90,7 +91,7 @@ namespace DiscordBot.Modules
             }
         }
         [Command("ban")]
-        public async Task Ban(IGuildUser bannedUser, params String[] parameters)
+        public async Task Ban(SocketGuildUser bannedUser, params String[] parameters)
         {
             Embed embed;
             int prune = 0;
@@ -118,7 +119,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(bannedUser, reason, Context, "1");
+                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
 
                 if (embed.Title == "Banned")
                 {
@@ -130,7 +131,7 @@ namespace DiscordBot.Modules
         }
         
         [Command("warn")]
-        public async Task Warn(IGuildUser warnedUser, params String[] parameters)
+        public async Task Warn(SocketGuildUser warnedUser, params String[] parameters)
         {
             Embed embed;
             if (warnedUser == Context.User)
@@ -156,7 +157,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(warnedUser, reason, Context, "4");
+                embed = ViolationManager.NewViolation(warnedUser, reason, Context, 4);
                     
                 if (embed.Title == "Warned")
                 {
@@ -168,7 +169,7 @@ namespace DiscordBot.Modules
         }
 
         [Command("kick")]
-        public async Task Kick(IGuildUser kickedUser, params String[] parameters)
+        public async Task Kick(SocketGuildUser kickedUser, params String[] parameters)
         {
             Embed embed;
             if (kickedUser == Context.User)
@@ -186,7 +187,7 @@ namespace DiscordBot.Modules
                     reason += " " + parameters[i];
                 }
                 
-                embed = ViolationManager.NewViolation(kickedUser, reason, Context, "2");
+                embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
                 
                 if (embed.Title == "Kicked")
                 {
@@ -216,6 +217,56 @@ namespace DiscordBot.Modules
             await Context.Guild.RemoveBanAsync(bannedUserId);
             await ReplyAsync(embed: embed);
 
+        }
+
+        [Command("mute")]
+        public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
+        {
+            Embed embed;
+            if (mutedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't mute that user."
+                }.Build();
+            }
+            else
+            {
+                embed = ViolationManager.NewViolation(mutedUser, reason, Context, "3");
+
+                if (embed.Title == "Muted")
+                {
+                    await mutedUser.SendMessageAsync(embed: embed);
+                    await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                }
+            }
+
+            await ReplyAsync(embed: embed);
+        }
+
+        [Command("unmute")]
+        public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
+        {
+            Embed embed;
+            if (unmutedUser == Context.User)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "You can't unmute that user."
+                }.Build();
+            }
+            else
+            {
+                embed = ViolationManager.NewViolation(unmutedUser, reason, Context, "4");
+
+                if (embed.Title == "Unmuted")
+                {
+                    await unmutedUser.SendMessageAsync(embed: embed);
+                    await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
+                }
+            }
+
+            await ReplyAsync(embed: embed);
         }
 
         [Command("test")]
