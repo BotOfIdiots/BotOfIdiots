@@ -101,6 +101,9 @@ namespace DiscordBot.Modules
                 case "3":
                     violationTitle = "Muted";
                     break;
+                case "4":
+                    violationTitle = "Unmuted";
+                    break;
                 default:
                     violationTitle = "Warned";
                     break;
