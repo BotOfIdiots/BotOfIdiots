@@ -73,6 +73,11 @@ namespace DiscordBot.Modules
             }
         }
 
+        /// <summary>
+        /// Returns the total ammount of violations for a specified user
+        /// </summary>
+        /// <param name="userId">id of the user to return the violation count of</param>
+        /// <returns>int</returns>
         public static int CountUserViolations(ulong userId)
         {
             using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
