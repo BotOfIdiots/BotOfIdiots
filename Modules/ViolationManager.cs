@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Discord;
 using Discord.Commands;
@@ -186,15 +185,19 @@ namespace DiscordBot.Modules
             }
         }
 
-//        public static void DeleteViolationRecord() {
-//            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
-//            {
-//                var table = db.GetCollection<Violation>("violations");
-//
-//                table.Delete();
-//            }
-//        }
-//        
+        /// <summary>
+        /// Delete a violation
+        /// </summary>
+        /// <param name="violationId">Id of violation to delete</param>
+        public static void DeleteViolationRecord(int violationId)
+        {
+            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            {
+                var table = db.GetCollection<Violation>("violations");
+
+                table.Delete(violationId);
+            }
+        }
 
         /// <summary>
         /// Return a Database record based on the specified date
