@@ -18,8 +18,8 @@ namespace DiscordBot
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
         private static string _version = "0.0.1";
-        private DiscordSocketClient _client;
-        private CommandService _commands;
+        private static DiscordSocketClient _client;
+        public static CommandService Commands;
         private static IServiceProvider _services;
         public string ConfigPath;
         public static IConfiguration Config;
@@ -31,7 +31,7 @@ namespace DiscordBot
         public async Task RunBotAsync()
         {
             _client = new DiscordSocketClient();
-            _commands = new CommandService();
+            Commands = new CommandService();
 
             //Checks OS type to determine the location of the Config file.
             switch ((int) Environment.OSVersion.Platform)
@@ -47,7 +47,7 @@ namespace DiscordBot
 
             _services = new ServiceCollection()
                 .AddSingleton(_client)
-                .AddSingleton(_commands)
+                .AddSingleton(Commands)
                 .BuildServiceProvider();
 
             //Get the config options
@@ -85,7 +85,7 @@ namespace DiscordBot
         public async Task RegisterCommandsAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace DiscordBot
             int argPos = 0;
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
-                var result = await _commands.ExecuteAsync(context, argPos, _services);
+                var result = await Commands.ExecuteAsync(context, argPos, _services);
                 if (!result.IsSuccess) Console.WriteLine(result.ToString());
             }
         }
