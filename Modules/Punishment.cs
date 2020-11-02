@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -33,14 +35,6 @@ namespace DiscordBot.Modules
                     Title = "You can't warn that user"
                 }.Build();
             }
-            else if (warnedUser == null)
-            {
-                embed = new EmbedBuilder
-                    {
-                        Title = "User not found"
-                    }
-                    .Build();
-            }
             else
             {
                 embed = ViolationManager.NewViolation(warnedUser, reason, Context);
@@ -73,6 +67,15 @@ namespace DiscordBot.Modules
                     Title = "You can't mute that user."
                 }.Build();
             }
+
+            else if (mutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "User is already muted"
+                }.Build();
+            }
+            
             else
             {
                 embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
@@ -105,6 +108,13 @@ namespace DiscordBot.Modules
                 embed = new EmbedBuilder
                 {
                     Title = "You can't unmute that user."
+                }.Build();
+            }
+            else if (!unmutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "User was not muted"
                 }.Build();
             }
             else
@@ -167,15 +177,7 @@ namespace DiscordBot.Modules
         {
             Embed embed;
             int prune = 0;
-            if (bannedUser == null)
-            {
-                embed = new EmbedBuilder
-                    {
-                        Title = "User Not Found"
-                    }
-                    .Build();
-            }
-            else if (bannedUser == Context.User)
+            if (bannedUser == Context.User)
             {
                 embed = new EmbedBuilder
                     {
