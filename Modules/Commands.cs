@@ -1,62 +1,92 @@
 ﻿using System;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Channels;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Modules;
 
 namespace DiscordBot.Modules
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
+        /// <summary>
+        /// Replies with pong
+        /// </summary>
+        /// <returns></returns>
         [Command("ping")]
+        [Summary("$ping - Responds with Pong")]
         public async Task Ping()
         {
             await ReplyAsync("Pong");
         }
 
+        /// <summary>
+        /// Return the current version of the bot
+        /// </summary>
+        /// <returns></returns>
+        [RequireOwner]
         [Command("version")]
+        [Summary("$version - returns the current bot version")]
         // Return the current version of the bot
         public async Task Version()
         {
             Embed embed = new EmbedBuilder
-            {
-                Title = "Version: " + Program.Version(),
-            }
+                {
+                    Title = "Version: " + DiscordBot.Version(),
+                }
                 .WithAuthor(Context.Client.CurrentUser)
-                .WithFooter(Program.Version())
+                .WithFooter(DiscordBot.Version())
                 .WithCurrentTimestamp()
                 .Build();
-            
+
             await ReplyAsync(embed: embed);
         }
 
+        /// <summary>
+        /// Get the account information of a user
+        /// </summary>
+        /// <param name="user">user to return userinfo of</param>
+        /// <returns></returns>
         [Command("userinfo")]
-        // Get the account information of a user
-        public async Task Userinfo(IGuildUser userAccount = null)
+        [Summary("$userinfo {user/snowflake} - Shows userinfo")]
+        public async Task Userinfo(SocketGuildUser user = null)
         {
             Embed embed;
+            String roles = null;
 
             try
             {
-                if (userAccount == null)
+                if (user == null)
                 {
-                    throw new NullReferenceException();
+                    user = Context.Guild.GetUser(Context.User.Id);
                 }
 
-                embed = new EmbedBuilder {}
-                    .AddField("User", userAccount.Mention)
-                    .WithThumbnailUrl(userAccount.GetAvatarUrl())
-                    .AddField("Created At", userAccount.CreatedAt, true)
-                    .AddField("Joined At", userAccount.JoinedAt, true)
-// TODO:                   .AddField("Roles", userAccount)
-                    .WithAuthor(userAccount)
-                    .WithFooter("UserID: " + userAccount.Id)
+                foreach (IRole role in user.Roles.Distinct())
+                {
+                    if (roles == null)
+                    {
+                        roles = role.Mention;
+                    }
+                    else
+                    {
+                        roles += role.Mention;
+                    }
+                }
+
+                embed = new EmbedBuilder { }
+                    .AddField("User", user.Mention)
+                    .WithThumbnailUrl(user.GetAvatarUrl())
+                    .AddField("Violation Count:", ViolationManager.CountUserViolations(user.Id))
+                    .AddField("Created At", user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true)
+                    .AddField("Joined At", user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true)
+                    .AddField("Roles", roles)
+                    .WithAuthor(user)
+                    .WithFooter("UserID: " + user.Id)
                     .WithCurrentTimestamp()
                     .Build();
+
                 await ReplyAsync(embed: embed);
             }
             catch (NullReferenceException)
@@ -70,42 +100,49 @@ namespace DiscordBot.Modules
                     .Build();
                 await ReplyAsync(embed: embed);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine(e);   
+                Console.WriteLine(e);
             }
-            
         }
-        //TODO: Userinfo of own account without mentioning it
-        /*
-        public async Task Userinfo()
+
+        /// <summary>
+        /// Returns User Snowflake
+        /// </summary>
+        /// <param name="user">User from which to get Snowflake</param>
+        /// <returns></returns>
+        [Command("snowflake")]
+        [Summary("$snowflake <user/snowflake> - returns the snowflake of the user")]
+        public async Task Snowflake(SocketGuildUser user)
         {
-            IGuildUser useraccount =  
-            try
-            {
-                var user = message.Author;
-                embed = new EmbedBuilder 
-                    {
-                        Title = message.Author.Mention
-                    }
-                    .AddField("Created At", user.CreatedAt, true)
-                    .AddField("Joined At", userAccount.JoinedAt, true)
-                    .AddField("Roles", userAccount.RoleIds.ToString())
-                    .WithCurrentTimestamp()
-                    .Build();  
-            }
-            catch (Exception)
-            {
-                 embed = new EmbedBuilder
-                    {
-                        Title = "User Not Found"
-                    }
-                    .WithCurrentTimestamp()
-                    .Build();
-            }
+            Embed embed = new EmbedBuilder
+                {
+                    Title = "Snowflake for user " + user.Username
+                }.AddField("snowflake", user.Id)
+                .Build();
 
             await ReplyAsync(embed: embed);
-        } 
-        */
+        }
+
+        [Command("help")]
+        [Summary("$help - returns a list of available commands")]
+        public async Task Help()
+        {
+            EmbedBuilder embedBuilder = new EmbedBuilder
+            {
+                Title = "Bot Commands",
+                Color = Color.Teal
+            };
+            foreach (CommandInfo command in DiscordBot.Commands.Commands)
+            {
+                embedBuilder.AddField(command.Name, command.Summary);
+            }
+
+            Embed helpEmbed = embedBuilder.Build();
+
+            await ReplyAsync(embed: helpEmbed);
+
+        }
+        
     }
 }
