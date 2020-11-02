@@ -9,7 +9,7 @@ using Discord.WebSocket;
 
 namespace DiscordBot.Modules
 {
-    public class Command : ModuleBase<SocketCommandContext>
+    public class Commands : ModuleBase<SocketCommandContext>
     {
         /// <summary>
         /// Replies with pong
@@ -107,13 +107,13 @@ namespace DiscordBot.Modules
         }
 
         /// <summary>
-        /// Returns
+        /// Returns User Snowflake
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="user">User from which to get Snowflake</param>
         /// <returns></returns>
         [Command("snowflake")]
         [Summary("$snowflake <user/snowflake> - returns the snowflake of the user")]
-        public async Task Test(SocketGuildUser user)
+        public async Task Snowflake(SocketGuildUser user)
         {
             Embed embed = new EmbedBuilder
                 {

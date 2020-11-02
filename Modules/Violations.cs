@@ -8,6 +8,7 @@ using DiscordBot.Models;
 
 namespace DiscordBot.Modules
 {
+    [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage = "The Bot doesn't have the KickMembers permission")]
     [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to use this command")]
     [Group("violation")]
     [Summary("Everything to do with violations")]
