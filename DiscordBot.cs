@@ -17,7 +17,7 @@ namespace DiscordBot
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
-        private static string _version = "0.0.1";
+        private static string _version = "0.0.2";
         private static DiscordSocketClient _client;
         public static CommandService Commands;
         private static IServiceProvider _services;
