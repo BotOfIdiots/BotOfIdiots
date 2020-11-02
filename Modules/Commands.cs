@@ -26,7 +26,7 @@ namespace DiscordBot.Modules
         /// Return the current version of the bot
         /// </summary>
         /// <returns></returns>
-        [RequireOwner]
+        [RequireUserPermission(GuildPermission.Administrator)]     
         [Command("version")]
         [Summary("$version - returns the current bot version")]
         // Return the current version of the bot
