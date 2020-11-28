@@ -6,7 +6,7 @@ using Discord.WebSocket;
 using DiscordBot.Models;
 using LiteDB;
 
-namespace DiscordBot.Modules
+namespace DiscordBot
 
 {
     public static class ViolationManager

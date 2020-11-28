@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,12 +18,14 @@ namespace DiscordBot
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
-        private static string _version = "0.0.2";
-        private static DiscordSocketClient _client;
-        public static CommandService Commands;
+        private static readonly string _version = "0.0.2";
         private static IServiceProvider _services;
-        public string ConfigPath;
+        private string _configPath;
+        public static DiscordSocketClient Client;
+        public static CommandService Commands;
         public static IConfiguration Config;
+        public static LogChannels LogChannels;
+        public static ulong GuildId;
 
         /// <summary>
         /// 
@@ -30,43 +33,86 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync()
         {
-            _client = new DiscordSocketClient();
-            Commands = new CommandService();
-
-            //Checks OS type to determine the location of the Config file.
-            switch ((int) Environment.OSVersion.Platform)
+            _detectOS();
+            _createConfig();
+            
+            var discordConfig = new DiscordSocketConfig
             {
-                case 4: //Location of the Linux Config
-                    ConfigPath = "/home/botofidiots/";
-                    break;
-                case 2: //Location of the Windows Config
-                    ConfigPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                 "/.discordtestbot";
-                    break;
-            }
+                MessageCacheSize = 200
+            };
+            
+            Client = new DiscordSocketClient(discordConfig);
+            Commands = new CommandService();
+            _createLogChannels();
 
             _services = new ServiceCollection()
-                .AddSingleton(_client)
+                .AddSingleton(Client)
                 .AddSingleton(Commands)
                 .BuildServiceProvider();
-
-            //Get the config options
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(ConfigPath)
-                .AddJsonFile(path: "config.json");
-            Config = builder.Build();
-
-            _client.Log += _client_log;
-
+            
+            Client.Log += _client_log;
+            LoadDiscordEventHandlers();
+            
+            
             await RegisterCommandsAsync();
-
-            await _client.LoginAsync(TokenType.Bot, Config["Token"]);
-
-            await _client.StartAsync();
-
+            await Client.LoginAsync(TokenType.Bot, Config["Token"]);
+            await Client.StartAsync();
             await Task.Delay(-1);
         }
 
+        private void LoadDiscordEventHandlers()
+        {
+            EventHandler.HookMessageDeleted(Client);
+            EventHandler.HookMessageUpdated(Client);
+        }
+
+        /// <summary>
+        /// Detect the OS and build all OS based variables
+        /// </summary>
+        private void _detectOS()
+        {
+            int environment = (int) Environment.OSVersion.Platform;
+            _getConfigPath(environment);
+            
+        }
+
+        /// <summary>
+        /// Get the config file location based on the enviroment
+        /// </summary>
+        /// <param name="enviroment"></param>
+        private void _getConfigPath(int enviroment)
+        {
+            switch (enviroment)
+            {
+                case 4: //Location of the Linux Config
+                    _configPath = "/home/botofidiots/";
+                    break;
+                case 2: //Location of the Windows Config
+                    _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                                  "/.discordtestbot";
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// Create the config object based on the config.json file
+        /// </summary>
+        private void _createConfig()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(_configPath)
+                .AddJsonFile(path: "config.json");
+            Config = builder.Build();
+            GuildId = Convert.ToUInt64(Config["GuildId"]);
+        }
+
+        private void _createLogChannels()
+        {
+            LogChannels = new LogChannels(Config.GetSection("LogChannels"));
+        }
+
+        
+        
         /// <summary>
         /// 
         /// </summary>
@@ -84,7 +130,7 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RegisterCommandsAsync()
         {
-            _client.MessageReceived += HandleCommandAsync;
+            Client.MessageReceived += HandleCommandAsync;
             await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
@@ -105,14 +151,22 @@ namespace DiscordBot
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(_client, message);
+            var context = new SocketCommandContext(Client, message);
             if (message.Author.IsBot) return;
 
             int argPos = 0;
             if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
-                if (!result.IsSuccess) Console.WriteLine(result.ToString());
+                if (!result.IsSuccess)
+                {
+                    Embed exceptionEmbed = new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithDescription(result.ErrorReason)
+                        .Build();
+                    
+                    await context.Channel.SendMessageAsync(embed: exceptionEmbed);
+                }
             }
         }
     }

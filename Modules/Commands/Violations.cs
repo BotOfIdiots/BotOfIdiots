@@ -6,9 +6,10 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Models;
 
-namespace DiscordBot.Modules
+namespace DiscordBot.Modules.Commands
 {
-    [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage = "The Bot doesn't have the KickMembers permission")]
+    [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage =
+        "The Bot doesn't have the KickMembers permission")]
     [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to use this command")]
     [Group("violation")]
     [Summary("Everything to do with violations")]
@@ -23,9 +24,16 @@ namespace DiscordBot.Modules
         [Summary("$violation <violationID> - Returns the violation")]
         public async Task Violation(int violationId)
         {
-            Embed embed = ViolationManager.GetViolation(violationId, Context);
+            try
+            {
+                Embed embed = ViolationManager.GetViolation(violationId, Context);
 
-            await ReplyAsync(embed: embed);
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -37,44 +45,51 @@ namespace DiscordBot.Modules
         [Summary("$violation list <user/snowflake> - Returns a list of violations")]
         public async Task List(SocketGuildUser guildUser)
         {
-            List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
-
-            EmbedBuilder embedBuilder = new EmbedBuilder();
-            embedBuilder.WithTitle("Violations")
-                .AddField("User:", guildUser.Mention)
-                .AddField("ViolationCount", violations.Count)
-                .WithCurrentTimestamp()
-                .WithFooter("UserID: " + guildUser.Id)
-                ;
-
-            foreach (Violation violation in violations)
+            try
             {
-                string violationType;
-                switch (violation.Type)
+                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
+
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.WithTitle("Violations")
+                    .AddField("User:", guildUser.Mention)
+                    .AddField("ViolationCount", violations.Count)
+                    .WithCurrentTimestamp()
+                    .WithFooter("UserID: " + guildUser.Id)
+                    ;
+
+                foreach (Violation violation in violations)
                 {
-                    case 1:
-                        violationType = "Ban";
-                        break;
-                    case 2:
-                        violationType = "Kick";
-                        break;
-                    case 3:
-                        violationType = "Mute";
-                        break;
-                    case 4:
-                        violationType = "Unmute";
-                        break;
-                    default:
-                        violationType = "Warn";
-                        break;
+                    string violationType;
+                    switch (violation.Type)
+                    {
+                        case 1:
+                            violationType = "Ban";
+                            break;
+                        case 2:
+                            violationType = "Kick";
+                            break;
+                        case 3:
+                            violationType = "Mute";
+                            break;
+                        case 4:
+                            violationType = "Unmute";
+                            break;
+                        default:
+                            violationType = "Warn";
+                            break;
+                    }
+
+                    embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
                 }
 
-                embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
+                Embed embed = embedBuilder.Build();
+
+                await ReplyAsync(embed: embed);
             }
-
-            Embed embed = embedBuilder.Build();
-
-            await ReplyAsync(embed: embed);
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
@@ -83,26 +98,32 @@ namespace DiscordBot.Modules
         [Summary("$violation remove <violationID> - Removes a violation")]
         public async Task Remove(int violationId, [Remainder] String reason = "No reason specified")
         {
-            Violation violation = ViolationManager.GetViolationRecord(violationId);
-            Embed embed = new EmbedBuilder
-                {
-                    Title = "Violation Removed",
-                    Color = Color.Orange
-                }
-                .WithAuthor(Context.Client.CurrentUser)
-                .AddField("User", "<@!" + violation.UserId + ">", true)
-                .AddField("Date", DateTime.Now, true)
-                .AddField("Moderator", Context.User.Mention)
-                .AddField("Reason", reason)
-                .AddField("Original Violation Date", violation.Date)
-                .AddField("Original Violation Reason", violation.Reason)
-                .WithFooter("UserID: " + violation.UserId)
-                .WithTimestamp(DateTime.Now)
-                .Build();
+            try
+            {
+                Violation violation = ViolationManager.GetViolationRecord(violationId);
+                Embed embed = new EmbedBuilder
+                    {
+                        Title = "Violation Removed",
+                        Color = Color.Orange
+                    }
+                    .WithAuthor(Context.Client.CurrentUser)
+                    .AddField("User", "<@!" + violation.UserId + ">", true)
+                    .AddField("Date", DateTime.Now, true)
+                    .AddField("Moderator", Context.User.Mention)
+                    .AddField("Reason", reason)
+                    .AddField("Original Violation Date", violation.Date)
+                    .AddField("Original Violation Reason", violation.Reason)
+                    .WithFooter("UserID: " + violation.UserId)
+                    .WithTimestamp(DateTime.Now)
+                    .Build();
 
-            ViolationManager.DeleteViolationRecord(violationId);
-
-            await ReplyAsync(embed: embed);
+                ViolationManager.DeleteViolationRecord(violationId);
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
     }
 }
