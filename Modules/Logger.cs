@@ -7,17 +7,14 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Models;
 
 namespace DiscordBot.Modules
 {
     public static class Logger
     {
-        static SocketTextChannel messageChannel = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetTextChannel(DiscordBot.LogChannels.Messages);
-
-        static SocketTextChannel exceptionChannel = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetTextChannel(DiscordBot.LogChannels.Exceptions);
-
+        private static LogChannels _logChannels = new LogChannels(DiscordBot.Config.GetSection("LogChannels"));
+        
         public static Task LogException(Exception exception)
         {
             try
@@ -33,7 +30,7 @@ namespace DiscordBot.Modules
                     .WithCurrentTimestamp()
                     .Build();
 
-                exceptionChannel.SendMessageAsync(embed: exceptionEmbed);
+                _logChannels.Exceptions.SendMessageAsync(embed: exceptionEmbed);
                 Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
             }
@@ -66,7 +63,7 @@ namespace DiscordBot.Modules
                         .WithCurrentTimestamp()
                         .Build();
 
-                    messageChannel.SendMessageAsync(embed: messageDeleteEmbed);
+                    _logChannels.Messages.SendMessageAsync(embed: messageDeleteEmbed);
                     return Task.CompletedTask;
                 }
                 if (!cachedMessage.HasValue)
@@ -82,7 +79,7 @@ namespace DiscordBot.Modules
                         .WithCurrentTimestamp()
                         .Build();
 
-                    messageChannel.SendMessageAsync(embed: messageDeleteEmbed);
+                    _logChannels.Messages.SendMessageAsync(embed: messageDeleteEmbed);
                     return Task.CompletedTask;
                 }
                 throw new Exception("Message Unhandled MessageDeleteHandler State");
@@ -111,7 +108,7 @@ namespace DiscordBot.Modules
                         .WithCurrentTimestamp()
                         .Build();
                     
-                    messageChannel.SendMessageAsync(embed: messageBulkDeleteEmbed);
+                    _logChannels.Messages.SendMessageAsync(embed: messageBulkDeleteEmbed);
                     return Task.CompletedTask;
                 }
                 throw new Exception("Unhandled MessageBulkDeleteHandler state");
@@ -150,7 +147,7 @@ namespace DiscordBot.Modules
                         .WithCurrentTimestamp()
                         .Build();
 
-                    messageChannel.SendMessageAsync(embed: messageUpdateEmbed);
+                    _logChannels.Messages.SendMessageAsync(embed: messageUpdateEmbed);
                     return Task.CompletedTask;
                 }
 
@@ -161,6 +158,69 @@ namespace DiscordBot.Modules
                 LogException(e);
                 return Task.CompletedTask;
             }
+        }
+
+        public static Task MemberJoinHandler(SocketGuildUser joinedUser)
+        {
+            try
+            {
+                if (joinedUser != null)
+                {
+                    Embed memberJoinEmbed = new EmbedBuilder
+                        {
+                            Title = "Member Joined"
+                        }
+                        .WithAuthor(joinedUser)
+                        .AddField("Username", joinedUser.Username)
+                        .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .WithColor(Color.Green)
+                        .WithCurrentTimestamp()
+                        .WithFooter("UserID: " + joinedUser.Id)
+                        .Build();
+
+                    _logChannels.JoinLeave.SendMessageAsync(embed: memberJoinEmbed);
+                    return Task.CompletedTask;
+                }
+
+                throw new Exception("Unhandled MemberJoinHandler state");
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return Task.CompletedTask;
+            } 
+        }
+        
+        public static Task MemberLeaveHandler(SocketGuildUser leavingUser)
+        {
+            try
+            {
+                if (leavingUser != null)
+                {
+                    Embed memberJoinEmbed = new EmbedBuilder
+                        {
+                            Title = "Member Left"
+                        }
+                        .WithAuthor(leavingUser)
+                        .AddField("Username", leavingUser.Username)
+                        .AddField("User Created At", leavingUser.CreatedAt.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .WithColor(Color.Red)
+                        .WithCurrentTimestamp()
+                        .WithFooter("UserID: " + leavingUser.Id)
+                        .Build();
+
+                    _logChannels.JoinLeave.SendMessageAsync(embed: memberJoinEmbed);
+                    return Task.CompletedTask;
+                }
+
+                throw new Exception("Unhandled MemberJoinHandler state");
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return Task.CompletedTask;
+            } 
         }
     }
 }

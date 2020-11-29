@@ -1,32 +1,36 @@
 ﻿using System;
+using Discord.Rest;
+using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
 namespace DiscordBot.Models
 {
     public class LogChannels
     {
-        public ulong Logs { get; }
-        public ulong JoinLeave { get; }
-        public ulong Punishments{ get; }
-        public ulong Messages { get; }
-        public ulong Voice { get; }
-        public ulong Roles { get; }
-        public ulong ChannelUpdates { get; }
-        public ulong Commands { get; }
-        public ulong Exceptions { get; }
+        public SocketTextChannel Logs { get; }
+        public SocketTextChannel JoinLeave { get; }
+        public SocketTextChannel Punishments{ get; }
+        public SocketTextChannel Messages { get; }
+        public SocketTextChannel Voice { get; }
+        public SocketTextChannel Roles { get; }
+        public SocketTextChannel ChannelUpdates { get; }
+        public SocketTextChannel Commands { get; }
+        public SocketTextChannel Exceptions { get; }
         
 
         public LogChannels(IConfigurationSection config)
         {
-            Logs = Convert.ToUInt64(config["Logs"]);
-            JoinLeave = Convert.ToUInt64(config["JoinLeave"]);
-            Punishments = Convert.ToUInt64(config["Punishments"]);
-            Messages = Convert.ToUInt64(config["Messages"]);
-            Voice = Convert.ToUInt64(config["Voice"]);
-            Roles = Convert.ToUInt64(config["Roles"]);
-            ChannelUpdates = Convert.ToUInt64(config["ChannelUpdates"]);
-            Commands = Convert.ToUInt64(config["Commands"]);
-            Exceptions = Convert.ToUInt64(config["Exceptions"]);
+            SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId); 
+            
+            Logs = socketGuild.GetTextChannel(Convert.ToUInt64(config["Logs"]));
+            JoinLeave = socketGuild.GetTextChannel(Convert.ToUInt64(config["JoinLeave"]));
+            Punishments = socketGuild.GetTextChannel(Convert.ToUInt64(config["Punishments"]));
+            Messages = socketGuild.GetTextChannel(Convert.ToUInt64(config["Messages"]));
+            Voice = socketGuild.GetTextChannel(Convert.ToUInt64(config["Voice"]));
+            Roles = socketGuild.GetTextChannel(Convert.ToUInt64(config["Roles"]));
+            ChannelUpdates = socketGuild.GetTextChannel(Convert.ToUInt64(config["ChannelUpdates"]));
+            Commands = socketGuild.GetTextChannel(Convert.ToUInt64(config["Commands"]));
+            Exceptions = socketGuild.GetTextChannel(Convert.ToUInt64(config["Exceptions"]));
             
         }
        

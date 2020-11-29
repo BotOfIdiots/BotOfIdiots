@@ -24,7 +24,6 @@ namespace DiscordBot
         public static DiscordSocketClient Client;
         public static CommandService Commands;
         public static IConfiguration Config;
-        public static LogChannels LogChannels;
         public static ulong GuildId;
 
         /// <summary>
@@ -44,7 +43,6 @@ namespace DiscordBot
             
             Client = new DiscordSocketClient(discordConfig);
             Commands = new CommandService();
-            _createLogChannels();
 
             _services = new ServiceCollection()
                 .AddSingleton(Client)
@@ -66,9 +64,11 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
-            EventHandler.HookMessageDeleted(Client);
-            EventHandler.HooMessageBulkDelted(Client);
-            EventHandler.HookMessageUpdated(Client);
+            DiscordEventHandler.HookMessageDeleted(Client);
+            DiscordEventHandler.HooMessageBulkDelted(Client);
+            DiscordEventHandler.HookMessageUpdated(Client);
+            DiscordEventHandler.HookMemberJoin(Client);
+            DiscordEventHandler.HookMemberLeave(Client);
         }
 
         /// <summary>
@@ -111,13 +111,6 @@ namespace DiscordBot
             GuildId = Convert.ToUInt64(Config["GuildId"]);
         }
 
-        private void _createLogChannels()
-        {
-            LogChannels = new LogChannels(Config.GetSection("LogChannels"));
-        }
-
-        
-        
         /// <summary>
         /// 
         /// </summary>
