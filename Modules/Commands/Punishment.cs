@@ -197,18 +197,17 @@ namespace DiscordBot.Modules.Commands
         /// Ban a user
         /// </summary>
         /// <param name="bannedUser">user to ban</param>
+        /// <param name="prune" default= "0"> Go this amount of days back in time to delete message from the banned user. Must be between 0-7 days </param>
         /// <param name="reason" default="No reason specified"></param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to ban members")]
         [Command("ban")]
-        [Summary("$ban <user/snowflake> {reason} - Ban a user")]
+        [Summary("$ban <user/snowflake> {prune} {reason} - Ban a user")]
         public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason = "No reason specified.")
         {
             try
             {
                 Embed embed;
-
-                int prune = 0;
                 if (bannedUser == Context.User)
                 {
                     embed = new EmbedBuilder
@@ -224,7 +223,7 @@ namespace DiscordBot.Modules.Commands
                     if (embed.Title == "Banned")
                     {
                         await bannedUser.SendMessageAsync(embed: embed);
-                        await bannedUser.BanAsync(prune, reason);
+                        await bannedUser.BanAsync(1, reason);
                     }
                 }
 
@@ -244,7 +243,7 @@ namespace DiscordBot.Modules.Commands
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to unban members")]
         [Command("unban")]
         [Summary("$unban <user/snowflake> {reason} - Unban a banned user")]
-        public async Task Unban(ulong bannedUserId)
+        public async Task Unban(ulong bannedUserId, [Remainder] string reason = "No reason specified")
         {
             try
             {
@@ -256,6 +255,7 @@ namespace DiscordBot.Modules.Commands
                     .AddField("User:", "<@!" + bannedUserId + ">", true)
                     .AddField("Date", DateTime.Now, true)
                     .AddField("Moderator:", Context.User.Mention)
+                    .AddField("Reason", reason)
                     .WithCurrentTimestamp()
                     .WithFooter("UserID: " + bannedUserId)
                     .Build();
