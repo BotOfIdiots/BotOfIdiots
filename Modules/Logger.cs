@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Discord;
@@ -26,7 +28,7 @@ namespace DiscordBot.Modules
                     }
                     .WithColor(Color.Red)
                     .AddField("Source", exception.Source)
-                    .AddField("Exception", exception.StackTrace)
+                    .AddField("Exception",  exception.StackTrace)
                     .WithFooter(DiscordBot.Version())
                     .WithCurrentTimestamp()
                     .Build();
@@ -72,7 +74,9 @@ namespace DiscordBot.Modules
                     Embed messageDeleteEmbed = new EmbedBuilder
                         {
                             Title = "Message Deleted"
-                        }.WithColor(Color.Red)
+                        }
+                        .WithColor(Color.Red)
+                        .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
                         .WithDescription("Could not retrieve message from cache")
                         .WithFooter("MessageID: " + cachedMessage.Id)
                         .WithCurrentTimestamp()
@@ -82,6 +86,35 @@ namespace DiscordBot.Modules
                     return Task.CompletedTask;
                 }
                 throw new Exception("Message Unhandled MessageDeleteHandler State");
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return Task.CompletedTask;
+            }
+        }
+
+        public static Task MessageBulkDeleteHandler(IReadOnlyCollection<Cacheable<IMessage, ulong>> cachedData, ISocketMessageChannel channel)
+        {
+            try
+            {
+                if (cachedData.Count > 0)
+                {
+                    Embed messageBulkDeleteEmbed = new EmbedBuilder
+                        {
+                            Title = "Bulk Messages Delete"
+                        }
+                        .WithColor(Color.Red)
+                        .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
+                        .AddField("Amount", cachedData.Count)
+                        .WithFooter("Message Count: " + cachedData.Count)
+                        .WithCurrentTimestamp()
+                        .Build();
+                    
+                    messageChannel.SendMessageAsync(embed: messageBulkDeleteEmbed);
+                    return Task.CompletedTask;
+                }
+                throw new Exception("Unhandled MessageBulkDeleteHandler state");
             }
             catch (Exception e)
             {
@@ -102,7 +135,7 @@ namespace DiscordBot.Modules
                 if (cachedMessage.HasValue)
                 {
                     var oldMessage = cachedMessage.Value;
-                    
+
                     Embed messageUpdateEmbed = new EmbedBuilder
                         {
                             Title = "Message Updated"
@@ -120,6 +153,7 @@ namespace DiscordBot.Modules
                     messageChannel.SendMessageAsync(embed: messageUpdateEmbed);
                     return Task.CompletedTask;
                 }
+
                 throw new Exception("Unhandled MessageUpdateHandler State");
             }
             catch (Exception e)

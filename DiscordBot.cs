@@ -38,7 +38,8 @@ namespace DiscordBot
             
             var discordConfig = new DiscordSocketConfig
             {
-                MessageCacheSize = 200
+                MessageCacheSize = Convert.ToInt32(Config["MessageCacheSize"]),
+                ExclusiveBulkDelete = Convert.ToBoolean(Config["AllowBulkDelete"])
             };
             
             Client = new DiscordSocketClient(discordConfig);
@@ -60,9 +61,13 @@ namespace DiscordBot
             await Task.Delay(-1);
         }
 
+        /// <summary>
+        /// Register all the Discord Event Hooks
+        /// </summary>
         private void LoadDiscordEventHandlers()
         {
             EventHandler.HookMessageDeleted(Client);
+            EventHandler.HooMessageBulkDelted(Client);
             EventHandler.HookMessageUpdated(Client);
         }
 
