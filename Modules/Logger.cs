@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Models;
+using DiscordBot.Models.Embeds;
 
 namespace DiscordBot.Modules
 {
@@ -54,7 +55,8 @@ namespace DiscordBot.Modules
                         .WithColor(Color.Red)
                         .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
                         .AddField("Content", message.Content)
-                        .AddField("Sent At", message.Timestamp.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .AddField("Sent At", message.Timestamp.ToLocalTime()
+                            .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithFooter("MessageID: " + message.Id)
                         .WithCurrentTimestamp()
                         .Build();
@@ -87,7 +89,8 @@ namespace DiscordBot.Modules
             }
         }
 
-        public static Task MessageBulkDeleteHandler(IReadOnlyCollection<Cacheable<IMessage, ulong>> cachedData, ISocketMessageChannel channel)
+        public static Task MessageBulkDeleteHandler(IReadOnlyCollection<Cacheable<IMessage, ulong>> cachedData,
+            ISocketMessageChannel channel)
         {
             try
             {
@@ -138,7 +141,8 @@ namespace DiscordBot.Modules
                         .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
                         .AddField("Old Content", oldMessage.Content)
                         .AddField("New Content", message.Content)
-                        .AddField("Sent At", message.Timestamp.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .AddField("Sent At", message.Timestamp.ToLocalTime()
+                            .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithFooter("MessageID: " + message.Id)
                         .WithCurrentTimestamp()
                         .Build();
@@ -156,7 +160,7 @@ namespace DiscordBot.Modules
             }
         }
 
-        public static Task MemberJoinHandler(SocketGuildUser joinedUser)
+        public static Task MemberJoinGuildHandler(SocketGuildUser joinedUser)
         {
             try
             {
@@ -164,12 +168,14 @@ namespace DiscordBot.Modules
                 {
                     Embed memberJoinEmbed = new EmbedBuilder
                         {
-                            Title = "Member Joined"
+                            Title = "Member Joined Server"
                         }
                         .WithAuthor(joinedUser)
                         .AddField("Username", joinedUser.Username)
-                        .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
-                        .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime()
+                            .ToString("HH:mm:ss dd-MM-yyyy"))
+                        .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime()
+                            .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithColor(Color.Green)
                         .WithCurrentTimestamp()
                         .WithFooter("UserID: " + joinedUser.Id)
@@ -188,7 +194,7 @@ namespace DiscordBot.Modules
             } 
         }
         
-        public static Task MemberLeaveHandler(SocketGuildUser leavingUser)
+        public static Task MemberLeaveGuildHandler(SocketGuildUser leavingUser)
         {
             try
             {
@@ -196,11 +202,12 @@ namespace DiscordBot.Modules
                 {
                     Embed memberJoinEmbed = new EmbedBuilder
                         {
-                            Title = "Member Left"
+                            Title = "Member Left Server"
                         }
                         .WithAuthor(leavingUser)
                         .AddField("Username", leavingUser.Username)
-                        .AddField("User Created At", leavingUser.CreatedAt.ToLocalTime().ToString("dd-MM-yy HH:mm:ss"))
+                        .AddField("User Created At", leavingUser.CreatedAt.ToLocalTime()
+                            .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithColor(Color.Red)
                         .WithCurrentTimestamp()
                         .WithFooter("UserID: " + leavingUser.Id)
@@ -217,6 +224,42 @@ namespace DiscordBot.Modules
                 LogException(e);
                 return Task.CompletedTask;
             } 
+        }
+
+        public static Task MemberVoiceStateHandler(SocketUser user, SocketVoiceState stateBefore,
+            SocketVoiceState stateAfter)
+        {
+            try
+            {
+
+                int state = -1;
+                if (stateAfter.VoiceChannel == null)
+                {
+                    state = 0;
+                }
+                if (stateBefore.VoiceChannel == null )
+                {
+                    state = 1;
+                }
+                if (stateAfter.VoiceChannel != null && stateBefore.VoiceChannel != null)
+                {
+                    state = 2;
+                }
+                if (state >= 0)
+                {
+                    _logChannels.Voice.SendMessageAsync(
+                        embed: new VoiceStateEmbedBuilder(state, user, stateBefore, stateAfter).Build()
+                    );
+                    return Task.CompletedTask;
+                }
+                
+                throw new Exception("Unhandled Voice State");
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return  Task.CompletedTask;
+            }
         }
     }
 }

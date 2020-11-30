@@ -14,10 +14,13 @@ namespace DiscordBot
         public static void HookMessageUpdated(BaseSocketClient client)
             => client.MessageUpdated += Logger.MessageUpdateHandler;
 
-        public static void HookMemberJoin(BaseSocketClient client)
-            => client.UserJoined += Logger.MemberJoinHandler;
+        public static void HookMemberJoinGuild(BaseSocketClient client)
+            => client.UserJoined += Logger.MemberJoinGuildHandler;
 
-        public static void HookMemberLeave(BaseSocketClient client)
-            => client.UserLeft += Logger.MemberLeaveHandler;
+        public static void HookMemberLeaveGuild(BaseSocketClient client)
+            => client.UserLeft += Logger.MemberLeaveGuildHandler;
+
+        public static void HookMemberVoiceState(BaseSocketClient client)
+            => client.UserVoiceStateUpdated += Logger.MemberVoiceStateHandler;
     }
 }
