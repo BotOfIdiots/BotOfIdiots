@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 
-namespace DiscordBot.Modules
+namespace DiscordBot.Modules.Commands
 {
     /// <summary>
     /// This class contains al the command to punish Guild members
@@ -27,25 +28,32 @@ namespace DiscordBot.Modules
         [Summary("$warn <user/snowflake> {reason} - Warn a user")]
         public async Task Warn(SocketGuildUser warnedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-            if (warnedUser == Context.User)
+            try
             {
-                embed = new EmbedBuilder
+                Embed embed;
+                if (warnedUser == Context.User)
                 {
-                    Title = "You can't warn that user"
-                }.Build();
-            }
-            else
-            {
-                embed = ViolationManager.NewViolation(warnedUser, reason, Context);
-
-                if (embed.Title == "Warned")
-                {
-                    await warnedUser.SendMessageAsync(embed: embed);
+                    embed = new EmbedBuilder
+                    {
+                        Title = "You can't warn that user"
+                    }.Build();
                 }
-            }
+                else
+                {
+                    embed = ViolationManager.NewViolation(warnedUser, reason, Context);
 
-            await ReplyAsync(embed: embed);
+                    if (embed.Title == "Warned")
+                    {
+                        await warnedUser.SendMessageAsync(embed: embed);
+                    }
+                }
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -59,35 +67,42 @@ namespace DiscordBot.Modules
         [Summary("$mute <user/snowflake> {reason} - Mute a user")]
         public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-            if (mutedUser == Context.User)
+            try
             {
-                embed = new EmbedBuilder
+                Embed embed;
+                if (mutedUser == Context.User)
                 {
-                    Title = "You can't mute that user."
-                }.Build();
-            }
-
-            else if (mutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
-            {
-                embed = new EmbedBuilder
-                {
-                    Title = "User is already muted"
-                }.Build();
-            }
-            
-            else
-            {
-                embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
-
-                if (embed.Title == "Muted")
-                {
-                    await mutedUser.SendMessageAsync(embed: embed);
-                    await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                    embed = new EmbedBuilder
+                    {
+                        Title = "You can't mute that user."
+                    }.Build();
                 }
-            }
 
-            await ReplyAsync(embed: embed);
+                else if (mutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
+                {
+                    embed = new EmbedBuilder
+                    {
+                        Title = "User is already muted"
+                    }.Build();
+                }
+
+                else
+                {
+                    embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
+
+                    if (embed.Title == "Muted")
+                    {
+                        await mutedUser.SendMessageAsync(embed: embed);
+                        await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                    }
+                }
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -102,33 +117,40 @@ namespace DiscordBot.Modules
         [Summary("$unmute <user/snowflake> {reason} - Unmute a muted user")]
         public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-            if (unmutedUser == Context.User)
+            try
             {
-                embed = new EmbedBuilder
+                Embed embed;
+                if (unmutedUser == Context.User)
                 {
-                    Title = "You can't unmute that user."
-                }.Build();
-            }
-            else if (!unmutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
-            {
-                embed = new EmbedBuilder
-                {
-                    Title = "User was not muted"
-                }.Build();
-            }
-            else
-            {
-                embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
-
-                if (embed.Title == "Unmuted")
-                {
-                    await unmutedUser.SendMessageAsync(embed: embed);
-                    await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
+                    embed = new EmbedBuilder
+                    {
+                        Title = "You can't unmute that user."
+                    }.Build();
                 }
-            }
+                else if (!unmutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
+                {
+                    embed = new EmbedBuilder
+                    {
+                        Title = "User was not muted"
+                    }.Build();
+                }
+                else
+                {
+                    embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
 
-            await ReplyAsync(embed: embed);
+                    if (embed.Title == "Unmuted")
+                    {
+                        await unmutedUser.SendMessageAsync(embed: embed);
+                        await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
+                    }
+                }
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -142,61 +164,75 @@ namespace DiscordBot.Modules
         [Summary("$kick <user/snowflake> {reason} - Kick a user")]
         public async Task Kick(SocketGuildUser kickedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-            if (kickedUser == Context.User)
+            try
             {
-                embed = new EmbedBuilder
+                Embed embed;
+                if (kickedUser == Context.User)
                 {
-                    Title = "You can't kick that user"
-                }.Build();
-            }
-            else
-            {
-                embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
-
-                if (embed.Title == "Kicked")
-                {
-                    await kickedUser.SendMessageAsync(embed: embed);
-                    await kickedUser.KickAsync(reason);
+                    embed = new EmbedBuilder
+                    {
+                        Title = "You can't kick that user"
+                    }.Build();
                 }
-            }
+                else
+                {
+                    embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
 
-            await ReplyAsync(embed: embed);
+                    if (embed.Title == "Kicked")
+                    {
+                        await kickedUser.SendMessageAsync(embed: embed);
+                        await kickedUser.KickAsync(reason);
+                    }
+                }
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
         /// Ban a user
         /// </summary>
         /// <param name="bannedUser">user to ban</param>
+        /// <param name="prune" default= "0"> Go this amount of days back in time to delete message from the banned user. Must be between 0-7 days </param>
         /// <param name="reason" default="No reason specified"></param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to ban members")]
         [Command("ban")]
-        [Summary("$ban <user/snowflake> {reason} - Ban a user")]
+        [Summary("$ban <user/snowflake> {prune} {reason} - Ban a user")]
         public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-            int prune = 0;
-            if (bannedUser == Context.User)
+            try
             {
-                embed = new EmbedBuilder
-                    {
-                        Title = "You can't ban that user"
-                    }
-                    .Build();
-            }
-            else
-            {
-                embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
-
-                if (embed.Title == "Banned")
+                Embed embed;
+                if (bannedUser == Context.User)
                 {
-                    await bannedUser.SendMessageAsync(embed: embed);
-                    await bannedUser.BanAsync(prune, reason);
+                    embed = new EmbedBuilder
+                        {
+                            Title = "You can't ban that user"
+                        }
+                        .Build();
                 }
-            }
+                else
+                {
+                    embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
 
-            await ReplyAsync(embed: embed);
+                    if (embed.Title == "Banned")
+                    {
+                        await bannedUser.SendMessageAsync(embed: embed);
+                        await bannedUser.BanAsync(1, reason);
+                    }
+                }
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -207,22 +243,45 @@ namespace DiscordBot.Modules
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to unban members")]
         [Command("unban")]
         [Summary("$unban <user/snowflake> {reason} - Unban a banned user")]
-        public async Task Unban(ulong bannedUserId)
+        public async Task Unban(ulong bannedUserId, [Remainder] string reason = "No reason specified")
         {
-            Embed embed = new EmbedBuilder
+            try
+            {
+                Embed embed = new EmbedBuilder
+                    {
+                        Title = "User Unbanned",
+                        Color = Color.Red
+                    }
+                    .AddField("User:", "<@!" + bannedUserId + ">", true)
+                    .AddField("Date", DateTime.Now, true)
+                    .AddField("Moderator:", Context.User.Mention)
+                    .AddField("Reason", reason)
+                    .WithCurrentTimestamp()
+                    .WithFooter("UserID: " + bannedUserId)
+                    .Build();
+                await Context.Guild.RemoveBanAsync(bannedUserId);
+                await ReplyAsync(embed: embed);
+            }
+            catch(HttpException e)
+            {
+                if (e.HttpCode == HttpStatusCode.NotFound)
                 {
-                    Title = "User Unbanned",
-                    Color = Color.Red
-                }
-                .AddField("User:", "<@!" + bannedUserId + ">", true)
-                .AddField("Date", DateTime.Now, true)
-                .AddField("Moderator:", Context.User.Mention)
-                .WithCurrentTimestamp()
-                .WithFooter("UserID: " + bannedUserId)
-                .Build();
+                    Embed embed = new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithDescription("Banned User not found")
+                        .Build();
 
-            await Context.Guild.RemoveBanAsync(bannedUserId);
-            await ReplyAsync(embed: embed);
+                    await ReplyAsync(embed: embed);
+                }
+                else
+                {
+                    await Logger.LogException(e);
+                }
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
     }
 }
