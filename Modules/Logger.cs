@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
-using Discord.Net;
 using Discord.WebSocket;
 using DiscordBot.Models;
 
