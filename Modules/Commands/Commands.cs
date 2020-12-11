@@ -194,6 +194,42 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(DiscordBot.GuildId.ToString());
         }
 
+        [Command("Bakei")]
+        [Summary("$bakei <user> - When someone does something bakei worthy, run this command")]
+        public async Task Bakei(SocketGuildUser user = null)
+        {
+            Embed embed;
 
+            try
+            {
+                if (user == null)
+                {
+                    user = Context.Guild.GetUser(Context.User.Id);
+                }
+
+                embed = new EmbedBuilder { }
+                    .WithAuthor(user)
+                    .WithDescription("IS EEN GROTE BAKEI")
+                    .WithImageUrl("https://media1.tenor.com/images/184d330a4b5a856986d56903e2211fad/tenor.gif")
+                    .WithColor(Color.DarkMagenta)
+                    .Build();
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (NullReferenceException)
+            {
+                embed = new EmbedBuilder
+                {
+                    Title = "Missing Username/Snowflake"
+                }
+                    .AddField("Example", "$bakei [username/snowflake]")
+                    .Build();
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
+        }
     }
 }
