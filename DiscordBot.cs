@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -18,9 +19,9 @@ namespace DiscordBot
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
-        private static readonly string _version = "0.0.2";
+        private static readonly string _version = "0.0.3";
         private static IServiceProvider _services;
-        private string _configPath;
+        public static string WorkingDirectory;
         public static DiscordSocketClient Client;
         public static CommandService Commands;
         public static IConfiguration Config;
@@ -78,7 +79,7 @@ namespace DiscordBot
         private void _detectOS()
         {
             int environment = (int) Environment.OSVersion.Platform;
-            _getConfigPath(environment);
+            _setWorkingDirectory(environment);
             
         }
 
@@ -86,16 +87,16 @@ namespace DiscordBot
         /// Get the config file location based on the enviroment
         /// </summary>
         /// <param name="enviroment"></param>
-        private void _getConfigPath(int enviroment)
+        private void _setWorkingDirectory(int enviroment)
         {
             switch (enviroment)
             {
                 case 4: //Location of the Linux Config
-                    _configPath = "/home/botofidiots/";
+                    WorkingDirectory = "./";
                     break;
                 case 2: //Location of the Windows Config
-                    _configPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                  "/.discordtestbot";
+                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                                  "/.discordtestbot/";
                     break;
             }
         }
@@ -106,7 +107,7 @@ namespace DiscordBot
         private void _createConfig()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(_configPath)
+                .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
             GuildId = Convert.ToUInt64(Config["GuildId"]);
