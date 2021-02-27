@@ -92,7 +92,8 @@ namespace DiscordBot
             switch (enviroment)
             {
                 case 4: //Location of the Linux Config
-                    WorkingDirectory = "./";
+                    WorkingDirectory = Environment.CurrentDirectory;
+                    //"./";
                     break;
                 case 2: //Location of the Windows Config
                     WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
