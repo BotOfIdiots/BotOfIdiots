@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using System.Diagnostics;
+using Discord.WebSocket;
 using DiscordBot.Modules;
 
 namespace DiscordBot
@@ -22,5 +23,14 @@ namespace DiscordBot
 
         public static void HookMemberVoiceState(BaseSocketClient client)
             => client.UserVoiceStateUpdated += Logger.MemberVoiceStateHandler;
+
+        public static void HookMemberUpdated(BaseSocketClient client)
+            => client.GuildMemberUpdated += Logger.MemberUpdatedHandler;
+
+        public static void HookMemberBanned(BaseSocketClient client)
+            => client.UserBanned += Logger.MemberBannedHandler;
+
+        public static void HookMemberUnbanned(DiscordSocketClient client)
+            => client.UserUnbanned += Logger.MemberUnbannedHandler;
     }
 }

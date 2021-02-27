@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -171,7 +172,7 @@ namespace DiscordBot.Modules
                             Title = "Member Joined Server"
                         }
                         .WithAuthor(joinedUser)
-                        .AddField("Username", joinedUser.Username)
+                        .AddField("Username", joinedUser.Mention)
                         .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime()
                             .ToString("HH:mm:ss dd-MM-yyyy"))
                         .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime()
@@ -205,7 +206,7 @@ namespace DiscordBot.Modules
                             Title = "Member Left Server"
                         }
                         .WithAuthor(leavingUser)
-                        .AddField("Username", leavingUser.Username)
+                        .AddField("Username", leavingUser.Mention)
                         .AddField("User Created At", leavingUser.CreatedAt.ToLocalTime()
                             .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithColor(Color.Red)
@@ -260,6 +261,88 @@ namespace DiscordBot.Modules
                 LogException(e);
                 return  Task.CompletedTask;
             }
+        }
+
+        public static Task MemberUpdatedHandler(SocketGuildUser before, SocketGuildUser after)
+        {
+            try
+            {
+                if (before.Roles.Count != after.Roles.Count)
+                {
+                    _logChannels.Roles.SendMessageAsync(
+                        embed: new MemberRolesUpdateEmbedBuilder(after, before.Roles.ToList()).Build()
+                    );
+                }
+
+                if (before.Nickname != after.Nickname)
+                {
+                    _logChannels.Nickname.SendMessageAsync(
+                        embed: new NicknameUpdateEmbedBuilder(after, before.Nickname).Build()
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+            }
+            return Task.CompletedTask;
+        }
+
+        public static Task MemberBannedHandler(SocketUser user, SocketGuild guild)
+        {
+            try
+            {
+                _logChannels.JoinLeave.SendMessageAsync(
+                    embed: new EmbedBuilder()
+                        .WithTitle("User Banned")
+                        .AddField("user", user.Mention)
+                        .WithCurrentTimestamp()
+                        .WithColor(Color.Red)
+                        .WithFooter("UserID: " + user.Id)
+                        .Build()
+                    );
+
+                _logChannels.Logs.SendMessageAsync(
+                    embed: new EmbedBuilder()
+                        .WithTitle("User Banned")
+                        .AddField("user", user.Mention)
+                        .WithCurrentTimestamp()
+                        .WithColor(Color.Red)
+                        .WithFooter("UserID: " + user.Id)
+                        .Build()
+                );
+                
+                return Task.CompletedTask;
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return Task.CompletedTask;
+            }   
+        }
+
+        public static Task MemberUnbannedHandler(SocketUser user, SocketGuild guild)
+        {
+            try
+            {
+                _logChannels.Logs.SendMessageAsync(
+                    embed: new EmbedBuilder()
+                        .WithTitle("User Unbanned")
+                        .AddField("user", user.Mention)
+                        .WithCurrentTimestamp()
+                        .WithColor(Color.Green)
+                        .WithFooter("UserID: " + user.Id)
+                        .Build()
+                );
+                
+                return Task.CompletedTask;
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return Task.CompletedTask;
+            }
+           
         }
     }
 }
