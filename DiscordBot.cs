@@ -70,6 +70,9 @@ namespace DiscordBot
             DiscordEventHandler.HookMemberJoinGuild(Client);
             DiscordEventHandler.HookMemberLeaveGuild(Client);
             DiscordEventHandler.HookMemberVoiceState(Client);
+            DiscordEventHandler.HookMemberUpdated(Client);
+            DiscordEventHandler.HookMemberBanned(Client);
+            DiscordEventHandler.HookMemberUnbanned(Client);
         }
 
         /// <summary>

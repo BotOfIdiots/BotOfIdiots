@@ -13,6 +13,7 @@ namespace DiscordBot.Models
         public SocketTextChannel Messages { get; }
         public SocketTextChannel Voice { get; }
         public SocketTextChannel Roles { get; }
+        public SocketTextChannel Nickname { get; }
         public SocketTextChannel ChannelUpdates { get; }
         public SocketTextChannel Commands { get; }
         public SocketTextChannel Exceptions { get; }
@@ -28,6 +29,7 @@ namespace DiscordBot.Models
             Messages = socketGuild.GetTextChannel(Convert.ToUInt64(config["Messages"]));
             Voice = socketGuild.GetTextChannel(Convert.ToUInt64(config["Voice"]));
             Roles = socketGuild.GetTextChannel(Convert.ToUInt64(config["Roles"]));
+            Nickname = socketGuild.GetTextChannel(Convert.ToUInt64(config["Nickname"]));
             ChannelUpdates = socketGuild.GetTextChannel(Convert.ToUInt64(config["ChannelUpdates"]));
             Commands = socketGuild.GetTextChannel(Convert.ToUInt64(config["Commands"]));
             Exceptions = socketGuild.GetTextChannel(Convert.ToUInt64(config["Exceptions"]));
