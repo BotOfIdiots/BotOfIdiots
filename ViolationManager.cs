@@ -79,7 +79,7 @@ namespace DiscordBot
         /// <returns>int</returns>
         public static int CountUserViolations(ulong userId)
         {
-            using (var db = new LiteDatabase(DiscordBot.Config + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.Config + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 
@@ -96,7 +96,7 @@ namespace DiscordBot
         {
             List<Violation> violations = new List<Violation>();
 
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
                 IEnumerable<Violation> queryData = table.Find(x => x.UserId == user);
@@ -177,7 +177,7 @@ namespace DiscordBot
         /// <param name="record">The object to insert</param>
         public static void InsertViolation(Violation record)
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 
@@ -191,7 +191,7 @@ namespace DiscordBot
         /// <param name="violationId">Id of violation to delete</param>
         public static void DeleteViolationRecord(int violationId)
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 
@@ -206,7 +206,7 @@ namespace DiscordBot
         /// <returns></returns>
         public static Violation GetCreatedRecord(DateTime date)
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 
@@ -221,7 +221,7 @@ namespace DiscordBot
         /// <returns></returns>
         public static Violation GetViolationRecord(int id)
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 

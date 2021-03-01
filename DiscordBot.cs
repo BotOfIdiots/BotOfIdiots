@@ -95,11 +95,13 @@ namespace DiscordBot
             switch (enviroment)
             {
                 case 4: //Location of the Linux Config
-                    WorkingDirectory = "./";
+                    WorkingDirectory = Environment.CurrentDirectory;
+                    Console.WriteLine(WorkingDirectory);
+                    //"./";
                     break;
                 case 2: //Location of the Windows Config
                     WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                  "/.discordtestbot/";
+                                  "/.discordtestbot";
                     break;
             }
         }
@@ -158,7 +160,7 @@ namespace DiscordBot
             if (message.Author.IsBot) return;
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
+            if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
                 if (!result.IsSuccess)
