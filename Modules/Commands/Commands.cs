@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace DiscordBot.Modules
+namespace DiscordBot.Modules.Commands
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
@@ -19,29 +17,43 @@ namespace DiscordBot.Modules
         [Summary("$ping - Responds with Pong")]
         public async Task Ping()
         {
-            await ReplyAsync("Pong");
+            try
+            {
+                await ReplyAsync("Pong");
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
         /// Return the current version of the bot
         /// </summary>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.Administrator)]     
+        [RequireUserPermission(GuildPermission.Administrator)]
         [Command("version")]
         [Summary("$version - returns the current bot version")]
         // Return the current version of the bot
         public async Task Version()
         {
-            Embed embed = new EmbedBuilder
-                {
-                    Title = "Version: " + DiscordBot.Version(),
-                }
-                .WithAuthor(Context.Client.CurrentUser)
-                .WithFooter(DiscordBot.Version())
-                .WithCurrentTimestamp()
-                .Build();
+            try
+            {
+                Embed embed = new EmbedBuilder
+                    {
+                        Title = "Version: " + DiscordBot.Version(),
+                    }
+                    .WithAuthor(Context.Client.CurrentUser)
+                    .WithFooter(DiscordBot.Version())
+                    .WithCurrentTimestamp()
+                    .Build();
 
-            await ReplyAsync(embed: embed);
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await Logger.LogException(e);
+            }
         }
 
         /// <summary>
@@ -92,7 +104,6 @@ namespace DiscordBot.Modules
             catch (NullReferenceException)
             {
                 embed = new EmbedBuilder
-
                     {
                         Title = "Missing Username/Snowflake"
                     }
@@ -102,7 +113,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Logger.LogException(e);
             }
         }
 
@@ -135,14 +146,65 @@ namespace DiscordBot.Modules
             };
             foreach (CommandInfo command in DiscordBot.Commands.Commands)
             {
-                embedBuilder.AddField(command.Name, command.Summary);
+                string summary;
+                switch (command.Summary)
+                {
+                    case null:
+                        summary = "Command doesn't have a description";
+                        break;
+                    default:
+                        summary = command.Summary;
+                        break;
+                }
+                
+                embedBuilder.AddField(command.Name, summary);
             }
 
             Embed helpEmbed = embedBuilder.Build();
 
             await ReplyAsync(embed: helpEmbed);
-
         }
-        
+
+        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "You don't have permission to use this command")]
+        [Command("Config")]
+        public async Task Config()
+        {
+            EmbedBuilder embedBuilder = new EmbedBuilder()
+                .WithTitle("Bot Config");
+
+            var configOptions = DiscordBot.Config.GetChildren();
+
+            foreach (var option in configOptions)
+            {
+                if (option.GetChildren().Any())
+                {
+                    var section = option.GetChildren();
+                    
+                    foreach (var suboption in section)
+                    {
+                        embedBuilder.AddField(suboption.Key, suboption.Value); 
+                    }
+                }
+                else
+                {
+                    if (option.Key != "Token")
+                    {
+                        embedBuilder.AddField(option.Key, option.Value);
+                    }
+                }
+            }
+
+            Embed embed = embedBuilder.Build();
+
+            await ReplyAsync(embed: embed);
+        }
+
+        [Command("GuildID")]
+        public async Task guildID()
+        {
+            await ReplyAsync(DiscordBot.GuildId.ToString());
+        }
+
+
     }
 }

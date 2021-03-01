@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,12 +19,13 @@ namespace DiscordBot
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
-        private static string _version = "0.0.2";
-        private static DiscordSocketClient _client;
-        public static CommandService Commands;
+        private static readonly string _version = "0.0.3";
         private static IServiceProvider _services;
-        public string ConfigPath;
+        public static string WorkingDirectory;
+        public static DiscordSocketClient Client;
+        public static CommandService Commands;
         public static IConfiguration Config;
+        public static ulong GuildId;
 
         /// <summary>
         /// 
@@ -30,41 +33,89 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync()
         {
-            _client = new DiscordSocketClient();
+            _detectOS();
+            _createConfig();
+            
+            var discordConfig = new DiscordSocketConfig
+            {
+                MessageCacheSize = Convert.ToInt32(Config["MessageCacheSize"]),
+                ExclusiveBulkDelete = Convert.ToBoolean(Config["AllowBulkDelete"])
+            };
+            
+            Client = new DiscordSocketClient(discordConfig);
             Commands = new CommandService();
 
-            //Checks OS type to determine the location of the Config file.
-            switch ((int) Environment.OSVersion.Platform)
-            {
-                case 4: //Location of the Linux Config
-                    ConfigPath = "/home/botofidiots/";
-                    break;
-                case 2: //Location of the Windows Config
-                    ConfigPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                 "/.discordtestbot";
-                    break;
-            }
-
             _services = new ServiceCollection()
-                .AddSingleton(_client)
+                .AddSingleton(Client)
                 .AddSingleton(Commands)
                 .BuildServiceProvider();
+            
+            Client.Log += _client_log;
+            LoadDiscordEventHandlers();
+            
+            
+            await RegisterCommandsAsync();
+            await Client.LoginAsync(TokenType.Bot, Config["Token"]);
+            await Client.StartAsync();
+            await Task.Delay(-1);
+        }
 
-            //Get the config options
+        /// <summary>
+        /// Register all the Discord Event Hooks
+        /// </summary>
+        private void LoadDiscordEventHandlers()
+        {
+            DiscordEventHandler.HookMessageDeleted(Client);
+            DiscordEventHandler.HooMessageBulkDelted(Client);
+            DiscordEventHandler.HookMessageUpdated(Client);
+            DiscordEventHandler.HookMemberJoinGuild(Client);
+            DiscordEventHandler.HookMemberLeaveGuild(Client);
+            DiscordEventHandler.HookMemberVoiceState(Client);
+            DiscordEventHandler.HookMemberUpdated(Client);
+            DiscordEventHandler.HookMemberBanned(Client);
+            DiscordEventHandler.HookMemberUnbanned(Client);
+        }
+
+        /// <summary>
+        /// Detect the OS and build all OS based variables
+        /// </summary>
+        private void _detectOS()
+        {
+            int environment = (int) Environment.OSVersion.Platform;
+            _setWorkingDirectory(environment);
+            
+        }
+
+        /// <summary>
+        /// Get the config file location based on the enviroment
+        /// </summary>
+        /// <param name="enviroment"></param>
+        private void _setWorkingDirectory(int enviroment)
+        {
+            switch (enviroment)
+            {
+                case 4: //Location of the Linux Config
+                    WorkingDirectory = Environment.CurrentDirectory;
+                    Console.WriteLine(WorkingDirectory);
+                    //"./";
+                    break;
+                case 2: //Location of the Windows Config
+                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                                  "/.discordtestbot";
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// Create the config object based on the config.json file
+        /// </summary>
+        private void _createConfig()
+        {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(ConfigPath)
+                .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
-
-            _client.Log += _client_log;
-
-            await RegisterCommandsAsync();
-
-            await _client.LoginAsync(TokenType.Bot, Config["Token"]);
-
-            await _client.StartAsync();
-
-            await Task.Delay(-1);
+            GuildId = Convert.ToUInt64(Config["GuildId"]);
         }
 
         /// <summary>
@@ -84,7 +135,7 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RegisterCommandsAsync()
         {
-            _client.MessageReceived += HandleCommandAsync;
+            Client.MessageReceived += HandleCommandAsync;
             await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
@@ -105,14 +156,22 @@ namespace DiscordBot
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(_client, message);
+            var context = new SocketCommandContext(Client, message);
             if (message.Author.IsBot) return;
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
+            if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
-                if (!result.IsSuccess) Console.WriteLine(result.ToString());
+                if (!result.IsSuccess)
+                {
+                    Embed exceptionEmbed = new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithDescription(result.ErrorReason)
+                        .Build();
+                    
+                    await context.Channel.SendMessageAsync(embed: exceptionEmbed);
+                }
             }
         }
     }
