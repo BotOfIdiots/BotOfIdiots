@@ -146,7 +146,18 @@ namespace DiscordBot.Modules.Commands
             };
             foreach (CommandInfo command in DiscordBot.Commands.Commands)
             {
-                embedBuilder.AddField(command.Name, command.Summary);
+                string summary;
+                switch (command.Summary)
+                {
+                    case null:
+                        summary = "Command doesn't have a description";
+                        break;
+                    default:
+                        summary = command.Summary;
+                        break;
+                }
+                
+                embedBuilder.AddField(command.Name, summary);
             }
 
             Embed helpEmbed = embedBuilder.Build();

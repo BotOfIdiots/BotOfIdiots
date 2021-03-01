@@ -157,7 +157,7 @@ namespace DiscordBot
             if (message.Author.IsBot) return;
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config["CommandPrefix"], ref argPos))
+            if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
                 if (!result.IsSuccess)
