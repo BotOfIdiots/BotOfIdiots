@@ -98,7 +98,7 @@ namespace DiscordBot
                     break;
                 case 2: //Location of the Windows Config
                     WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                  "/.discordtestbot/";
+                                  "/.discordtestbot";
                     break;
             }
         }
