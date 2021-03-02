@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -22,12 +23,12 @@ namespace DiscordBot.Modules
                         Title = exception.Message
                     }
                     .WithColor(Color.Red)
+                    .WithDescription(exception.StackTrace)
                     .AddField("Source", exception.Source)
-                    .AddField("Exception",  exception.StackTrace)
                     .WithFooter(DiscordBot.Version())
                     .WithCurrentTimestamp()
                     .Build();
-
+                
                 _logChannels.Exceptions.SendMessageAsync(embed: exceptionEmbed);
                 Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
