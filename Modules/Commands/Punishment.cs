@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -44,7 +45,7 @@ namespace DiscordBot.Modules.Commands
 
                     if (embed.Title == "Warned")
                     {
-                        await warnedUser.SendMessageAsync(embed: embed);
+                        await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
                     }
                 }
 
@@ -92,7 +93,7 @@ namespace DiscordBot.Modules.Commands
 
                     if (embed.Title == "Muted")
                     {
-                        await mutedUser.SendMessageAsync(embed: embed);
+                        await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
                         await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
                     }
                 }
@@ -140,7 +141,7 @@ namespace DiscordBot.Modules.Commands
 
                     if (embed.Title == "Unmuted")
                     {
-                        await unmutedUser.SendMessageAsync(embed: embed);
+                        await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
                         await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
                     }
                 }
@@ -180,7 +181,7 @@ namespace DiscordBot.Modules.Commands
 
                     if (embed.Title == "Kicked")
                     {
-                        await kickedUser.SendMessageAsync(embed: embed);
+                        await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
                         await kickedUser.KickAsync(reason);
                     }
                 }
@@ -222,12 +223,11 @@ namespace DiscordBot.Modules.Commands
 
                     if (embed.Title == "Banned")
                     {
-                        await bannedUser.SendMessageAsync(embed: embed);
+                        await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
                         await bannedUser.BanAsync(1, reason);
+                        await ReplyAsync(embed: embed);
                     }
                 }
-
-                await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
