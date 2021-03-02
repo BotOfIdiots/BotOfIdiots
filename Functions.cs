@@ -25,8 +25,9 @@ namespace DiscordBot
                     .WithColor(Color.Red)
                     .WithCurrentTimestamp()
                     .Build();
-                
-                await context.Channel.SendMessageAsync(embed: embed);
+
+                SocketTextChannel replyChannel = context.Guild.GetTextChannel(context.Channel.Id);
+                await replyChannel.SendMessageAsync(embed: embed);
             }
         }
     }
