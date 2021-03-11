@@ -231,27 +231,34 @@ namespace DiscordBot.Modules
         public static Task MemberVoiceStateHandler(SocketUser user, SocketVoiceState stateBefore,
             SocketVoiceState stateAfter)
         {
+            if (stateAfter.VoiceChannel == stateBefore.VoiceChannel)
+            {
+                return Task.CompletedTask;
+            }
+            
             try
             {
-
-                int state = -1;
-                if (stateAfter.VoiceChannel == null)
+                Embed logEmbed = null;
+                
+                if (stateAfter.VoiceChannel == null) 
                 {
-                    state = 0;
+                    logEmbed = new VoiceStateEmbedBuilder(0, user, stateBefore, stateAfter).Build();
+                    
                 }
+                
                 if (stateBefore.VoiceChannel == null )
                 {
-                    state = 1;
+                    logEmbed = new VoiceStateEmbedBuilder(1, user, stateBefore, stateAfter).Build();
                 }
+                
                 if (stateAfter.VoiceChannel != null && stateBefore.VoiceChannel != null)
                 {
-                    state = 2;
+                    logEmbed = new VoiceStateEmbedBuilder(2, user, stateBefore, stateAfter).Build();
                 }
-                if (state >= 0)
+
+                if (logEmbed != null)
                 {
-                    _logChannels.Voice.SendMessageAsync(
-                        embed: new VoiceStateEmbedBuilder(state, user, stateBefore, stateAfter).Build()
-                    );
+                    _logChannels.Voice.SendMessageAsync(embed: logEmbed);
                     return Task.CompletedTask;
                 }
                 
