@@ -79,7 +79,7 @@ namespace DiscordBot
         /// <returns>int</returns>
         public static int CountUserViolations(ulong userId)
         {
-            using (var db = new LiteDatabase(DiscordBot.Config + "/Database.db"))
+            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
             {
                 var table = db.GetCollection<Violation>("violations");
 

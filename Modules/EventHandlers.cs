@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -23,12 +22,12 @@ namespace DiscordBot.Modules
                         Title = exception.Message
                     }
                     .WithColor(Color.Red)
+                    .WithDescription(exception.StackTrace)
                     .AddField("Source", exception.Source)
-                    .AddField("Exception",  exception.StackTrace)
                     .WithFooter(DiscordBot.Version())
                     .WithCurrentTimestamp()
                     .Build();
-
+                
                 _logChannels.Exceptions.SendMessageAsync(embed: exceptionEmbed);
                 Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
@@ -241,27 +240,34 @@ namespace DiscordBot.Modules
         public static Task MemberVoiceStateHandler(SocketUser user, SocketVoiceState stateBefore,
             SocketVoiceState stateAfter)
         {
+            if (stateAfter.VoiceChannel == stateBefore.VoiceChannel)
+            {
+                return Task.CompletedTask;
+            }
+            
             try
             {
-
-                int state = -1;
-                if (stateAfter.VoiceChannel == null)
+                Embed logEmbed = null;
+                
+                if (stateAfter.VoiceChannel == null) 
                 {
-                    state = 0;
+                    logEmbed = new VoiceStateEmbedBuilder(0, user, stateBefore, stateAfter).Build();
+                    
                 }
+                
                 if (stateBefore.VoiceChannel == null )
                 {
-                    state = 1;
+                    logEmbed = new VoiceStateEmbedBuilder(1, user, stateBefore, stateAfter).Build();
                 }
+                
                 if (stateAfter.VoiceChannel != null && stateBefore.VoiceChannel != null)
                 {
-                    state = 2;
+                    logEmbed = new VoiceStateEmbedBuilder(2, user, stateBefore, stateAfter).Build();
                 }
-                if (state >= 0)
+
+                if (logEmbed != null)
                 {
-                    _logChannels.Voice.SendMessageAsync(
-                        embed: new VoiceStateEmbedBuilder(state, user, stateBefore, stateAfter).Build()
-                    );
+                    _logChannels.Voice.SendMessageAsync(embed: logEmbed);
                     return Task.CompletedTask;
                 }
                 
