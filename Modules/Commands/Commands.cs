@@ -23,7 +23,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await Logger.LogException(e);
+                await EventHandlers.LogException(e);
             }
         }
 
@@ -52,7 +52,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await Logger.LogException(e);
+                await EventHandlers.LogException(e);
             }
         }
 
@@ -113,7 +113,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await Logger.LogException(e);
+                await EventHandlers.LogException(e);
             }
         }
 
