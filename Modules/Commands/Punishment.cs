@@ -82,6 +82,12 @@ namespace DiscordBot.Modules.Commands
             {
                 try
                 {
+                    IRole mutedRole = Context.Guild.GetRole(
+                        Convert.ToUInt64(
+                            DiscordBot.Config["MutedRole"]
+                            )
+                        );
+                    
                     if (mutedUser == Context.User)
                     {
                         embed = new EmbedBuilder
@@ -90,11 +96,7 @@ namespace DiscordBot.Modules.Commands
                         }.Build();
                     }
 
-                    else if (mutedUser.Roles.Contains(
-                            Context.Guild.GetRole(Convert.ToUInt64(
-                                DiscordBot.Config["MutedRole"])
-                            )
-                        )
+                    else if (mutedUser.Roles.Contains(mutedRole)
                     )
                     {
                         embed = new EmbedBuilder
@@ -110,7 +112,7 @@ namespace DiscordBot.Modules.Commands
                         if (embed.Title == "Muted")
                         {
                             await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                            await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                            await mutedUser.AddRoleAsync(mutedRole);
                         }
                     }
 
