@@ -68,41 +68,58 @@ namespace DiscordBot.Modules.Commands
         [Summary("$mute <user/snowflake> {reason} - Mute a user")]
         public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
         {
-            try
+            Embed embed;
+
+            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
             {
-                Embed embed;
-                if (mutedUser == Context.User)
+                embed = new EmbedBuilder
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "You can't mute that user."
-                    }.Build();
-                }
-
-                else if (mutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
-                {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "User is already muted"
-                    }.Build();
-                }
-
-                else
-                {
-                    embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
-
-                    if (embed.Title == "Muted")
-                    {
-                        await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                        await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
-                    }
-                }
-
+                    Title = "Muted Role not defined"
+                }.Build();
                 await ReplyAsync(embed: embed);
             }
-            catch (Exception e)
+            else
             {
-                await EventHandlers.LogException(e);
+                try
+                {
+                    if (mutedUser == Context.User)
+                    {
+                        embed = new EmbedBuilder
+                        {
+                            Title = "You can't mute that user."
+                        }.Build();
+                    }
+
+                    else if (mutedUser.Roles.Contains(
+                            Context.Guild.GetRole(Convert.ToUInt64(
+                                DiscordBot.Config["MutedRole"])
+                            )
+                        )
+                    )
+                    {
+                        embed = new EmbedBuilder
+                        {
+                            Title = "User is already muted"
+                        }.Build();
+                    }
+
+                    else
+                    {
+                        embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
+
+                        if (embed.Title == "Muted")
+                        {
+                            await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
+                            await mutedUser.AddRoleAsync(Context.Guild.GetRole(748884435260276816));
+                        }
+                    }
+
+                    await ReplyAsync(embed: embed);
+                }
+                catch (Exception e)
+                {
+                    await EventHandlers.LogException(e);
+                }
             }
         }
 
@@ -262,7 +279,7 @@ namespace DiscordBot.Modules.Commands
                 await Context.Guild.RemoveBanAsync(bannedUserId);
                 await ReplyAsync(embed: embed);
             }
-            catch(HttpException e)
+            catch (HttpException e)
             {
                 if (e.HttpCode == HttpStatusCode.NotFound)
                 {
