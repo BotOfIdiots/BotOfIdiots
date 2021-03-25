@@ -66,7 +66,7 @@ namespace DiscordBot
         private void LoadDiscordEventHandlers()
         {
             DiscordEventHooks.HookMessageDeleted(Client);
-            DiscordEventHooks.HookMessageBulkDelted(Client);
+            DiscordEventHooks.HookMessageBulkDeleted(Client);
             DiscordEventHooks.HookMessageUpdated(Client);
             DiscordEventHooks.HookMemberJoinGuild(Client);
             DiscordEventHooks.HookMemberLeaveGuild(Client);

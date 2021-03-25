@@ -9,7 +9,7 @@ namespace DiscordBot
         public static void HookMessageDeleted(BaseSocketClient client) 
             => client.MessageDeleted += EventHandlers.MessageDeleteHandler;
 
-        public static void HookMessageBulkDelted(BaseSocketClient client)
+        public static void HookMessageBulkDeleted(BaseSocketClient client)
             => client.MessagesBulkDeleted += EventHandlers.MessageBulkDeleteHandler;
         
         public static void HookMessageUpdated(BaseSocketClient client)
