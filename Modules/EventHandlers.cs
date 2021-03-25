@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -10,9 +9,9 @@ using DiscordBot.Models.Embeds;
 
 namespace DiscordBot.Modules
 {
-    public static class Logger
+    public static class EventHandlers
     {
-        private static LogChannels _logChannels = new LogChannels(DiscordBot.Config.GetSection("LogChannels"));
+        private static readonly LogChannels _logChannels = new LogChannels(DiscordBot.Config.GetSection("LogChannels"));
         
         public static Task LogException(Exception exception)
         {
@@ -168,6 +167,16 @@ namespace DiscordBot.Modules
             {
                 if (joinedUser != null)
                 {
+                    if (DiscordBot.Config["JoinRole"] != null)
+                    {
+                        IRole role = DiscordBot.Client.GetGuild(
+                                DiscordBot.GuildId
+                            ).GetRole(
+                                Convert.ToUInt64(DiscordBot.Config["JoinRole"])
+                                );
+                        joinedUser.AddRoleAsync(role);
+                    }
+                    
                     Embed memberJoinEmbed = new EmbedBuilder
                         {
                             Title = "Member Joined Server"
