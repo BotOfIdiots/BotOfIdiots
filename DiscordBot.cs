@@ -65,15 +65,15 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
-            DiscordEventHandler.HookMessageDeleted(Client);
-            DiscordEventHandler.HooMessageBulkDelted(Client);
-            DiscordEventHandler.HookMessageUpdated(Client);
-            DiscordEventHandler.HookMemberJoinGuild(Client);
-            DiscordEventHandler.HookMemberLeaveGuild(Client);
-            DiscordEventHandler.HookMemberVoiceState(Client);
-            DiscordEventHandler.HookMemberUpdated(Client);
-            DiscordEventHandler.HookMemberBanned(Client);
-            DiscordEventHandler.HookMemberUnbanned(Client);
+            DiscordEventHooks.HookMessageDeleted(Client);
+            DiscordEventHooks.HookMessageBulkDelted(Client);
+            DiscordEventHooks.HookMessageUpdated(Client);
+            DiscordEventHooks.HookMemberJoinGuild(Client);
+            DiscordEventHooks.HookMemberLeaveGuild(Client);
+            DiscordEventHooks.HookMemberVoiceState(Client);
+            DiscordEventHooks.HookMemberUpdated(Client);
+            DiscordEventHooks.HookMemberBanned(Client);
+            DiscordEventHooks.HookMemberUnbanned(Client);
         }
 
         /// <summary>
