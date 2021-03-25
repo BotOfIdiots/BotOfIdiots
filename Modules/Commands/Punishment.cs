@@ -18,6 +18,11 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
+        
+        private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
+            .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
+        
+        
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -82,12 +87,6 @@ namespace DiscordBot.Modules.Commands
             {
                 try
                 {
-                    IRole mutedRole = Context.Guild.GetRole(
-                        Convert.ToUInt64(
-                            DiscordBot.Config["MutedRole"]
-                            )
-                        );
-                    
                     if (mutedUser == Context.User)
                     {
                         embed = new EmbedBuilder
@@ -96,7 +95,7 @@ namespace DiscordBot.Modules.Commands
                         }.Build();
                     }
 
-                    else if (mutedUser.Roles.Contains(mutedRole)
+                    else if (mutedUser.Roles.Contains(MutedRole)
                     )
                     {
                         embed = new EmbedBuilder
@@ -112,7 +111,7 @@ namespace DiscordBot.Modules.Commands
                         if (embed.Title == "Muted")
                         {
                             await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                            await mutedUser.AddRoleAsync(mutedRole);
+                            await mutedUser.AddRoleAsync(MutedRole);
                         }
                     }
 
@@ -147,7 +146,7 @@ namespace DiscordBot.Modules.Commands
                         Title = "You can't unmute that user."
                     }.Build();
                 }
-                else if (!unmutedUser.Roles.Contains(Context.Guild.GetRole(748884435260276816)))
+                else if (!unmutedUser.Roles.Contains(MutedRole))
                 {
                     embed = new EmbedBuilder
                     {
@@ -161,7 +160,7 @@ namespace DiscordBot.Modules.Commands
                     if (embed.Title == "Unmuted")
                     {
                         await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                        await unmutedUser.RemoveRoleAsync(Context.Guild.GetRole(748884435260276816));
+                        await unmutedUser.RemoveRoleAsync(MutedRole);
                     }
                 }
 
