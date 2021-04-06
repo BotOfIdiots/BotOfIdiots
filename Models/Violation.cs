@@ -1,5 +1,4 @@
 ﻿using System;
-using Discord.WebSocket;
 using LiteDB;
 
 namespace DiscordBot.Models
@@ -33,7 +32,11 @@ namespace DiscordBot.Models
         /// <param name="reason">The reason for the violation</param>
         public Violation(ulong violater, ulong moderatorId, int type, string reason)
         {
-            SetValues(violater, moderatorId, type, reason);
+            UserId = violater;
+            ModeratorId = moderatorId;
+            Type = type;
+            Reason = reason;
+            Date = DateTime.Now;
         }
 
         /// <summary>
@@ -45,25 +48,9 @@ namespace DiscordBot.Models
         /// <param name="reason">The reason for the violation</param>
         /// <param name="expires">The moment the violation expirers</param>
         public Violation(ulong violater, ulong moderatorId, int type, string reason, DateTime expires)
+            : this(violater, moderatorId, type, reason)
         {
-            SetValues(violater, moderatorId, type, reason);
             Expires = expires;
-        }
-
-        /// <summary>
-        /// Sets the basic violation information
-        /// </summary>
-        /// <param name="userId">The user of the violation</param>
-        /// <param name="moderatorId">The moderator of the violation</param>
-        /// <param name="type">The type of the violation</param>
-        /// <param name="reason">The reason for the violation</param>
-        private void SetValues(ulong userId, ulong moderatorId, int type, string reason)
-        {
-            UserId = userId;
-            ModeratorId = moderatorId;
-            Type = type;
-            Reason = reason;
-            Date = DateTime.Now;
         }
 
         /// <summary>
