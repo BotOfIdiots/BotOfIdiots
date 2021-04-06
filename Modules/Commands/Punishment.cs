@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -18,11 +17,9 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
-        
-        private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
+        public static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
             .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-        
-        
+
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -36,26 +33,17 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed;
                 if (warnedUser == Context.User)
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "You can't warn that user"
-                    }.Build();
+                    await ReplyAsync(embed: Functions.CommandError("You can't warn that user"));
                 }
+
                 else
                 {
-                    embed = ViolationManager.NewViolation(warnedUser, reason, Context);
-
-                    if (embed.Title == "Warned")
-                    {
-                        await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
-                    }
+                    await ReplyAsync(embed: ViolationManager.NewViolation(warnedUser, reason, Context).Result);
                 }
-
-                await ReplyAsync(embed: embed);
             }
+
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -73,54 +61,41 @@ namespace DiscordBot.Modules.Commands
         [Summary("$mute <user/snowflake> {reason} - Mute a user")]
         public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
         {
-            Embed embed;
-
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            try
             {
-                embed = new EmbedBuilder
+                if (mutedUser == Context.User)
                 {
-                    Title = "Muted Role not defined"
-                }.Build();
-                await ReplyAsync(embed: embed);
-            }
-            else
-            {
-                try
-                {
-                    if (mutedUser == Context.User)
-                    {
-                        embed = new EmbedBuilder
-                        {
-                            Title = "You can't mute that user."
-                        }.Build();
-                    }
-
-                    else if (mutedUser.Roles.Contains(MutedRole)
-                    )
-                    {
-                        embed = new EmbedBuilder
-                        {
-                            Title = "User is already muted"
-                        }.Build();
-                    }
-
-                    else
-                    {
-                        embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
-
-                        if (embed.Title == "Muted")
-                        {
-                            await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                            await mutedUser.AddRoleAsync(MutedRole);
-                        }
-                    }
-
-                    await ReplyAsync(embed: embed);
+                    await ReplyAsync(embed: Functions.CommandError("You can't mute that user."));
                 }
-                catch (Exception e)
+
+                else if (mutedUser.Roles.Contains(MutedRole)
+                )
+                {
+                    await ReplyAsync(embed: Functions.CommandError("User is already muted"));
+                }
+
+                else
+                {
+                    await ReplyAsync(embed: ViolationManager.NewViolation(mutedUser, reason, Context, 3).Result);
+                }
+            }
+            
+            catch (NullReferenceException e)
+            {
+                if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+                {
+                    await ReplyAsync(embed: Functions.CommandError("Muted Role not defined"));
+                }
+                
+                else
                 {
                     await EventHandlers.LogException(e);
                 }
+            }
+            
+            catch (Exception e)
+            {
+                await EventHandlers.LogException(e);
             }
         }
 
@@ -138,34 +113,35 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed;
                 if (unmutedUser == Context.User)
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "You can't unmute that user."
-                    }.Build();
+                    await ReplyAsync(embed: Functions.CommandError("You can't unmute that user."));
                 }
+                
                 else if (!unmutedUser.Roles.Contains(MutedRole))
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "User was not muted"
-                    }.Build();
+                    await ReplyAsync(embed: Functions.CommandError("User was not muted"));
                 }
+                
                 else
                 {
-                    embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
-
-                    if (embed.Title == "Unmuted")
-                    {
-                        await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                        await unmutedUser.RemoveRoleAsync(MutedRole);
-                    }
+                    await ReplyAsync(embed: ViolationManager.NewViolation(unmutedUser, reason, Context, 4).Result);
                 }
-
-                await ReplyAsync(embed: embed);
             }
+            
+            catch (NullReferenceException e)
+            {
+                if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+                {
+                    await ReplyAsync(embed: Functions.CommandError("Muted Role not defined"));
+                }
+                
+                else
+                {
+                    await EventHandlers.LogException(e);
+                }
+            }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -185,27 +161,17 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed;
                 if (kickedUser == Context.User)
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "You can't kick that user"
-                    }.Build();
+                    await ReplyAsync(embed: Functions.CommandError("You can't kick that user"));
                 }
+                
                 else
                 {
-                    embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
-
-                    if (embed.Title == "Kicked")
-                    {
-                        await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
-                        await kickedUser.KickAsync(reason);
-                    }
+                    await ReplyAsync(embed: ViolationManager.NewViolation(kickedUser, reason, Context, 2).Result);
                 }
-
-                await ReplyAsync(embed: embed);
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -216,37 +182,59 @@ namespace DiscordBot.Modules.Commands
         /// Ban a user
         /// </summary>
         /// <param name="bannedUser">user to ban</param>
-        /// <param name="prune" default= "0"> Go this amount of days back in time to delete message from the banned user. Must be between 0-7 days </param>
-        /// <param name="reason" default="No reason specified"></param>
+        /// <param name="reason" default="No reason specified">The reason for the ban</param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to ban members")]
         [Command("ban")]
-        [Summary("$ban <user/snowflake> {prune} {reason} - Ban a user")]
+        [Summary("$ban <user/snowflake> {reason} - Ban a user")]
         public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason = "No reason specified.")
         {
             try
             {
-                Embed embed;
                 if (bannedUser == Context.User)
                 {
-                    embed = new EmbedBuilder
-                        {
-                            Title = "You can't ban that user"
-                        }
-                        .Build();
+                    await ReplyAsync(embed: Functions.CommandError("You can't ban that user"));
                 }
+                
                 else
                 {
-                    embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
-
-                    if (embed.Title == "Banned")
-                    {
-                        await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
-                        await bannedUser.BanAsync(1, reason);
-                        await ReplyAsync(embed: embed);
-                    }
+                    await ReplyAsync(embed: ViolationManager.NewViolation(bannedUser, reason, Context, 1).Result);
                 }
             }
+            
+            catch (Exception e)
+            {
+                await EventHandlers.LogException(e);
+            }
+        }
+
+        /// <summary>
+        /// Ban a user
+        /// </summary>
+        /// <param name="bannedUserId"> Id of the user to ban</param>
+        /// <param name="reason" default="No reason specified">The reason for the ban</param>
+        /// <returns></returns>
+        [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to ban members")]
+        [Command("ban")]
+        [Summary("$ban <user/snowflake> {reason} - Ban a user")]
+        public async Task Ban(ulong bannedUserId, [Remainder] string reason = "No reason specified.")
+        {
+            try
+            {
+                if (bannedUserId == Context.User.Id)
+                {
+                    await ReplyAsync(embed: Functions.CommandError("You can't ban that user"));
+                }
+
+                else
+                {
+                    await Context.Guild.AddBanAsync(bannedUserId, 1, reason);
+                    await ReplyAsync(embed: 
+                        ViolationManager.CreateViolationRecord(bannedUserId, reason, Context, 1)
+                        );
+                }
+            }
+
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -257,6 +245,7 @@ namespace DiscordBot.Modules.Commands
         /// unban a user
         /// </summary>
         /// <param name="bannedUserId">the user to unban</param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to unban members")]
         [Command("unban")]
@@ -280,6 +269,7 @@ namespace DiscordBot.Modules.Commands
                 await Context.Guild.RemoveBanAsync(bannedUserId);
                 await ReplyAsync(embed: embed);
             }
+            
             catch (HttpException e)
             {
                 if (e.HttpCode == HttpStatusCode.NotFound)
@@ -291,11 +281,13 @@ namespace DiscordBot.Modules.Commands
 
                     await ReplyAsync(embed: embed);
                 }
+                
                 else
                 {
                     await EventHandlers.LogException(e);
                 }
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);

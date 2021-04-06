@@ -21,6 +21,7 @@ namespace DiscordBot.Modules.Commands
             {
                 await ReplyAsync("Pong");
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -50,6 +51,7 @@ namespace DiscordBot.Modules.Commands
 
                 await ReplyAsync(embed: embed);
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -81,6 +83,7 @@ namespace DiscordBot.Modules.Commands
                     {
                         roles = role.Mention;
                     }
+                    
                     else
                     {
                         roles += role.Mention;
@@ -101,6 +104,7 @@ namespace DiscordBot.Modules.Commands
 
                 await ReplyAsync(embed: embed);
             }
+            
             catch (NullReferenceException)
             {
                 embed = new EmbedBuilder
@@ -111,6 +115,7 @@ namespace DiscordBot.Modules.Commands
                     .Build();
                 await ReplyAsync(embed: embed);
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -144,6 +149,7 @@ namespace DiscordBot.Modules.Commands
                 Title = "Bot Commands",
                 Color = Color.Teal
             };
+            
             foreach (CommandInfo command in DiscordBot.Commands.Commands)
             {
                 string summary;
@@ -185,6 +191,7 @@ namespace DiscordBot.Modules.Commands
                         embedBuilder.AddField(suboption.Key, suboption.Value); 
                     }
                 }
+                
                 else
                 {
                     if (option.Key != "Token")
@@ -204,7 +211,6 @@ namespace DiscordBot.Modules.Commands
         {
             await ReplyAsync(DiscordBot.GuildId.ToString());
         }
-
-
+        
     }
 }
