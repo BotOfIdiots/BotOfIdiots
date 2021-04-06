@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -32,9 +33,13 @@ namespace DiscordBot.Modules
                 Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
             }
+            
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+                Console.WriteLine();
+                Console.WriteLine("The following could not be posted to the Log exception channel:");
+                Console.WriteLine(exception);
                 return Task.CompletedTask;
             }
         }
@@ -65,6 +70,7 @@ namespace DiscordBot.Modules
                     _logChannels.Messages.SendMessageAsync(embed: messageDeleteEmbed);
                     return Task.CompletedTask;
                 }
+                
                 if (!cachedMessage.HasValue)
                 {
                     Embed messageDeleteEmbed = new EmbedBuilder
@@ -81,8 +87,10 @@ namespace DiscordBot.Modules
                     _logChannels.Messages.SendMessageAsync(embed: messageDeleteEmbed);
                     return Task.CompletedTask;
                 }
+                
                 throw new Exception("Message Unhandled MessageDeleteHandler State");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -111,8 +119,10 @@ namespace DiscordBot.Modules
                     _logChannels.Messages.SendMessageAsync(embed: messageBulkDeleteEmbed);
                     return Task.CompletedTask;
                 }
+                
                 throw new Exception("Unhandled MessageBulkDeleteHandler state");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -129,6 +139,7 @@ namespace DiscordBot.Modules
                 {
                     return Task.CompletedTask;
                 }
+                
                 if (cachedMessage.HasValue)
                 {
                     var oldMessage = cachedMessage.Value;
@@ -154,6 +165,7 @@ namespace DiscordBot.Modules
 
                 throw new Exception("Unhandled MessageUpdateHandler State");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -198,6 +210,7 @@ namespace DiscordBot.Modules
 
                 throw new Exception("Unhandled MemberJoinHandler state");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -230,6 +243,7 @@ namespace DiscordBot.Modules
 
                 throw new Exception("Unhandled MemberJoinHandler state");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -273,6 +287,7 @@ namespace DiscordBot.Modules
                 
                 throw new Exception("Unhandled Voice State");
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -298,10 +313,12 @@ namespace DiscordBot.Modules
                     );
                 }
             }
+            
             catch (Exception e)
             {
                 LogException(e);
             }
+            
             return Task.CompletedTask;
         }
 
@@ -331,6 +348,7 @@ namespace DiscordBot.Modules
                 
                 return Task.CompletedTask;
             }
+            
             catch (Exception e)
             {
                 LogException(e);
@@ -354,6 +372,7 @@ namespace DiscordBot.Modules
                 
                 return Task.CompletedTask;
             }
+            
             catch (Exception e)
             {
                 LogException(e);

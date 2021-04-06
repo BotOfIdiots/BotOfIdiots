@@ -3,17 +3,19 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Newtonsoft.Json.Serialization;
 
 namespace DiscordBot
 {
     public static class Functions
     {
-        public static async Task SendMessageEmbedToUser(SocketGuildUser user, Embed embed, SocketCommandContext context)
+        public static async Task SendMessageEmbedToUser(IUser user, Embed embed, SocketCommandContext context)
         {
             try
             {
                 await user.SendMessageAsync(embed: embed);
             }
+            
             catch (Exception)
             {
                 embed = new EmbedBuilder
@@ -29,6 +31,15 @@ namespace DiscordBot
                 SocketTextChannel replyChannel = context.Guild.GetTextChannel(context.Channel.Id);
                 await replyChannel.SendMessageAsync(embed: embed);
             }
+        }
+
+        public static Embed CommandError(String message)
+        {
+            return new EmbedBuilder
+                {
+                    Title = message
+                }
+                .Build();
         }
     }
 }

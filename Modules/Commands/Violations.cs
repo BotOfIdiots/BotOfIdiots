@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Models;
+using DiscordBot.Models.Embeds;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -26,10 +27,9 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed = ViolationManager.GetViolation(violationId, Context);
-
-                await ReplyAsync(embed: embed);
+                await ReplyAsync(embed: new ViolationEmbedBuilder(violationId, Context.Client.CurrentUser).Build());
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -86,6 +86,7 @@ namespace DiscordBot.Modules.Commands
 
                 await ReplyAsync(embed: embed);
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -100,7 +101,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Violation violation = ViolationManager.GetViolationRecord(violationId);
+                Violation violation = Models.Violation.GetRecord(violationId);
                 Embed embed = new EmbedBuilder
                     {
                         Title = "Violation Removed",
@@ -116,10 +117,11 @@ namespace DiscordBot.Modules.Commands
                     .WithFooter("UserID: " + violation.UserId)
                     .WithTimestamp(DateTime.Now)
                     .Build();
-
-                ViolationManager.DeleteViolationRecord(violationId);
+                
+                Models.Violation.DeleteRecord(violationId);
                 await ReplyAsync(embed: embed);
             }
+            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);

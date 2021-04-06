@@ -13,8 +13,4 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0-preview.4.20251.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Database" />
-  </ItemGroup>
-
 </Project>
