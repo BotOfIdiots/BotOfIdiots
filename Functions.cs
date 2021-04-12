@@ -15,7 +15,6 @@ namespace DiscordBot
             {
                 await user.SendMessageAsync(embed: embed);
             }
-            
             catch (Exception)
             {
                 embed = new EmbedBuilder

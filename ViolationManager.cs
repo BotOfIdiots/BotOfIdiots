@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -16,13 +17,13 @@ namespace DiscordBot
         /// <summary>
         /// Create a New violation insert it into the database and return an embed
         /// </summary>
-        /// <param name="violationType"> Violation type. 1 = Ban, 2 = Kick, 3 = mute, 4 = warn </param>
+        /// <param name="violationType"> Violation type. 0 = warn, 1 = Ban, 2 = Kick, 3 = mute, 4 = unmute</param>
         /// <param name="violator">User that committed the violation</param>
         /// <param name="reason">Reason for the violation</param>
         /// <param name="context">Command Context</param>
         /// <returns>Embed</returns>
         public static async Task<Embed> NewViolation(SocketGuildUser violator, string reason, SocketCommandContext context,
-            int violationType = 0)
+            ViolationTypes violationType = ViolationTypes.Warned)
         {
             Embed violationEmbed = ExecuteViolation(violator, reason, context, violationType);
             
@@ -40,20 +41,20 @@ namespace DiscordBot
         /// <param name="violationType"></param>
         /// <returns></returns>
         private static Embed ExecuteViolation(SocketGuildUser violator, string reason, SocketCommandContext context,
-            int violationType)
+            ViolationTypes violationType)
         {
             switch (violationType)
             {
-                case 1:
+                case ViolationTypes.Banned:
                     violator.BanAsync(1, reason);
                     break;
-                case 2:
+                case ViolationTypes.Kicked:
                     violator.KickAsync(reason);
                     break;
-                case 3:
+                case ViolationTypes.Muted:
                     violator.AddRoleAsync(Punishment.MutedRole);
                     break;
-                case 4:
+                case ViolationTypes.UnMuted:
                     violator.RemoveRoleAsync(Punishment.MutedRole);
                     break;
             }
@@ -70,9 +71,9 @@ namespace DiscordBot
         /// <param name="violationType"></param>
         /// <returns></returns>
         public static Embed CreateViolationRecord(ulong violator, string reason, SocketCommandContext context,
-            int violationType)
+            ViolationTypes violationType)
         {
-            int violationId = new Violation(violator, context.User.Id, violationType, reason)
+            int violationId = new Violation(violator, context.User.Id, (int) violationType, reason)
                 .InsertRecord();
             
             return new ViolationEmbedBuilder(violationId, context.Client.CurrentUser).Build();
@@ -114,13 +115,7 @@ namespace DiscordBot
         /// <returns></returns>
         private static List<Violation> CreateViolationList(IEnumerable<Violation> violations)
         {
-            List<Violation> list = new List<Violation>();
-            
-            foreach (Violation violation in violations)
-            {
-                list.Add(violation);
-            }
-            return list;
+            return violations.ToList();
         }
 
     }

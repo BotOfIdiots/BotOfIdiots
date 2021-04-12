@@ -6,6 +6,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Models;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -40,10 +41,9 @@ namespace DiscordBot.Modules.Commands
 
                 else
                 {
-                    await ReplyAsync(embed: ViolationManager.NewViolation(warnedUser, reason, Context).Result);
+                    await ReplyAsync(embed: await ViolationManager.NewViolation(warnedUser, reason, Context, 0));
                 }
             }
-
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -76,10 +76,9 @@ namespace DiscordBot.Modules.Commands
 
                 else
                 {
-                    await ReplyAsync(embed: ViolationManager.NewViolation(mutedUser, reason, Context, 3).Result);
+                    await ReplyAsync(embed: await ViolationManager.NewViolation(mutedUser, reason, Context, ViolationTypes.Muted));
                 }
             }
-            
             catch (NullReferenceException e)
             {
                 if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
@@ -92,7 +91,6 @@ namespace DiscordBot.Modules.Commands
                     await EventHandlers.LogException(e);
                 }
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -125,10 +123,9 @@ namespace DiscordBot.Modules.Commands
                 
                 else
                 {
-                    await ReplyAsync(embed: ViolationManager.NewViolation(unmutedUser, reason, Context, 4).Result);
+                    await ReplyAsync(embed: await ViolationManager.NewViolation(unmutedUser, reason, Context, ViolationTypes.UnMuted));
                 }
             }
-            
             catch (NullReferenceException e)
             {
                 if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
@@ -141,7 +138,6 @@ namespace DiscordBot.Modules.Commands
                     await EventHandlers.LogException(e);
                 }
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -168,10 +164,10 @@ namespace DiscordBot.Modules.Commands
                 
                 else
                 {
-                    await ReplyAsync(embed: ViolationManager.NewViolation(kickedUser, reason, Context, 2).Result);
+                    await ReplyAsync(embed: 
+                        await ViolationManager.NewViolation(kickedUser, reason, Context, ViolationTypes.Kicked));
                 }
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -198,10 +194,10 @@ namespace DiscordBot.Modules.Commands
                 
                 else
                 {
-                    await ReplyAsync(embed: ViolationManager.NewViolation(bannedUser, reason, Context, 1).Result);
+                    await ReplyAsync(embed: 
+                        await ViolationManager.NewViolation(bannedUser, reason, Context, ViolationTypes.Banned));
                 }
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -230,11 +226,10 @@ namespace DiscordBot.Modules.Commands
                 {
                     await Context.Guild.AddBanAsync(bannedUserId, 1, reason);
                     await ReplyAsync(embed: 
-                        ViolationManager.CreateViolationRecord(bannedUserId, reason, Context, 1)
+                        ViolationManager.CreateViolationRecord(bannedUserId, reason, Context, ViolationTypes.Banned)
                         );
                 }
             }
-
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -269,7 +264,6 @@ namespace DiscordBot.Modules.Commands
                 await Context.Guild.RemoveBanAsync(bannedUserId);
                 await ReplyAsync(embed: embed);
             }
-            
             catch (HttpException e)
             {
                 if (e.HttpCode == HttpStatusCode.NotFound)
@@ -287,7 +281,6 @@ namespace DiscordBot.Modules.Commands
                     await EventHandlers.LogException(e);
                 }
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);

@@ -21,7 +21,6 @@ namespace DiscordBot.Modules.Commands
             {
                 await ReplyAsync("Pong");
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -51,7 +50,6 @@ namespace DiscordBot.Modules.Commands
 
                 await ReplyAsync(embed: embed);
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -104,7 +102,6 @@ namespace DiscordBot.Modules.Commands
 
                 await ReplyAsync(embed: embed);
             }
-            
             catch (NullReferenceException)
             {
                 embed = new EmbedBuilder
@@ -115,7 +112,6 @@ namespace DiscordBot.Modules.Commands
                     .Build();
                 await ReplyAsync(embed: embed);
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
