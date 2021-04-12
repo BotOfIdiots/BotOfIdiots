@@ -11,7 +11,7 @@ namespace DiscordBot.Models
         public int Id { get; set; }
         public ulong UserId { get; set; }
         public ulong ModeratorId { get; set; }
-        public int Type { get; set; }
+        public ViolationTypes Type { get; set; }
         public string Reason { get; set; }
         public DateTime Date { get; set; }
         public DateTime Expires { get; }
@@ -30,7 +30,7 @@ namespace DiscordBot.Models
         /// <param name="moderatorId">The moderator of the violation</param>
         /// <param name="type">The type of the violation</param>
         /// <param name="reason">The reason for the violation</param>
-        public Violation(ulong violater, ulong moderatorId, int type, string reason)
+        public Violation(ulong violater, ulong moderatorId, ViolationTypes type, string reason)
         {
             UserId = violater;
             ModeratorId = moderatorId;
@@ -47,7 +47,7 @@ namespace DiscordBot.Models
         /// <param name="type">The type of the violation</param>
         /// <param name="reason">The reason for the violation</param>
         /// <param name="expires">The moment the violation expirers</param>
-        public Violation(ulong violater, ulong moderatorId, int type, string reason, DateTime expires)
+        public Violation(ulong violater, ulong moderatorId, ViolationTypes type, string reason, DateTime expires)
             : this(violater, moderatorId, type, reason)
         {
             Expires = expires;

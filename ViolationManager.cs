@@ -73,7 +73,7 @@ namespace DiscordBot
         public static Embed CreateViolationRecord(ulong violator, string reason, SocketCommandContext context,
             ViolationTypes violationType)
         {
-            int violationId = new Violation(violator, context.User.Id, (int) violationType, reason)
+            int violationId = new Violation(violator, context.User.Id, violationType, reason)
                 .InsertRecord();
             
             return new ViolationEmbedBuilder(violationId, context.Client.CurrentUser).Build();

@@ -58,7 +58,7 @@ namespace DiscordBot.Modules.Commands
 
                 foreach (Violation violation in violations)
                     embedBuilder.AddField(
-                        violation.Id + " - " + (ViolationTypes) violation.Type + ":",
+                        violation.Id + " - " +  violation.Type + ":",
                         violation.Reason
                         );
                 
