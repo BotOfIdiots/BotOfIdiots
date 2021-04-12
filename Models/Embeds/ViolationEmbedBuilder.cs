@@ -1,3 +1,4 @@
+using System;
 using Discord;
 using Discord.WebSocket;
 
@@ -14,7 +15,7 @@ namespace DiscordBot.Models.Embeds
         {
             Violation violation = Violation.GetRecord(violationId);
             
-            SetType(violation.Type);
+            WithTitle(Enum.GetName(typeof(ViolationTypes), violation.Type));
             Color = Discord.Color.Red;
             WithAuthor(author.ToString());
             AddField("User:", "<@!" + violation.UserId + ">", true);
@@ -23,32 +24,6 @@ namespace DiscordBot.Models.Embeds
             AddField("Reason:", violation.Reason);
             AddField("Violation ID:", violation.Id, true);
             WithFooter("UserID: " + violation.UserId);
-        }
-
-        /// <summary>
-        /// Sets the title of the embed based on the violation type
-        /// </summary>
-        /// <param name="type">The type on which the title is based</param>
-        private void SetType(int type)
-        {
-            switch (type)
-            {
-                case 1:
-                    WithTitle("Banned");
-                    break;
-                case 2:
-                    WithTitle("Kicked");
-                    break;
-                case 3:
-                    WithTitle("Muted");
-                    break;
-                case 4:
-                    WithTitle("Unmuted");
-                    break;
-                default:
-                    WithTitle("Warned");
-                    break;
-            }
         }
 
     }

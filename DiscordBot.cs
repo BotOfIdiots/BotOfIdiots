@@ -115,6 +115,7 @@ namespace DiscordBot
                 .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
+            Config = Config.GetSection("DiscordBot");
             GuildId = Convert.ToUInt64(Config["GuildId"]);
         }
 

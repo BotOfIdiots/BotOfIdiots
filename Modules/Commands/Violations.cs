@@ -9,6 +9,7 @@ using DiscordBot.Models.Embeds;
 
 namespace DiscordBot.Modules.Commands
 {
+    
     [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage =
         "The Bot doesn't have the KickMembers permission")]
     [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to use this command")]
@@ -29,7 +30,6 @@ namespace DiscordBot.Modules.Commands
             {
                 await ReplyAsync(embed: new ViolationEmbedBuilder(violationId, Context.Client.CurrentUser).Build());
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -54,39 +54,18 @@ namespace DiscordBot.Modules.Commands
                     .AddField("User:", guildUser.Mention)
                     .AddField("ViolationCount", violations.Count)
                     .WithCurrentTimestamp()
-                    .WithFooter("UserID: " + guildUser.Id)
-                    ;
+                    .WithFooter("UserID: " + guildUser.Id);
 
                 foreach (Violation violation in violations)
-                {
-                    string violationType;
-                    switch (violation.Type)
-                    {
-                        case 1:
-                            violationType = "Ban";
-                            break;
-                        case 2:
-                            violationType = "Kick";
-                            break;
-                        case 3:
-                            violationType = "Mute";
-                            break;
-                        case 4:
-                            violationType = "Unmute";
-                            break;
-                        default:
-                            violationType = "Warn";
-                            break;
-                    }
+                    embedBuilder.AddField(
+                        violation.Id + " - " + (ViolationTypes) violation.Type + ":",
+                        violation.Reason
+                        );
+                
+                Embed violationList = embedBuilder.Build();
 
-                    embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
-                }
-
-                Embed embed = embedBuilder.Build();
-
-                await ReplyAsync(embed: embed);
+                await ReplyAsync(embed: violationList);
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -121,7 +100,6 @@ namespace DiscordBot.Modules.Commands
                 Models.Violation.DeleteRecord(violationId);
                 await ReplyAsync(embed: embed);
             }
-            
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
