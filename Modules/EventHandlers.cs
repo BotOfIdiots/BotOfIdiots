@@ -35,6 +35,8 @@ namespace DiscordBot.Modules
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+                Console.WriteLine("This exception could not bet logged to the exception channel");
+                Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
             }
         }
@@ -54,8 +56,8 @@ namespace DiscordBot.Modules
                         }
                         .WithAuthor(message.Author)
                         .WithColor(Color.Red)
+                        .WithDescription(message.Content)
                         .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
-                        .AddField("Content", message.Content)
                         .AddField("Sent At", message.Timestamp.ToLocalTime()
                             .ToString("HH:mm:ss dd-MM-yyyy"))
                         .WithFooter("MessageID: " + message.Id)
@@ -111,6 +113,7 @@ namespace DiscordBot.Modules
                     _logChannels.Messages.SendMessageAsync(embed: messageBulkDeleteEmbed);
                     return Task.CompletedTask;
                 }
+                
                 throw new Exception("Unhandled MessageBulkDeleteHandler state");
             }
             catch (Exception e)
@@ -125,10 +128,28 @@ namespace DiscordBot.Modules
         {
             try
             {
+                if (!cachedMessage.HasValue || message.Content == null)
+                {
+                    Embed messageDeleteEmbed = new EmbedBuilder
+                        {
+                            Title = "Message Updated"
+                        }
+                        .WithColor(Color.Orange)
+                        .AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")")
+                        .WithDescription("Could not retrieve message from cache")
+                        .WithFooter("MessageID: " + cachedMessage.Id)
+                        .WithCurrentTimestamp()
+                        .Build();
+
+                    _logChannels.Messages.SendMessageAsync(embed: messageDeleteEmbed);
+                    return Task.CompletedTask;
+                }
+                
                 if (cachedMessage.Value.Content == message.Content)
                 {
                     return Task.CompletedTask;
                 }
+                
                 if (cachedMessage.HasValue)
                 {
                     var oldMessage = cachedMessage.Value;
@@ -151,7 +172,7 @@ namespace DiscordBot.Modules
                     _logChannels.Messages.SendMessageAsync(embed: messageUpdateEmbed);
                     return Task.CompletedTask;
                 }
-
+                
                 throw new Exception("Unhandled MessageUpdateHandler State");
             }
             catch (Exception e)
