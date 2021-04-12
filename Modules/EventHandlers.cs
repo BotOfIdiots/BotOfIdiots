@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -36,9 +35,6 @@ namespace DiscordBot.Modules
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                Console.WriteLine();
-                Console.WriteLine("The following could not be posted to the Log exception channel:");
-                Console.WriteLine(exception);
                 return Task.CompletedTask;
             }
         }
