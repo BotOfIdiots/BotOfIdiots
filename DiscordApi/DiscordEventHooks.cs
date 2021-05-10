@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
-using Discord.WebSocket;
-using DiscordBot.Modules;
+﻿using Discord.WebSocket;
+using DiscordBot.DiscordApi.Modules;
 
-namespace DiscordBot
+namespace DiscordBot.DiscordApi
 {
     public static class DiscordEventHooks
     {
@@ -15,8 +14,8 @@ namespace DiscordBot
         public static void HookMessageUpdated(BaseSocketClient client)
             => client.MessageUpdated += EventHandlers.MessageUpdateHandler;
 
-        public static void HookMemberJoinGuild(BaseSocketClient client)
-            => client.UserJoined += EventHandlers.MemberJoinGuildHandler;
+        // public static void HookMemberJoinGuild(BaseSocketClient client)
+        //     => client.UserJoined += EventHandlers.MemberJoinGuildHandler;
 
         public static void HookMemberLeaveGuild(BaseSocketClient client)
             => client.UserLeft += EventHandlers.MemberLeaveGuildHandler;

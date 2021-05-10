@@ -4,15 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using DiscordBot.Models;
-using DiscordBot.Models.Embeds;
+using DiscordBot.DiscordApi.Models;
+using DiscordBot.DiscordApi.Models.Embeds;
 
-namespace DiscordBot.Modules
+namespace DiscordBot.DiscordApi.Modules
 {
     public static class EventHandlers
     {
-        private static readonly LogChannels _logChannels = new LogChannels(DiscordBot.Config.GetSection("LogChannels"));
-        
+        private static readonly LogChannels _logChannels = 
+            new LogChannels(Base.DiscordBot.Config.GetSection("LogChannels"));
+
         public static Task LogException(Exception exception)
         {
             try
@@ -24,13 +25,12 @@ namespace DiscordBot.Modules
                     .WithColor(Color.Red)
                     .WithDescription(exception.StackTrace)
                     .AddField("Source", exception.Source)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(Base.Version())
                     .WithCurrentTimestamp()
                     .Build();
-                
+
                 _logChannels.Exceptions.SendMessageAsync(embed: exceptionEmbed);
-                Console.WriteLine(exception.ToString());
-                return Task.CompletedTask;
+                
             }
             catch (Exception e)
             {
@@ -39,7 +39,32 @@ namespace DiscordBot.Modules
                 Console.WriteLine(exception.ToString());
                 return Task.CompletedTask;
             }
+            return Task.CompletedTask;
         }
+
+        public static Task LogDebugMessage(string message)
+        {
+            try
+            {
+                Embed debugEmbed = new EmbedBuilder
+                {
+                    Title = "Debug Message"
+                }
+                    .WithColor(Color.Orange)
+                    .WithDescription(message)
+                    .WithFooter(Base.Version())
+                    .WithCurrentTimestamp()
+                    .Build();
+
+                _logChannels.Exceptions.SendMessageAsync(embed: debugEmbed);
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+            }
+            return Task.CompletedTask;
+        }
+
 
         public static Task MessageDeleteHandler(Cacheable<IMessage, ulong> cachedMessage,
             ISocketMessageChannel channel)
@@ -109,7 +134,7 @@ namespace DiscordBot.Modules
                         .WithFooter("Message Count: " + cachedData.Count)
                         .WithCurrentTimestamp()
                         .Build();
-                    
+
                     _logChannels.Messages.SendMessageAsync(embed: messageBulkDeleteEmbed);
                     return Task.CompletedTask;
                 }
@@ -182,50 +207,50 @@ namespace DiscordBot.Modules
             }
         }
 
-        public static Task MemberJoinGuildHandler(SocketGuildUser joinedUser)
-        {
-            try
-            {
-                if (joinedUser != null)
-                {
-                    if (DiscordBot.Config["JoinRole"] != null)
-                    {
-                        IRole role = DiscordBot.Client.GetGuild(
-                                DiscordBot.GuildId
-                            ).GetRole(
-                                Convert.ToUInt64(DiscordBot.Config["JoinRole"])
-                                );
-                        joinedUser.AddRoleAsync(role);
-                    }
-                    
-                    Embed memberJoinEmbed = new EmbedBuilder
-                        {
-                            Title = "Member Joined Server"
-                        }
-                        .WithAuthor(joinedUser)
-                        .AddField("Username", joinedUser.Mention)
-                        .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime()
-                            .ToString("HH:mm:ss dd-MM-yyyy"))
-                        .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime()
-                            .ToString("HH:mm:ss dd-MM-yyyy"))
-                        .WithColor(Color.Green)
-                        .WithCurrentTimestamp()
-                        .WithFooter("UserID: " + joinedUser.Id)
-                        .Build();
+        // public static Task MemberJoinGuildHandler(SocketGuildUser joinedUser)
+        // {
+        //     try
+        //     {
+        //         if (joinedUser != null)
+        //         {
+        //             if (Base.DiscordBot.Config["JoinRole"] != null)
+        //             {
+        //                 IRole role = Base.DiscordBot.Client.GetGuild(
+        //                     Base.DiscordBot.GuildId
+        //                 ).GetRole(
+        //                     Convert.ToUInt64(Base.DiscordBot.Config["JoinRole"])
+        //                 );
+        //                 joinedUser.AddRoleAsync(role);
+        //             }
+        //
+        //             Embed memberJoinEmbed = new EmbedBuilder
+        //                 {
+        //                     Title = "Member Joined Server"
+        //                 }
+        //                 .WithAuthor(joinedUser)
+        //                 .AddField("Username", joinedUser.Mention)
+        //                 .AddField("User Created At", joinedUser.CreatedAt.ToLocalTime()
+        //                     .ToString("HH:mm:ss dd-MM-yyyy"))
+        //                 .AddField("User Joined at", joinedUser.JoinedAt?.ToLocalTime()
+        //                     .ToString("HH:mm:ss dd-MM-yyyy"))
+        //                 .WithColor(Color.Green)
+        //                 .WithCurrentTimestamp()
+        //                 .WithFooter("UserID: " + joinedUser.Id)
+        //                 .Build();
+        //
+        //             _logChannels.JoinLeave.SendMessageAsync(embed: memberJoinEmbed);
+        //             return Task.CompletedTask;
+        //         }
+        //
+        //         throw new Exception("Unhandled MemberJoinHandler state");
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         LogException(e);
+        //         return Task.CompletedTask;
+        //     }
+        // }
 
-                    _logChannels.JoinLeave.SendMessageAsync(embed: memberJoinEmbed);
-                    return Task.CompletedTask;
-                }
-
-                throw new Exception("Unhandled MemberJoinHandler state");
-            }
-            catch (Exception e)
-            {
-                LogException(e);
-                return Task.CompletedTask;
-            } 
-        }
-        
         public static Task MemberLeaveGuildHandler(SocketGuildUser leavingUser)
         {
             try
@@ -255,7 +280,7 @@ namespace DiscordBot.Modules
             {
                 LogException(e);
                 return Task.CompletedTask;
-            } 
+            }
         }
 
         public static Task MemberVoiceStateHandler(SocketUser user, SocketVoiceState stateBefore,
@@ -265,22 +290,21 @@ namespace DiscordBot.Modules
             {
                 return Task.CompletedTask;
             }
-            
+
             try
             {
                 Embed logEmbed = null;
-                
-                if (stateAfter.VoiceChannel == null) 
+
+                if (stateAfter.VoiceChannel == null)
                 {
                     logEmbed = new VoiceStateEmbedBuilder(0, user, stateBefore, stateAfter).Build();
-                    
                 }
-                
-                if (stateBefore.VoiceChannel == null )
+
+                if (stateBefore.VoiceChannel == null)
                 {
                     logEmbed = new VoiceStateEmbedBuilder(1, user, stateBefore, stateAfter).Build();
                 }
-                
+
                 if (stateAfter.VoiceChannel != null && stateBefore.VoiceChannel != null)
                 {
                     logEmbed = new VoiceStateEmbedBuilder(2, user, stateBefore, stateAfter).Build();
@@ -291,13 +315,13 @@ namespace DiscordBot.Modules
                     _logChannels.Voice.SendMessageAsync(embed: logEmbed);
                     return Task.CompletedTask;
                 }
-                
+
                 throw new Exception("Unhandled Voice State");
             }
             catch (Exception e)
             {
                 LogException(e);
-                return  Task.CompletedTask;
+                return Task.CompletedTask;
             }
         }
 
@@ -338,7 +362,7 @@ namespace DiscordBot.Modules
                         .WithColor(Color.Red)
                         .WithFooter("UserID: " + user.Id)
                         .Build()
-                    );
+                );
 
                 _logChannels.Logs.SendMessageAsync(
                     embed: new EmbedBuilder()
@@ -349,14 +373,14 @@ namespace DiscordBot.Modules
                         .WithFooter("UserID: " + user.Id)
                         .Build()
                 );
-                
+
                 return Task.CompletedTask;
             }
             catch (Exception e)
             {
                 LogException(e);
                 return Task.CompletedTask;
-            }   
+            }
         }
 
         public static Task MemberUnbannedHandler(SocketUser user, SocketGuild guild)
@@ -372,7 +396,7 @@ namespace DiscordBot.Modules
                         .WithFooter("UserID: " + user.Id)
                         .Build()
                 );
-                
+
                 return Task.CompletedTask;
             }
             catch (Exception e)
@@ -380,7 +404,6 @@ namespace DiscordBot.Modules
                 LogException(e);
                 return Task.CompletedTask;
             }
-           
         }
     }
 }

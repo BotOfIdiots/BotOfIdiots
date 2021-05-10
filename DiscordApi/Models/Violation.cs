@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DiscordBot.Models
+namespace DiscordBot.DiscordApi.Models
 {
     /// <summary>
     /// This object Contains all the information for a violation

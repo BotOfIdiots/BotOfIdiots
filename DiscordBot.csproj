@@ -11,6 +11,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0-preview.4.20251.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0-preview.4.20251.6" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0-preview.4.20251.6" />
+    <PackageReference Include="TwitchLib.Api" Version="3.2.2" />
+    <PackageReference Include="TwitchLib.Client" Version="3.2.1" />
+    <PackageReference Include="TwitchLib.Communication" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>

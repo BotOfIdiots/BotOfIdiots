@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
+using DiscordBot.DiscordApi.Models;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.DiscordApi.Modules.Commands
 {
     [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage =
         "The Bot doesn't have the KickMembers permission")]
@@ -93,7 +93,7 @@ namespace DiscordBot.Modules.Commands
         }
 
         [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
-            "You don't have persmision to use this command")]
+            "You don't have permision to use this command")]
         [Command("remove")]
         [Summary("$violation remove <violationID> - Removes a violation")]
         public async Task Remove(int violationId, [Remainder] String reason = "No reason specified")

@@ -5,7 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.DiscordApi.Modules.Commands
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
@@ -41,10 +41,10 @@ namespace DiscordBot.Modules.Commands
             {
                 Embed embed = new EmbedBuilder
                     {
-                        Title = "Version: " + DiscordBot.Version(),
+                        Title = "Version: " + Base.Version(),
                     }
                     .WithAuthor(Context.Client.CurrentUser)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(Base.Version())
                     .WithCurrentTimestamp()
                     .Build();
 
@@ -144,7 +144,7 @@ namespace DiscordBot.Modules.Commands
                 Title = "Bot Commands",
                 Color = Color.Teal
             };
-            foreach (CommandInfo command in DiscordBot.Commands.Commands)
+            foreach (CommandInfo command in Base.DiscordBot.Commands.Commands)
             {
                 string summary;
                 switch (command.Summary)
@@ -172,7 +172,7 @@ namespace DiscordBot.Modules.Commands
             EmbedBuilder embedBuilder = new EmbedBuilder()
                 .WithTitle("Bot Config");
 
-            var configOptions = DiscordBot.Config.GetChildren();
+            var configOptions = Base.Config.GetChildren();
 
             foreach (var option in configOptions)
             {
@@ -202,9 +202,7 @@ namespace DiscordBot.Modules.Commands
         [Command("GuildID")]
         public async Task guildID()
         {
-            await ReplyAsync(DiscordBot.GuildId.ToString());
+            await ReplyAsync(Base.DiscordBot.GuildId.ToString());
         }
-
-
     }
 }

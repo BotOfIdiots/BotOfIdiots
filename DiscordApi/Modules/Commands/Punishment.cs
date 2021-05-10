@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.DiscordApi.Modules.Commands
 {
     /// <summary>
     /// This class contains al the command to punish Guild members
@@ -19,9 +18,8 @@ namespace DiscordBot.Modules.Commands
     public class Punishment : ModuleBase<SocketCommandContext>
     {
         
-        private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-        
+        private static readonly IRole MutedRole = Base.DiscordBot.Client.GetGuild(Base.DiscordBot.GuildId)
+            .GetRole(Convert.ToUInt64(Base.DiscordBot.Config["MutedRole"]));
         
         /// <summary>
         /// Warn a user
@@ -75,7 +73,7 @@ namespace DiscordBot.Modules.Commands
         {
             Embed embed;
 
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            if (Base.DiscordBot.Config["MutedRole"] == null || Base.DiscordBot.Config["MutedRole"] == "")
             {
                 embed = new EmbedBuilder
                 {
