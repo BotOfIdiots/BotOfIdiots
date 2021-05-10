@@ -59,12 +59,10 @@ namespace DiscordBot.Models
         /// <returns>int</returns>
         public int InsertRecord()
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-                table.Insert(this);
-            }
-            return CreatedRecord(Date);
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
+            table.Insert(this);
+            
+            return GetRecordByDate(Date);
         }
 
         /// <summary>
@@ -72,11 +70,10 @@ namespace DiscordBot.Models
         /// </summary>
         /// <param name="dateTime">The date and time of the record to return </param>
         /// <returns>int</returns>
-        private static int CreatedRecord(DateTime dateTime)
+        private static int GetRecordByDate(DateTime dateTime)
         {
-            using var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db");
-            var table = db.GetCollection<Violation>("violations");
-
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
+            
             return table.FindOne(x => x.Date == dateTime).Id;
         }
 
@@ -85,11 +82,10 @@ namespace DiscordBot.Models
         /// </summary>
         /// <param name="violationId">The id of the violation to return</param>
         /// <returns></returns>
-        public static Violation GetRecord(int violationId)
+        public static Violation GetRecordById(int violationId)
         {
-            using var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db");
-            var table = db.GetCollection<Violation>("violations");
-                
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
+            
             return table.FindOne(x => x.Id == violationId);
         }
 
@@ -99,9 +95,8 @@ namespace DiscordBot.Models
         /// <param name="violationId">The id of the violation to delete</param>
         public static void DeleteRecord(int violationId)
         {
-            using var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db");
-            var table = db.GetCollection<Violation>("violations");
-
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
+            
             table.Delete(violationId);
         }
     }

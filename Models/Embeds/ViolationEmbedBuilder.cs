@@ -13,7 +13,7 @@ namespace DiscordBot.Models.Embeds
         /// <param name="author">The author of the embed</param>
         public ViolationEmbedBuilder(int violationId, SocketSelfUser author)
         {
-            Violation violation = Violation.GetRecord(violationId);
+            Violation violation = Violation.GetRecordById(violationId);
             
             WithTitle(Enum.GetName(typeof(ViolationTypes), violation.Type));
             Color = Discord.Color.Red;

@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,13 +18,12 @@ namespace DiscordBot
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
 
-        private static readonly string _version = "0.0.4";
         private static IServiceProvider _services;
-        public static string WorkingDirectory;
+        public static BotService BotService;
         public static DiscordSocketClient Client;
         public static CommandService Commands;
-        public static IConfiguration Config;
-        public static ulong GuildId;
+        private IConfiguration _config;
+
 
         /// <summary>
         /// 
@@ -33,31 +31,79 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync()
         {
-            _detectOS();
-            _createConfig();
+            string workingDirectory = _detectOS();
+            _createConfig(workingDirectory);
             
             var discordConfig = new DiscordSocketConfig
             {
-                MessageCacheSize = Convert.ToInt32(Config["MessageCacheSize"]),
-                ExclusiveBulkDelete = Convert.ToBoolean(Config["AllowBulkDelete"])
+                MessageCacheSize = Convert.ToInt32(_config.GetSection("DiscordBot")["MessageCacheSize"]),
+                ExclusiveBulkDelete = Convert.ToBoolean(_config.GetSection("DiscordBot")["AllowBulkDelete"])
             };
-            
+
             Client = new DiscordSocketClient(discordConfig);
+            BotService = new BotService(_config.GetSection("DiscordBot"), workingDirectory);
             Commands = new CommandService();
 
             _services = new ServiceCollection()
                 .AddSingleton(Client)
                 .AddSingleton(Commands)
                 .BuildServiceProvider();
-            
+
             Client.Log += _client_log;
             LoadDiscordEventHandlers();
-            
-            
+
             await RegisterCommandsAsync();
-            await Client.LoginAsync(TokenType.Bot, Config["Token"]);
+            await Client.LoginAsync(TokenType.Bot, BotService.Config["Token"]);
             await Client.StartAsync();
             await Task.Delay(-1);
+        }
+
+        /// <summary>
+        /// Detect the OS and build all OS based variables
+        /// </summary>
+        private string _detectOS()
+        {
+            int environment = (int) Environment.OSVersion.Platform;
+            return _WorkingDirectory(environment);
+        }
+
+        /// <summary>
+        /// Get the config file location based on the enviroment
+        /// </summary>
+        /// <param name="enviroment"></param>
+        private string _WorkingDirectory(int enviroment)
+        {
+            string workingDirectory = "";
+            switch (enviroment)
+            {
+                case 4: //Location of the Linux Config
+                    workingDirectory = Environment.CurrentDirectory;
+
+                    break;
+                case 2: //Location of the Windows Config
+                    workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                                       "\\.discordtestbot";
+                    break;
+            }
+
+            if (workingDirectory != "")
+            {
+                Console.WriteLine(workingDirectory);
+                return workingDirectory;
+            }
+            
+            throw new NullReferenceException();
+        }
+
+        /// <summary>
+        /// Create the config object based on the config.json file
+        /// </summary>
+        private void _createConfig(string workingDirectory)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(workingDirectory)
+                .AddJsonFile(path: "config.json");
+            _config = builder.Build();
         }
 
         /// <summary>
@@ -77,49 +123,6 @@ namespace DiscordBot
         }
 
         /// <summary>
-        /// Detect the OS and build all OS based variables
-        /// </summary>
-        private void _detectOS()
-        {
-            int environment = (int) Environment.OSVersion.Platform;
-            _setWorkingDirectory(environment);
-            
-        }
-
-        /// <summary>
-        /// Get the config file location based on the enviroment
-        /// </summary>
-        /// <param name="enviroment"></param>
-        private void _setWorkingDirectory(int enviroment)
-        {
-            switch (enviroment)
-            {
-                case 4: //Location of the Linux Config
-                    WorkingDirectory = Environment.CurrentDirectory;
-                    Console.WriteLine(WorkingDirectory);
-                    break;
-                case 2: //Location of the Windows Config
-                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                  "\\.discordtestbot";
-                    Console.WriteLine(WorkingDirectory);
-                    break;
-            }
-        }
-        
-        /// <summary>
-        /// Create the config object based on the config.json file
-        /// </summary>
-        private void _createConfig()
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(WorkingDirectory)
-                .AddJsonFile(path: "config.json");
-            Config = builder.Build();
-            Config = Config.GetSection("DiscordBot");
-            GuildId = Convert.ToUInt64(Config["GuildId"]);
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="arg"></param>
@@ -134,19 +137,10 @@ namespace DiscordBot
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task RegisterCommandsAsync()
+        private async Task RegisterCommandsAsync()
         {
             Client.MessageReceived += HandleCommandAsync;
             await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static string Version()
-        {
-            return _version;
         }
 
         /// <summary>
@@ -170,7 +164,7 @@ namespace DiscordBot
                         .WithColor(Color.Red)
                         .WithDescription(result.ErrorReason)
                         .Build();
-                    
+
                     await context.Channel.SendMessageAsync(embed: exceptionEmbed);
                 }
             }

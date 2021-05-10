@@ -41,10 +41,10 @@ namespace DiscordBot.Modules.Commands
             {
                 Embed embed = new EmbedBuilder
                     {
-                        Title = "Version: " + DiscordBot.Version(),
+                        Title = "Version: " + DiscordBot.BotService.Version,
                     }
                     .WithAuthor(Context.Client.CurrentUser)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(DiscordBot.BotService.Version)
                     .WithCurrentTimestamp()
                     .Build();
 
@@ -174,7 +174,7 @@ namespace DiscordBot.Modules.Commands
             EmbedBuilder embedBuilder = new EmbedBuilder()
                 .WithTitle("Bot Config");
 
-            var configOptions = DiscordBot.Config.GetChildren();
+            var configOptions = DiscordBot.BotService.Config.GetChildren();
 
             foreach (var option in configOptions)
             {
@@ -203,9 +203,9 @@ namespace DiscordBot.Modules.Commands
         }
 
         [Command("GuildID")]
-        public async Task guildID()
+        public async Task GuildId()
         {
-            await ReplyAsync(DiscordBot.GuildId.ToString());
+            await ReplyAsync(DiscordBot.BotService.GuildId.ToString());
         }
         
     }

@@ -86,8 +86,7 @@ namespace DiscordBot
         /// <returns>int</returns>
         public static int CountUserViolations(ulong userId)
         {
-            using var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db");
-            var table = db.GetCollection<Violation>("violations");
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
 
             return table.Count(x => x.UserId == userId);
         }
@@ -99,23 +98,11 @@ namespace DiscordBot
         /// <returns>List<Violation></returns>
         public static List<Violation> GetViolations(ulong user)
         {
-            using var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db");
-            
-            var table = db.GetCollection<Violation>("violations");
+            var table = DiscordBot.BotService.Database.GetCollection<Violation>("violations");
             
             IEnumerable<Violation> queryData = table.Find(x => x.UserId == user);
-            
-            return CreateViolationList(queryData);
-        }
 
-        /// <summary>
-        /// Creates a List of Violations from the given IEnumerable
-        /// </summary>
-        /// <param name="violations"></param>
-        /// <returns></returns>
-        private static List<Violation> CreateViolationList(IEnumerable<Violation> violations)
-        {
-            return violations.ToList();
+            return queryData.ToList();
         }
 
     }

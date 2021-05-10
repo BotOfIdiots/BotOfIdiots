@@ -11,7 +11,11 @@ namespace DiscordBot.Modules
 {
     public static class EventHandlers
     {
-        private static readonly LogChannels _logChannels = new LogChannels(DiscordBot.Config.GetSection("LogChannels"));
+        private static LogChannels _logChannels = new LogChannels(); 
+        // public EventHandlers(LogChannels logChannels)
+        // {
+        //     _logChannels = logChannels;
+        // }
         
         public static Task LogException(Exception exception)
         {
@@ -24,7 +28,7 @@ namespace DiscordBot.Modules
                     .WithColor(Color.Red)
                     .WithDescription(exception.StackTrace)
                     .AddField("Source", exception.Source)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(DiscordBot.BotService.Version)
                     .WithCurrentTimestamp()
                     .Build();
                 
@@ -190,12 +194,12 @@ namespace DiscordBot.Modules
             {
                 if (joinedUser != null)
                 {
-                    if (DiscordBot.Config["JoinRole"] != null)
+                    if (DiscordBot.BotService.Config["JoinRole"] != null)
                     {
                         IRole role = DiscordBot.Client.GetGuild(
-                                DiscordBot.GuildId
+                                DiscordBot.BotService.GuildId
                             ).GetRole(
-                                Convert.ToUInt64(DiscordBot.Config["JoinRole"])
+                                Convert.ToUInt64(DiscordBot.BotService.Config["JoinRole"])
                                 );
                         joinedUser.AddRoleAsync(role);
                     }

@@ -19,9 +19,10 @@ namespace DiscordBot.Models
         public SocketTextChannel Exceptions { get; }
         
 
-        public LogChannels(IConfigurationSection config)
+        public LogChannels()
         {
-            SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId); 
+            IConfiguration config = DiscordBot.BotService.Config.GetSection("LogChannels");
+            SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.BotService.GuildId); 
             
             Logs = socketGuild.GetTextChannel(Convert.ToUInt64(config["Logs"]));
             JoinLeave = socketGuild.GetTextChannel(Convert.ToUInt64(config["JoinLeave"]));

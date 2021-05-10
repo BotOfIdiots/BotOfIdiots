@@ -18,9 +18,9 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
-        public static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-
+        public static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.BotService.GuildId)
+            .GetRole(Convert.ToUInt64(DiscordBot.BotService.Config["MutedRole"]));
+        
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -79,18 +79,6 @@ namespace DiscordBot.Modules.Commands
                     await ReplyAsync(embed: await ViolationManager.NewViolation(mutedUser, reason, Context, ViolationTypes.Muted));
                 }
             }
-            catch (NullReferenceException e)
-            {
-                if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
-                {
-                    await ReplyAsync(embed: Functions.CommandError("Muted Role not defined"));
-                }
-                
-                else
-                {
-                    await EventHandlers.LogException(e);
-                }
-            }
             catch (Exception e)
             {
                 await EventHandlers.LogException(e);
@@ -124,18 +112,6 @@ namespace DiscordBot.Modules.Commands
                 else
                 {
                     await ReplyAsync(embed: await ViolationManager.NewViolation(unmutedUser, reason, Context, ViolationTypes.UnMuted));
-                }
-            }
-            catch (NullReferenceException e)
-            {
-                if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
-                {
-                    await ReplyAsync(embed: Functions.CommandError("Muted Role not defined"));
-                }
-                
-                else
-                {
-                    await EventHandlers.LogException(e);
                 }
             }
             catch (Exception e)

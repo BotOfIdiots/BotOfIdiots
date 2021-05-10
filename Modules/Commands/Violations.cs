@@ -80,7 +80,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Violation violation = Models.Violation.GetRecord(violationId);
+                Violation violation = Models.Violation.GetRecordById(violationId);
                 Embed embed = new EmbedBuilder
                     {
                         Title = "Violation Removed",
