@@ -18,11 +18,10 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
-        
         private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
             .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-        
-        
+
+
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -48,10 +47,8 @@ namespace DiscordBot.Modules.Commands
                 {
                     embed = ViolationManager.NewViolation(warnedUser, reason, Context);
 
-                    if (embed.Title == "Warned")
-                    {
-                        await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
-                    }
+                    await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
+                    await EventHandlers.LogViolation(embed);
                 }
 
                 await ReplyAsync(embed: embed);
@@ -108,11 +105,9 @@ namespace DiscordBot.Modules.Commands
                     {
                         embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
 
-                        if (embed.Title == "Muted")
-                        {
-                            await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                            await mutedUser.AddRoleAsync(MutedRole);
-                        }
+                        await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
+                        await mutedUser.AddRoleAsync(MutedRole);
+                        await EventHandlers.LogViolation(embed);
                     }
 
                     await ReplyAsync(embed: embed);
@@ -157,11 +152,9 @@ namespace DiscordBot.Modules.Commands
                 {
                     embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
 
-                    if (embed.Title == "Unmuted")
-                    {
-                        await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                        await unmutedUser.RemoveRoleAsync(MutedRole);
-                    }
+                    await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
+                    await EventHandlers.LogViolation(embed);
+                    await unmutedUser.RemoveRoleAsync(MutedRole);
                 }
 
                 await ReplyAsync(embed: embed);
@@ -197,11 +190,9 @@ namespace DiscordBot.Modules.Commands
                 {
                     embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
 
-                    if (embed.Title == "Kicked")
-                    {
-                        await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
-                        await kickedUser.KickAsync(reason);
-                    }
+                    await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
+                    await kickedUser.KickAsync(reason);
+                    await EventHandlers.LogViolation(embed);
                 }
 
                 await ReplyAsync(embed: embed);
@@ -238,14 +229,14 @@ namespace DiscordBot.Modules.Commands
                 else
                 {
                     embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
-
-                    if (embed.Title == "Banned")
-                    {
-                        await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
-                        await bannedUser.BanAsync(1, reason);
-                        await ReplyAsync(embed: embed);
-                    }
+                    
+                    await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
+                    await bannedUser.BanAsync(1, reason);
+                    await EventHandlers.LogViolation(embed);
                 }
+
+
+                await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
@@ -278,6 +269,7 @@ namespace DiscordBot.Modules.Commands
                     .WithFooter("UserID: " + bannedUserId)
                     .Build();
                 await Context.Guild.RemoveBanAsync(bannedUserId);
+                await EventHandlers.LogViolation(embed);
                 await ReplyAsync(embed: embed);
             }
             catch (HttpException e)
