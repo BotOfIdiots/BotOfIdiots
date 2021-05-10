@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -65,15 +63,10 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
-            DiscordEventHooks.HookMessageDeleted(Client);
-            DiscordEventHooks.HookMessageBulkDeleted(Client);
-            DiscordEventHooks.HookMessageUpdated(Client);
-            DiscordEventHooks.HookMemberJoinGuild(Client);
-            DiscordEventHooks.HookMemberLeaveGuild(Client);
-            DiscordEventHooks.HookMemberVoiceState(Client);
-            DiscordEventHooks.HookMemberUpdated(Client);
-            DiscordEventHooks.HookMemberBanned(Client);
-            DiscordEventHooks.HookMemberUnbanned(Client);
+            DiscordEventHooks.HookMessageEvents(Client);
+            DiscordEventHooks.HookMemberEvents(Client);
+            DiscordEventHooks.HookChannelEvents(Client);
+            DiscordEventHooks.HookBanEvents(Client);
         }
 
         /// <summary>
