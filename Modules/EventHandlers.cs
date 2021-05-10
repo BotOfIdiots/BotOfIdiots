@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
+
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -384,29 +384,28 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
-      
-        public static Task ChannelUpdateHandler(SocketChannel channelBefore, SocketChannel channel)
-        {
-            if (channelBefore == channel)
-            {
-                return Task.CompletedTask;
-            }
-            
-            if (channel.GetType() == typeof(SocketDMChannel) || channel.GetType() == typeof(SocketGroupChannel))
-            {
-                return Task.CompletedTask;
-            }
 
-            SocketGuildChannel guildChannelBefore = channelBefore as SocketGuildChannel;
-            SocketGuildChannel guildChannel = channel as SocketGuildChannel;
-
-            if (guildChannelBefore.Name != guildChannel.Name)
-            {
-                
-            }
-            
-            return Task.CompletedTask;
-        }
+        // public static Task ChannelUpdateHandler(SocketChannel channelBefore, SocketChannel channel)
+        // {
+        //     if (channelBefore == channel)
+        //     {
+        //         return Task.CompletedTask;
+        //     }
+        //
+        //     if (channel.GetType() == typeof(SocketDMChannel) || channel.GetType() == typeof(SocketGroupChannel))
+        //     {
+        //         return Task.CompletedTask;
+        //     }
+        //
+        //     SocketGuildChannel guildChannelBefore = channelBefore as SocketGuildChannel;
+        //     SocketGuildChannel guildChannel = channel as SocketGuildChannel;
+        //
+        //     if (guildChannelBefore.Name != guildChannel.Name)
+        //     {
+        //     }
+        //
+        //     return Task.CompletedTask;
+        // }
 
         public static Task ChannelDeleteHandler(SocketChannel channel)
         {
@@ -416,9 +415,9 @@ namespace DiscordBot.Modules
             }
 
             Embed embed = new ChannelDeletedEmbedBuilder(channel as SocketGuildChannel).Build();
-            
+
             _logChannels.ChannelUpdates.SendMessageAsync(embed: embed);
-            
+
             return Task.CompletedTask;
         }
 
@@ -430,9 +429,10 @@ namespace DiscordBot.Modules
             }
 
             Embed embed = new ChannelCreatedEmbedBuilder(channel as SocketGuildChannel).Build();
-            
+
             _logChannels.ChannelUpdates.SendMessageAsync(embed: embed);
-            
+            return Task.CompletedTask;
+        }
 
         public static Task LogViolation(Embed violationEmbed)
         {
@@ -444,6 +444,8 @@ namespace DiscordBot.Modules
             {
                 LogException(e);
 
+                
+            }
             return Task.CompletedTask;
         }
     }
