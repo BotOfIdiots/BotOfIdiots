@@ -384,7 +384,7 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
-
+      
         public static Task ChannelUpdateHandler(SocketChannel channelBefore, SocketChannel channel)
         {
             if (channelBefore == channel)
@@ -433,6 +433,17 @@ namespace DiscordBot.Modules
             
             _logChannels.ChannelUpdates.SendMessageAsync(embed: embed);
             
+
+        public static Task LogViolation(Embed violationEmbed)
+        {
+            try
+            {
+                _logChannels.Punishments.SendMessageAsync(embed: violationEmbed);
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+
             return Task.CompletedTask;
         }
     }
