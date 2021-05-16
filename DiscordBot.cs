@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Modules;
+using DiscordBot.Modules.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -157,6 +159,7 @@ namespace DiscordBot
             if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
+                
                 if (!result.IsSuccess)
                 {
                     Embed exceptionEmbed = new EmbedBuilder()
@@ -165,6 +168,11 @@ namespace DiscordBot
                         .Build();
                     
                     await context.Channel.SendMessageAsync(embed: exceptionEmbed);
+                }
+
+                if (result.IsSuccess)
+                {
+                    await EventHandlers.LogExecutedCommand(context, message);
                 }
             }
         }

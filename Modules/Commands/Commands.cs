@@ -64,7 +64,7 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [Command("userinfo")]
         [Summary("$userinfo {user/snowflake} - Shows userinfo")]
-        public async Task Userinfo(SocketGuildUser user = null)
+        public async Task UserInfo(SocketGuildUser user = null)
         {
             Embed embed;
             String roles = null;
