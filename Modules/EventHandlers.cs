@@ -4,6 +4,7 @@ using System.Linq;
 
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Models;
 using DiscordBot.Models.Embeds;
@@ -445,6 +446,21 @@ namespace DiscordBot.Modules
                 LogException(e);
 
                 
+            }
+            return Task.CompletedTask;
+        }
+
+        public static Task LogExecutedCommand(SocketCommandContext context, SocketUserMessage message)
+        {
+            try
+            {
+                Embed embed = new ExecutedCommand(context, message).Build();
+
+                _logChannels.Commands.SendMessageAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                LogException(e);
             }
             return Task.CompletedTask;
         }

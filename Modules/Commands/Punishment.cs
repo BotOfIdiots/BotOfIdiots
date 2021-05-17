@@ -131,37 +131,50 @@ namespace DiscordBot.Modules.Commands
         [Summary("$unmute <user/snowflake> {reason} - Unmute a muted user")]
         public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
         {
-            try
+            Embed embed;
+            
+            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
             {
-                Embed embed;
-                if (unmutedUser == Context.User)
+                embed = new EmbedBuilder
                 {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "You can't unmute that user."
-                    }.Build();
-                }
-                else if (!unmutedUser.Roles.Contains(MutedRole))
-                {
-                    embed = new EmbedBuilder
-                    {
-                        Title = "User was not muted"
-                    }.Build();
-                }
-                else
-                {
-                    embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
-
-                    await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                    await EventHandlers.LogViolation(embed);
-                    await unmutedUser.RemoveRoleAsync(MutedRole);
-                }
-
+                    Title = "Muted Role not defined"
+                }.Build();
                 await ReplyAsync(embed: embed);
             }
-            catch (Exception e)
+            else
             {
-                await EventHandlers.LogException(e);
+                try
+                {
+
+                    if (unmutedUser == Context.User)
+                    {
+                        embed = new EmbedBuilder
+                        {
+                            Title = "You can't unmute that user."
+                        }.Build();
+                    }
+                    else if (!unmutedUser.Roles.Contains(MutedRole))
+                    {
+                        embed = new EmbedBuilder
+                        {
+                            Title = "User was not muted"
+                        }.Build();
+                    }
+                    else
+                    {
+                        embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
+
+                        await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
+                        await EventHandlers.LogViolation(embed);
+                        await unmutedUser.RemoveRoleAsync(MutedRole);
+                    }
+
+                    await ReplyAsync(embed: embed);
+                }
+                catch (Exception e)
+                {
+                    await EventHandlers.LogException(e);
+                }
             }
         }
 
