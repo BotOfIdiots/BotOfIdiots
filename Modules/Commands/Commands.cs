@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -63,7 +64,7 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [Command("userinfo")]
         [Summary("$userinfo {user/snowflake} - Shows userinfo")]
-        public async Task Userinfo(SocketGuildUser user = null)
+        public async Task UserInfo(SocketGuildUser user = null)
         {
             Embed embed;
             String roles = null;
@@ -156,7 +157,7 @@ namespace DiscordBot.Modules.Commands
                         summary = command.Summary;
                         break;
                 }
-                
+
                 embedBuilder.AddField(command.Name, summary);
             }
 
@@ -165,7 +166,8 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(embed: helpEmbed);
         }
 
-        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "You don't have permission to use this command")]
+        [RequireUserPermission(GuildPermission.Administrator,
+            ErrorMessage = "You don't have permission to use this command")]
         [Command("Config")]
         public async Task Config()
         {
@@ -179,10 +181,10 @@ namespace DiscordBot.Modules.Commands
                 if (option.GetChildren().Any())
                 {
                     var section = option.GetChildren();
-                    
+
                     foreach (var suboption in section)
                     {
-                        embedBuilder.AddField(suboption.Key, suboption.Value); 
+                        embedBuilder.AddField(suboption.Key, suboption.Value);
                     }
                 }
                 else
@@ -205,6 +207,17 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(DiscordBot.GuildId.ToString());
         }
 
+        [Command("purge")]
+        [Summary(
+            "$purge <amount> - removes the amount of messages specified. (You don't have to count the command message as it is included by default")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        public async Task Purge(int amount)
+        {
+            var messageList = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
 
+            (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messageList);
+
+            await Task.CompletedTask;
+        }
     }
 }

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
+using DiscordBot.Modules;
+using DiscordBot.Modules.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -65,15 +65,10 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
-            DiscordEventHooks.HookMessageDeleted(Client);
-            DiscordEventHooks.HookMessageBulkDeleted(Client);
-            DiscordEventHooks.HookMessageUpdated(Client);
-            DiscordEventHooks.HookMemberJoinGuild(Client);
-            DiscordEventHooks.HookMemberLeaveGuild(Client);
-            DiscordEventHooks.HookMemberVoiceState(Client);
-            DiscordEventHooks.HookMemberUpdated(Client);
-            DiscordEventHooks.HookMemberBanned(Client);
-            DiscordEventHooks.HookMemberUnbanned(Client);
+            DiscordEventHooks.HookMessageEvents(Client);
+            DiscordEventHooks.HookMemberEvents(Client);
+            DiscordEventHooks.HookChannelEvents(Client);
+            DiscordEventHooks.HookBanEvents(Client);
         }
 
         /// <summary>
@@ -115,6 +110,7 @@ namespace DiscordBot
                 .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
+            Config = Config.GetSection("DiscordBot");
             GuildId = Convert.ToUInt64(Config["GuildId"]);
         }
 
@@ -163,6 +159,7 @@ namespace DiscordBot
             if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
+                
                 if (!result.IsSuccess)
                 {
                     Embed exceptionEmbed = new EmbedBuilder()
@@ -171,6 +168,11 @@ namespace DiscordBot
                         .Build();
                     
                     await context.Channel.SendMessageAsync(embed: exceptionEmbed);
+                }
+
+                if (result.IsSuccess)
+                {
+                    await EventHandlers.LogExecutedCommand(context, message);
                 }
             }
         }
