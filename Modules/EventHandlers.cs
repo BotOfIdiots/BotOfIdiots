@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Models;
 using DiscordBot.Models.Embeds;
+using Microsoft.Extensions.Configuration;
 
 namespace DiscordBot.Modules
 {
@@ -444,9 +444,52 @@ namespace DiscordBot.Modules
             catch (Exception e)
             {
                 LogException(e);
-
-                
             }
+
+            return Task.CompletedTask;
+        }
+
+        public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
+            SocketReaction reaction)
+        {
+            IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
+
+            if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
+            {
+                IConfiguration reactionMessage = reactionMessages.GetSection(message.Id.ToString());
+
+                if (reactionMessage.GetChildren().Any(item => item.Key == reaction.Emote.Name))
+                {
+                    SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId);
+
+                    IRole reactionRole = socketGuild.GetRole(Convert.ToUInt64(reactionMessage[reaction.Emote.Name]));
+                    SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
+                    user.AddRoleAsync(reactionRole);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public static Task ReactionRemovedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
+            SocketReaction reaction)
+        {
+            IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
+            
+            if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
+            {
+                IConfiguration reactionMessage = reactionMessages.GetSection(message.Id.ToString());
+                
+                if (reactionMessage.GetChildren().Any(item => item.Key == reaction.Emote.Name))
+                {
+                    SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId);
+
+                    IRole reactionRole = socketGuild.GetRole(Convert.ToUInt64(reactionMessage[reaction.Emote.Name]));
+                    SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
+                    user.RemoveRoleAsync(reactionRole);
+                }
+            }
+            
             return Task.CompletedTask;
         }
 

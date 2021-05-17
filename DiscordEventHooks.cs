@@ -19,6 +19,8 @@ namespace DiscordBot
             client.MessageDeleted += EventHandlers.MessageDeleteHandler;
             client.MessagesBulkDeleted += EventHandlers.MessageBulkDeleteHandler;
             client.MessageUpdated += EventHandlers.MessageUpdateHandler;
+            client.ReactionAdded += EventHandlers.ReactionAddedHandler;
+            client.ReactionRemoved += EventHandlers.ReactionRemovedHandler;
         }
 
         public static void HookBanEvents(BaseSocketClient client)
