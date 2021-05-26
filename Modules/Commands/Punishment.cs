@@ -30,8 +30,8 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to warn members")]
         [Command("warn")]
-        [Summary("$warn <user/snowflake> {reason} - Warn a user")]
-        public async Task Warn(SocketGuildUser warnedUser, [Remainder] string reason = "No reason specified.")
+        [Summary("$warn <user/snowflake> <reason> - Warn a user")]
+        public async Task Warn(SocketGuildUser warnedUser, [Remainder] string reason)
         {
             try
             {
@@ -67,8 +67,8 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to mute members")]
         [Command("mute")]
-        [Summary("$mute <user/snowflake> {reason} - Mute a user")]
-        public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason = "No reason specified.")
+        [Summary("$mute <user/snowflake> <reason> - Mute a user")]
+        public async Task Mute(SocketGuildUser mutedUser, [Remainder] string reason)
         {
             Embed embed;
 
@@ -186,8 +186,8 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to kick members")]
         [Command("kick")]
-        [Summary("$kick <user/snowflake> {reason} - Kick a user")]
-        public async Task Kick(SocketGuildUser kickedUser, [Remainder] string reason = "No reason specified.")
+        [Summary("$kick <user/snowflake> <reason> - Kick a user")]
+        public async Task Kick(SocketGuildUser kickedUser, [Remainder] string reason)
         {
             try
             {
@@ -220,13 +220,12 @@ namespace DiscordBot.Modules.Commands
         /// Ban a user
         /// </summary>
         /// <param name="bannedUser">user to ban</param>
-        /// <param name="prune" default= "0"> Go this amount of days back in time to delete message from the banned user. Must be between 0-7 days </param>
         /// <param name="reason" default="No reason specified"></param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to ban members")]
         [Command("ban")]
-        [Summary("$ban <user/snowflake> {prune} {reason} - Ban a user")]
-        public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason = "No reason specified.")
+        [Summary("$ban <user/snowflake> <reason> - Ban a user")]
+        public async Task Ban(SocketGuildUser bannedUser, [Remainder] string reason)
         {
             try
             {
@@ -265,7 +264,7 @@ namespace DiscordBot.Modules.Commands
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to unban members")]
         [Command("unban")]
         [Summary("$unban <user/snowflake> {reason} - Unban a banned user")]
-        public async Task Unban(ulong bannedUserId, [Remainder] string reason = "No reason specified")
+        public async Task Unban(ulong bannedUserId, [Remainder] string reason = "No reason specified.")
         {
             try
             {
