@@ -289,6 +289,13 @@ namespace DiscordBot.Modules
                     logEmbed = new VoiceStateEmbedBuilder(2, user, stateBefore, stateAfter).Build();
                 }
 
+                if (DiscordBot.Config.GetChildren().Any(item => item.Key == "PrivateChannels"))
+                {
+                    PrivateChannel.CreateChannelHandler(stateAfter, user).GetAwaiter();
+                    PrivateChannel.DestroyChannelHandler(stateBefore).GetAwaiter();
+
+                }
+
                 if (logEmbed != null)
                 {
                     _logChannels.Voice.SendMessageAsync(embed: logEmbed);
@@ -475,11 +482,11 @@ namespace DiscordBot.Modules
             SocketReaction reaction)
         {
             IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
-            
+
             if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
             {
                 IConfiguration reactionMessage = reactionMessages.GetSection(message.Id.ToString());
-                
+
                 if (reactionMessage.GetChildren().Any(item => item.Key == reaction.Emote.Name))
                 {
                     SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId);
@@ -489,7 +496,7 @@ namespace DiscordBot.Modules
                     user.RemoveRoleAsync(reactionRole);
                 }
             }
-            
+
             return Task.CompletedTask;
         }
 
@@ -505,6 +512,7 @@ namespace DiscordBot.Modules
             {
                 LogException(e);
             }
+
             return Task.CompletedTask;
         }
     }
