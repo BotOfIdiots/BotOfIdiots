@@ -48,14 +48,14 @@ namespace DiscordBot.Modules.Commands
                     embed = ViolationManager.NewViolation(warnedUser, reason, Context);
 
                     await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild.Id);
                 }
 
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -107,14 +107,14 @@ namespace DiscordBot.Modules.Commands
 
                         await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
                         await mutedUser.AddRoleAsync(MutedRole);
-                        await EventHandlers.LogViolation(embed);
+                        await EventHandlers.LogViolation(embed, Context.Guild.Id);
                     }
 
                     await ReplyAsync(embed: embed);
                 }
                 catch (Exception e)
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild.Id);
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace DiscordBot.Modules.Commands
                         embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
 
                         await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                        await EventHandlers.LogViolation(embed);
+                        await EventHandlers.LogViolation(embed, Context.Guild.Id);
                         await unmutedUser.RemoveRoleAsync(MutedRole);
                     }
 
@@ -173,7 +173,7 @@ namespace DiscordBot.Modules.Commands
                 }
                 catch (Exception e)
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild.Id);
                 }
             }
         }
@@ -205,14 +205,14 @@ namespace DiscordBot.Modules.Commands
 
                     await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
                     await kickedUser.KickAsync(reason);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild.Id);
                 }
 
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -245,7 +245,7 @@ namespace DiscordBot.Modules.Commands
                     
                     await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
                     await bannedUser.BanAsync(1, reason);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild.Id);
                 }
 
 
@@ -253,7 +253,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -282,7 +282,7 @@ namespace DiscordBot.Modules.Commands
                     .WithFooter("UserID: " + bannedUserId)
                     .Build();
                 await Context.Guild.RemoveBanAsync(bannedUserId);
-                await EventHandlers.LogViolation(embed);
+                await EventHandlers.LogViolation(embed, Context.Guild.Id);
                 await ReplyAsync(embed: embed);
             }
             catch (HttpException e)
@@ -298,12 +298,12 @@ namespace DiscordBot.Modules.Commands
                 }
                 else
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild.Id);
                 }
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
     }

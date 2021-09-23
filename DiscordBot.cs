@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
 using DiscordBot.Modules;
-using DiscordBot.Modules.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +27,8 @@ namespace DiscordBot
         public static CommandService Commands;
         public static IConfiguration Config;
         public static ulong GuildId;
+        private XmlDocument settings = new XmlDocument();
+        public static DbConnection DbConnection;
 
         /// <summary>
         /// 
@@ -33,18 +36,16 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync()
         {
-            _detectOS();
-            _createConfig();
-            
-            var discordConfig = new DiscordSocketConfig
-            {
-                MessageCacheSize = Convert.ToInt32(Config["MessageCacheSize"]),
-                ExclusiveBulkDelete = Convert.ToBoolean(Config["AllowBulkDelete"])
-            };
+            _setWorkingDirectory(_detectOS());
+            _loadSettings();
+
+            DbConnection = new DbConnection(settings.DocumentElement["SQLSettings"].ChildNodes);
+
+            var discordConfig = BuildBotConfig(settings.DocumentElement["DiscordConfig"].ChildNodes);
             
             Client = new DiscordSocketClient(discordConfig);
             Commands = new CommandService();
-
+            
             _services = new ServiceCollection()
                 .AddSingleton(Client)
                 .AddSingleton(Commands)
@@ -55,7 +56,7 @@ namespace DiscordBot
             
             
             await RegisterCommandsAsync();
-            await Client.LoginAsync(TokenType.Bot, Config["Token"]);
+            await Client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
             await Client.StartAsync();
             await Task.Delay(-1);
         }
@@ -65,6 +66,7 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
+            DiscordEventHooks.HookClientEvents(Client);
             DiscordEventHooks.HookMessageEvents(Client);
             DiscordEventHooks.HookMemberEvents(Client);
             DiscordEventHooks.HookChannelEvents(Client);
@@ -74,11 +76,9 @@ namespace DiscordBot
         /// <summary>
         /// Detect the OS and build all OS based variables
         /// </summary>
-        private void _detectOS()
+        private int _detectOS()
         {
-            int environment = (int) Environment.OSVersion.Platform;
-            _setWorkingDirectory(environment);
-            
+            return (int)Environment.OSVersion.Platform;
         }
 
         /// <summary>
@@ -95,23 +95,49 @@ namespace DiscordBot
                     break;
                 case 2: //Location of the Windows Config
                     WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                  "\\.discordtestbot";
+                                       "\\.discordtestbot";
                     Console.WriteLine(WorkingDirectory);
                     break;
             }
         }
-        
+
         /// <summary>
         /// Create the config object based on the config.json file
         /// </summary>
-        private void _createConfig()
+        private void _loadSettings()
         {
+            settings.Load(WorkingDirectory + "/config.xml");
             var builder = new ConfigurationBuilder()
                 .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
             Config = Config.GetSection("DiscordBot");
             GuildId = Convert.ToUInt64(Config["GuildId"]);
+        }
+
+        private DiscordSocketConfig BuildBotConfig(XmlNodeList settings)
+        {
+            bool exclusiveBulkDelete = false;
+            int messageCacheSize = 0;
+            
+            foreach (XmlNode node in settings)
+            {
+                switch (node.Name)
+                {
+                    case "ExclusiveBulkDelete":
+                        exclusiveBulkDelete = Convert.ToBoolean(node.InnerText);
+                        break;
+                    case "MessageCacheSize":
+                        messageCacheSize = Convert.ToInt32(node.InnerText);
+                        break;
+                }
+            }
+
+            return new DiscordSocketConfig
+            {
+                ExclusiveBulkDelete = exclusiveBulkDelete,
+                MessageCacheSize = messageCacheSize
+            };
         }
 
         /// <summary>
@@ -159,14 +185,14 @@ namespace DiscordBot
             if (message.HasStringPrefix("$", ref argPos))
             {
                 var result = await Commands.ExecuteAsync(context, argPos, _services);
-                
+
                 if (!result.IsSuccess)
                 {
                     Embed exceptionEmbed = new EmbedBuilder()
                         .WithColor(Color.Red)
                         .WithDescription(result.ErrorReason)
                         .Build();
-                    
+
                     await context.Channel.SendMessageAsync(embed: exceptionEmbed);
                 }
 

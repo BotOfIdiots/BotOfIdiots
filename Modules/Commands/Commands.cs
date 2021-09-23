@@ -24,7 +24,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -53,7 +53,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -114,7 +114,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
 
@@ -215,7 +215,7 @@ namespace DiscordBot.Modules.Commands
         {
             var messageList = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
 
-            (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messageList);
+            await (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messageList);
 
             await Task.CompletedTask;
         }
