@@ -7,6 +7,7 @@ namespace DiscordBot.Models.Embeds
 {
     public class MemberRolesUpdateEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
         public MemberRolesUpdateEmbedBuilder(SocketGuildUser user, List<SocketRole> rolesBefore)
         {
             WithTitle("Role list updated");
@@ -22,7 +23,9 @@ namespace DiscordBot.Models.Embeds
 
 
         }
-
+        #endregion
+        
+        #region Methods
         private void _rolesBefore(List<SocketRole> roles)
         {
             string roleString = null;
@@ -44,5 +47,6 @@ namespace DiscordBot.Models.Embeds
 
             AddField("After", roleString);
         }
+        #endregion
     }
 }

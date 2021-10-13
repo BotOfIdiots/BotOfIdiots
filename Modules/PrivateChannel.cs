@@ -1,30 +1,27 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using DiscordBot.Models;
-using DiscordBot.Models.Embeds;
 
 namespace DiscordBot.Modules
 {
     public static class PrivateChannel
     {
+        #region Fields
         private static readonly ulong ChannelCreateId =
             Convert.ToUInt64(DiscordBot.Config.GetSection("PrivateChannels")["CreateChannelId"]);
 
         private static readonly ulong CategoryId = Convert.ToUInt64(
             DiscordBot.Config.GetSection("PrivateChannels")["CategoryId"]);
-
+        #endregion
+        
+        #region Methods
         public static async Task CreateChannelHandler(SocketVoiceState stateAfter, SocketUser user)
         {
             if (stateAfter.VoiceChannel.Id == ChannelCreateId)
             {
                 OverwritePermissions permissions = new OverwritePermissions(manageChannel: PermValue.Allow);
-                
-                
-
                 RestVoiceChannel createdChannel = CreateChannel(user);
                 await createdChannel.AddPermissionOverwriteAsync(user, permissions);
                 MoveUserToCreatedChannel(user, createdChannel);
@@ -58,5 +55,6 @@ namespace DiscordBot.Modules
                 await stateBefore.VoiceChannel.DeleteAsync();
             }
         }
+        #endregion
     }
 }

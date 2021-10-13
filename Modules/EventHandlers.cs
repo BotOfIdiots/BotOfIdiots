@@ -14,6 +14,7 @@ namespace DiscordBot.Modules
 {
     public static class EventHandlers
     {
+        #region Exception Event Handlers
         public static Task LogException(Exception exception, ulong guildId)
         {
             try
@@ -47,13 +48,15 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
+        #endregion
 
+        #region Message Event Handlers
         public static Task MessageDeleteHandler(Cacheable<IMessage, ulong> cachedMessage,
             ISocketMessageChannel channel)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Exceptions((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -78,6 +81,7 @@ namespace DiscordBot.Modules
                         .Build();
 
                     logChannel.SendMessageAsync(embed: messageDeleteEmbed);
+                    Console.WriteLine(logChannel.Name);
                     return Task.CompletedTask;
                 }
 
@@ -112,7 +116,7 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Exceptions((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -149,7 +153,7 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Exceptions((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -208,7 +212,9 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
+        #endregion
 
+        #region Member Event Handlers
         public static Task MemberJoinGuildHandler(SocketGuildUser joinedUser)
         {
             try
@@ -409,7 +415,18 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
+        
+        public static Task MemberJoinGuildHandler(SocketGuild guild)
+        {
+            JoinedGuild.AddGuild(guild);
+            JoinedGuild.DownloadMembers(guild.Users, guild.Id);
+            JoinedGuild.SetGuildOwner(guild.OwnerId);
 
+            return Task.CompletedTask;
+        }
+        #endregion
+
+        #region Member Ban event Hanlders
         public static Task MemberBannedHandler(SocketUser user, SocketGuild guild)
         {
             try
@@ -467,7 +484,9 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
+        #endregion
 
+        #region Channel Event Handlers
         // public static Task ChannelUpdateHandler(SocketChannel channelBefore, SocketChannel channel)
         // {
         //     if (channelBefore == channel)
@@ -492,7 +511,7 @@ namespace DiscordBot.Modules
 
         public static Task ChannelDeleteHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.Logs((channel as SocketTextChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketTextChannel).Guild.Id);
             if (logChannel == null)
             {
                 return Task.CompletedTask;
@@ -512,7 +531,7 @@ namespace DiscordBot.Modules
 
         public static Task ChannelCreatedHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.Logs((channel as SocketTextChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketTextChannel).Guild.Id);
             if (logChannel == null)
             {
                 return Task.CompletedTask;
@@ -548,7 +567,9 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
-
+        #endregion
+        
+        #region Reaction Event Handlers
         public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
@@ -592,12 +613,14 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region Command Event Handlers
         public static Task LogExecutedCommand(SocketCommandContext context, SocketUserMessage message)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(context.Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Commands(context.Guild.Id);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -615,14 +638,6 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
-
-        public static Task MemberJoinGuildHandler(SocketGuild guild)
-        {
-            JoinedGuild.AddGuild(guild);
-            JoinedGuild.DownloadMembers(guild.Users, guild.Id);
-            JoinedGuild.SetGuildOwner(guild.OwnerId);
-
-            return Task.CompletedTask;
-        }
+        #endregion
     }
 }

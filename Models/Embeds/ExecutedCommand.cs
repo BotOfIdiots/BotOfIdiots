@@ -6,6 +6,7 @@ namespace DiscordBot.Models.Embeds
 {
     public class ExecutedCommand : EmbedBuilder
     {
+        #region Constructors
         public ExecutedCommand(SocketCommandContext context, IMessage message)
         {
             IUser author = message.Author;
@@ -18,5 +19,6 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("UserID: " + author.Id);
         }
+        #endregion
     }
 }

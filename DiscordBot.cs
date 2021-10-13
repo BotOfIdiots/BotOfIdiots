@@ -14,12 +14,15 @@ namespace DiscordBot
 {
     internal class DiscordBot
     {
+        #region Main Method
         /// <summary>
         /// 
         /// </summary>
         /// <param name="args"></param>
         public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
-
+        #endregion
+        
+        #region Fields
         private static readonly string _version = "0.0.6";
         private static IServiceProvider _services;
         public static string WorkingDirectory;
@@ -29,7 +32,9 @@ namespace DiscordBot
         public static ulong GuildId;
         private XmlDocument settings = new XmlDocument();
         public static DbConnection DbConnection;
-
+        #endregion
+        
+        #region Startup Logic
         /// <summary>
         /// 
         /// </summary>
@@ -139,7 +144,9 @@ namespace DiscordBot
                 MessageCacheSize = messageCacheSize
             };
         }
+        #endregion
 
+        #region Methods
         /// <summary>
         /// 
         /// </summary>
@@ -202,5 +209,6 @@ namespace DiscordBot
                 }
             }
         }
+        #endregion
     }
 }

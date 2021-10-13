@@ -47,7 +47,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
+                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id, Context.Guild.Id);
 
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.WithTitle("Violations")
@@ -79,7 +79,7 @@ namespace DiscordBot.Modules.Commands
                             break;
                     }
 
-                    embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
+                    embedBuilder.AddField("Violation", violation.ViolationId + " - " + violationType);
                 }
 
                 Embed embed = embedBuilder.Build();
@@ -92,38 +92,38 @@ namespace DiscordBot.Modules.Commands
             }
         }
 
-        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
-            "You don't have persmision to use this command")]
-        [Command("remove")]
-        [Summary("$violation remove <violationID> - Removes a violation")]
-        public async Task Remove(int violationId, [Remainder] String reason = "No reason specified")
-        {
-            try
-            {
-                Violation violation = ViolationManager.GetViolationRecord(violationId);
-                Embed embed = new EmbedBuilder
-                    {
-                        Title = "Violation Removed",
-                        Color = Color.Orange
-                    }
-                    .WithAuthor(Context.Client.CurrentUser)
-                    .AddField("User", "<@!" + violation.UserId + ">", true)
-                    .AddField("Date", DateTime.Now, true)
-                    .AddField("Moderator", Context.User.Mention)
-                    .AddField("Reason", reason)
-                    .AddField("Original Violation Date", violation.Date)
-                    .AddField("Original Violation Reason", violation.Reason)
-                    .WithFooter("UserID: " + violation.UserId)
-                    .WithTimestamp(DateTime.Now)
-                    .Build();
-
-                ViolationManager.DeleteViolationRecord(violationId);
-                await ReplyAsync(embed: embed);
-            }
-            catch (Exception e)
-            {
-                await EventHandlers.LogException(e, Context.Guild.Id);
-            }
-        }
+        // [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
+        //     "You don't have persmision to use this command")]
+        // [Command("remove")]
+        // [Summary("$violation remove <violationID> - Removes a violation")]
+        // public async Task Remove(int violationId, [Remainder] String reason = "No reason specified")
+        // {
+        //     try
+        //     {
+        //         Violation violation = ViolationManager.GetViolationRecord(Context.Guild.Id, violationId);
+        //         Embed embed = new EmbedBuilder
+        //             {
+        //                 Title = "Violation Removed",
+        //                 Color = Color.Orange
+        //             }
+        //             .WithAuthor(Context.Client.CurrentUser)
+        //             .AddField("User", "<@!" + violation.UserId + ">", true)
+        //             .AddField("Date", DateTime.Now, true)
+        //             .AddField("Moderator", Context.User.Mention)
+        //             .AddField("Reason", reason)
+        //             .AddField("Original Violation Date", violation.Date)
+        //             .AddField("Original Violation Reason", violation.Reason)
+        //             .WithFooter("UserID: " + violation.UserId)
+        //             .WithTimestamp(DateTime.Now)
+        //             .Build();
+        //
+        //         ViolationManager.DeleteViolationRecord(violationId);
+        //         await ReplyAsync(embed: embed);
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         await EventHandlers.LogException(e, Context.Guild.Id);
+        //     }
+        // }
     }
 }

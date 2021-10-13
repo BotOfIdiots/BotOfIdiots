@@ -6,8 +6,11 @@ namespace DiscordBot.Database
 {
     public class DbConnection
     {
-        private MySqlConnection _sqlConnection;
-
+        #region Fields
+        public readonly MySqlConnection SqlConnection;
+        #endregion
+        
+        #region Constructors
         public DbConnection(XmlNodeList settings)
         {
             MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
@@ -37,22 +40,24 @@ namespace DiscordBot.Database
                 }
             }
 
-            _sqlConnection = new MySqlConnection(builder.ConnectionString);
+            SqlConnection = new MySqlConnection(builder.ConnectionString);
             CheckConnection();
         }
-
+        #endregion
+        
+        #region Methods
         public int ExecuteNonQuery(string query, params MySqlParameter[] parameters)
         {
             CheckConnection();
             try
             {
-                using (_sqlConnection)
+                using (SqlConnection)
                 {
-                    using (MySqlCommand cmd = _sqlConnection.CreateCommand())
+                    using (MySqlCommand cmd = SqlConnection.CreateCommand())
                     {
                         cmd.CommandText = query;
                         cmd.Parameters.AddRange(parameters);
-                        
+
                         int returnVal = cmd.ExecuteNonQuery();
                         return returnVal;
                     }
@@ -61,43 +66,19 @@ namespace DiscordBot.Database
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                _sqlConnection.Close();
+                SqlConnection.Close();
                 return -1;
             }
         }
 
-        public MySqlDataReader ExecuteReader(string query, params MySqlParameter[] parameters)
-        {
-            CheckConnection();
 
-            try
-            {
-                using (_sqlConnection)
-                {
-                    using (MySqlCommand cmd = _sqlConnection.CreateCommand())
-                    {
-                        cmd.CommandText = query;
-                        cmd.Parameters.AddRange(parameters);
-                        
-                        return cmd.ExecuteReader();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                _sqlConnection.Close();
-                return null;
-            }
-        }
-
-        private void CheckConnection()
+        public void CheckConnection()
         {
-            if (!_sqlConnection.Ping())
+            if (!SqlConnection.Ping())
             {
                 try
                 {
-                    _sqlConnection.Open();
+                    SqlConnection.Open();
                 }
                 catch (Exception e)
                 {
@@ -105,5 +86,6 @@ namespace DiscordBot.Database
                 }
             }
         }
+        #endregion
     }
 }

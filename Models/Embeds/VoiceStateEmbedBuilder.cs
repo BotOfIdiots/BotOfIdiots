@@ -7,6 +7,7 @@ namespace DiscordBot.Models.Embeds
     public class VoiceStateEmbedBuilder : EmbedBuilder
     {
       
+        #region Constructors
         public VoiceStateEmbedBuilder(int state, SocketUser user, SocketVoiceState before, SocketVoiceState after)
         {
             AddField("User", user.Mention);
@@ -28,7 +29,9 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("UserID: " + user.Id);
         }
+        #endregion
 
+        #region Methods
         private void _joinedChannelEmbed(SocketVoiceState state)
         {
             WithColor(Discord.Color.Green);
@@ -50,5 +53,6 @@ namespace DiscordBot.Models.Embeds
             AddField("Origin", before.VoiceChannel.Name + " (" + before.VoiceChannel.Id + ")");
             AddField("Destination", after.VoiceChannel.Name + " (" + after.VoiceChannel.Id + ")");
         }
+        #endregion
     }
 }

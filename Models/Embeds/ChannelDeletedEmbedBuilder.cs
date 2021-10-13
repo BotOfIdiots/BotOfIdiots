@@ -5,6 +5,7 @@ namespace DiscordBot.Models.Embeds
 {
     public class ChannelDeletedEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
         public ChannelDeletedEmbedBuilder(SocketGuildChannel channel)
         {
             WithTitle("Channel Deleted");
@@ -14,6 +15,7 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("ChannelId: " + channel.Id);
         }
+        #endregion
     }
     
 }

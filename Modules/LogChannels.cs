@@ -8,6 +8,7 @@ namespace DiscordBot.Models
 {
     public static class LogChannels
     {
+        #region Moderation Log Channels
         public static SocketTextChannel Logs(ulong guild)
         {
             ulong channelSnowflake = DbOperations.GetLogChannel("Logs", guild);
@@ -51,6 +52,9 @@ namespace DiscordBot.Models
             ulong channelSnowflake = DbOperations.GetLogChannel("Nickname", guild);
             return CreateLogChannel(channelSnowflake, guild);
         }
+        #endregion
+        
+        #region Admin Log Channels
         public static SocketTextChannel ChannelUpdates(ulong guild)
         {
             ulong channelSnowflake = DbOperations.GetLogChannel("ChannelUpdates", guild);
@@ -74,7 +78,9 @@ namespace DiscordBot.Models
                 return null;
             }
         }
+        #endregion
 
+        #region Methods
         private static SocketTextChannel CreateLogChannel(ulong channel, ulong guild)
         {
             if (channel != 0)
@@ -83,6 +89,6 @@ namespace DiscordBot.Models
             }
             return Logs(guild);
         }
-
+        #endregion
     }
 }

@@ -11,6 +11,7 @@ namespace DiscordBot.Modules.Commands
     [Group("set")]
     public class Set : ModuleBase<SocketCommandContext>
     {
+        #region Set Moderation Roles
         [Command("joinrole")]
         [Summary("$set joinrole <role/snowflake> - Set the join role")]
         public async Task JoinRole(IRole role)
@@ -127,7 +128,9 @@ namespace DiscordBot.Modules.Commands
                 await ReplyAsync(embed: reactionEmbed);
             }
         }
-
+        #endregion
+        
+        #region Setup Logging
         [Command("logging")]
         public async Task Logging(SocketTextChannel logsChannel, SocketTextChannel exceptionsChannel)
         {
@@ -207,5 +210,6 @@ namespace DiscordBot.Modules.Commands
             }
 
         }
+        #endregion
     }
 }

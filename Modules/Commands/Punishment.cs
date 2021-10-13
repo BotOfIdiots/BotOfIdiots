@@ -18,10 +18,12 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
+        #region Fields
         private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
             .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
+        #endregion
 
-
+        #region Warn Related Commands
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -58,7 +60,9 @@ namespace DiscordBot.Modules.Commands
                 await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
+        #endregion
 
+        #region Mute Related Commands
         /// <summary>
         /// Mute a user
         /// </summary>
@@ -177,7 +181,9 @@ namespace DiscordBot.Modules.Commands
                 }
             }
         }
+        #endregion
 
+        #region Kick Related Commands
         /// <summary>
         /// Kick a user
         /// </summary>
@@ -215,7 +221,9 @@ namespace DiscordBot.Modules.Commands
                 await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
+        #endregion
 
+        #region Ban Related Commands
         /// <summary>
         /// Ban a user
         /// </summary>
@@ -306,5 +314,6 @@ namespace DiscordBot.Modules.Commands
                 await EventHandlers.LogException(e, Context.Guild.Id);
             }
         }
+        #endregion
     }
 }

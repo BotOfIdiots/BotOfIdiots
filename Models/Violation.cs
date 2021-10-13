@@ -1,18 +1,221 @@
 ﻿using System;
 
+using DiscordBot.Database;
+using DiscordBot.Modules;
+using MySql.Data.MySqlClient;
+
 namespace DiscordBot.Models
 {
     /// <summary>
-    /// This object Contains all the information for a violation
+    /// This object contains all the information for a violation
     /// </summary>
     public class Violation
     {
-        public int Id { get; set; }
-        public ulong UserId { get; set; }
-        public ulong ModeratorId { get; set; }
+        #region Fields
+        public ulong Guild { get; set; }
+        public long ViolationId { get; set; }
+        public ulong User { get; set; }
+        public ulong Moderator { get; set; }
+        public bool Confidential { get; set; }
         public int Type { get; set; }
         public string Reason { get; set; }
         public DateTime Date { get; set; }
         public DateTime Expires { get; set; }
+        #endregion
+         
+        #region Constructors
+        public Violation(ulong guild)
+        {
+            Guild = guild;
+            ViolationId = GenerateViolationId();
+        }
+        
+        public Violation(ulong guild, ulong userId, ulong moderatorId, int type, string reason,
+            DateTime date, bool confidential = false, int violationId = -1)
+        {
+            Guild = guild;
+            User = userId;
+            Moderator = moderatorId;
+            Confidential = confidential;
+            Type = type;
+            Reason = reason;
+            Date = date;
+
+            if (violationId != -1)
+            {
+                ViolationId = violationId;
+            }
+            else
+            {
+                ViolationId = GenerateViolationId();
+            }
+        }
+
+        public Violation(ulong guild, ulong userId, ulong moderatorId, int type, string reason,
+            DateTime date, DateTime expires, bool confidential = false, int violationId = -1) : 
+            this(guild, userId, moderatorId, type, reason, date, confidential, violationId)
+        {
+            Expires = expires;
+        }
+        
+        #endregion
+
+        #region Methods
+        private int GenerateViolationId()
+        {
+            const ulong test = 317226837841281024;
+
+            string query = "SELECT ViolationId FROM violations WHERE Guild = @Guild"; //"SELECT max(ViolationId) as maxId FROM violations WHERE Guild = @Guild";
+
+            #region SQL Parameters
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
+            {
+                // Value = Guild;
+                Value = test
+            };
+
+            #endregion
+            
+            try
+            {
+                DiscordBot.DbConnection.CheckConnection();
+                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+
+                // return Convert.ToInt32(reader) + 1;
+
+                while (reader.Read())
+                {
+                    Console.WriteLine(Convert.ToString(reader.GetType()));
+                    
+                    // if (reader.GetInt32("maxId") != 0)
+                    // {
+                    //     Console.WriteLine(reader.GetInt32("maxId"));
+                    //     return reader.GetInt32("maxId") + 1;
+                    // }
+                    // else
+                    // {
+                    //     return 1;
+                    // }
+                }
+            }
+
+            #region Exception Handling
+            catch (MySqlException ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            #endregion
+            
+            return 0;
+        }
+        #endregion
+        
+        #region Database Operations
+        public void Insert()
+        {
+            string query =
+                "INSERT INTO violations VALUE (@Guild, @ViolationId, @User, @Moderator, @Confidential, @Type, @Reason, @Date, @Expires)";
+            
+            #region SQL Parameters
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+            guild.Value = Guild;
+
+            MySqlParameter violationId = new MySqlParameter("@ViolationId", MySqlDbType.Int32);
+            violationId.Value = ViolationId;
+
+            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64);
+            user.Value = User;
+
+            
+            MySqlParameter moderator = new MySqlParameter("@Moderator", MySqlDbType.UInt64);
+            moderator.Value = Moderator;
+
+            MySqlParameter confidential = new MySqlParameter("@Confidential", MySqlDbType.Int16);
+            confidential.Value = Confidential;
+
+            MySqlParameter type = new MySqlParameter("@Type", MySqlDbType.Int16);
+            type.Value = Type;
+
+            MySqlParameter reason = new MySqlParameter("@Reason", MySqlDbType.VarChar);
+            reason.Value = Reason;
+
+            MySqlParameter date = new MySqlParameter("@Date", MySqlDbType.DateTime);
+            date.Value = Date;
+
+            MySqlParameter expires = new MySqlParameter("@Expires", MySqlDbType.DateTime);
+            expires.Value = Expires;
+            #endregion
+
+            try
+            {
+                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violationId, user, moderator, confidential, type,
+                    reason, date, expires);
+            }
+            
+            #region Exception Handling
+            
+            catch (MySqlException ex)
+            {
+            }
+            
+            catch (Exception ex)
+            {
+                EventHandlers.LogException(ex, Guild);
+            }
+            
+            #endregion
+        }
+
+        public static Violation ReturnViolation(ulong guildId, int violationId)
+        {
+            string query = "SELECT * FROM violations WHERE Guild = @Guild AND ViolationId = @ViolationId";
+
+            #region SQL Parameters
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+            guild.Value = guildId;
+
+            MySqlParameter violation = new MySqlParameter("@ViolationId", MySqlDbType.Int32);
+            guild.Value = violationId;
+            #endregion
+
+            try
+            {
+                DiscordBot.DbConnection.CheckConnection();
+                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, violation);
+
+
+                while (reader.Read())
+                {
+                    ulong user = reader.GetUInt64("User");
+                    ulong moderator = reader.GetUInt64("Moderator");
+                    bool confidential = reader.GetBoolean("Confidential");
+                    int type = reader.GetInt32("Type");
+                    string reason = reader.GetString("Reason");
+                    DateTime date = reader.GetDateTime("Date");
+                    DateTime expires = reader.GetDateTime("Expires");
+
+                    return new Violation(guildId, user, moderator, type, reason, date, expires, confidential,
+                        violationId);
+                }
+            }
+            
+            #region Exception Handling
+            
+            catch (MySqlException ex)
+            {
+            }
+            
+            catch (Exception ex)
+            {
+                EventHandlers.LogException(ex, guildId);
+            }
+            #endregion
+
+            return null;
+        }
+        #endregion
     }
 }
