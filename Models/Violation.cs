@@ -64,8 +64,10 @@ namespace DiscordBot.Models
         private int GenerateViolationId()
         {
             const ulong test = 317226837841281024;
-
-            string query = "SELECT ViolationId FROM violations WHERE Guild = @Guild"; //"SELECT max(ViolationId) as maxId FROM violations WHERE Guild = @Guild";
+            
+            //TODO: Fix database request so the int to varchar conversion can be removed
+            // string query = "SELECT max(ViolationId) as maxId FROM violations WHERE Guild = @Guild";
+            string query = "SELECT CAST(max(ViolationId) as VARCHAR(3)) as maxId FROM violations WHERE Guild = @Guild";
 
             #region SQL Parameters
 
@@ -83,22 +85,9 @@ namespace DiscordBot.Models
                 using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
 
-                // return Convert.ToInt32(reader) + 1;
-
-                while (reader.Read())
-                {
-                    Console.WriteLine(Convert.ToString(reader.GetType()));
-                    
-                    // if (reader.GetInt32("maxId") != 0)
-                    // {
-                    //     Console.WriteLine(reader.GetInt32("maxId"));
-                    //     return reader.GetInt32("maxId") + 1;
-                    // }
-                    // else
-                    // {
-                    //     return 1;
-                    // }
-                }
+                reader.Read();
+                // Console.WriteLine(reader.GetString("maxId"));
+                return reader.GetInt32("maxId") + 1;
             }
 
             #region Exception Handling

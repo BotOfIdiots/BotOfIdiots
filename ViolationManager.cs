@@ -40,7 +40,7 @@ namespace DiscordBot
                 Reason = reason,
                 Date = DateTime.Now
             };
-
+            
             newViolation.Insert();
 
             return new ViolationEmbedBuilder(newViolation, context.Client.CurrentUser.Id).Build();
