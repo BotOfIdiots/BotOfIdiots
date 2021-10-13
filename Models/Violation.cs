@@ -63,9 +63,7 @@ namespace DiscordBot.Models
         #region Methods
         private int GenerateViolationId()
         {
-            const ulong test = 317226837841281024;
-            
-            //TODO: Fix database request so the int to varchar conversion can be removed
+           //TODO: Fix database request so the int to varchar conversion can be removed
             // string query = "SELECT max(ViolationId) as maxId FROM violations WHERE Guild = @Guild";
             string query = "SELECT CAST(max(ViolationId) as VARCHAR(3)) as maxId FROM violations WHERE Guild = @Guild";
 
@@ -73,8 +71,7 @@ namespace DiscordBot.Models
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
             {
-                // Value = Guild;
-                Value = test
+                Value = Guild
             };
 
             #endregion
