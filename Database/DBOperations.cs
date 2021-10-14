@@ -7,7 +7,8 @@ namespace DiscordBot.Database
 {
     public static class DbOperations
     {
-        #region Database Check
+        #region Database Checks
+
         public static bool CheckJoinRole()
         {
             bool check = false;
@@ -18,13 +19,13 @@ namespace DiscordBot.Database
             // guild.Value = guildId;
 
             // if ()
-
-
-                return check;
+            return check;
         }
+
         #endregion
 
         #region Database Inserts
+
         public static void InsertUser(ulong userId, ulong guildId)
         {
             string query = "INSERT INTO users (Guild, Snowflake) VALUES (@Guild, @Snowflake)";
@@ -37,16 +38,20 @@ namespace DiscordBot.Database
 
             DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
         }
+
         #endregion
 
         #region Database Selects
+
         public static ulong GetLogChannel(string logType, ulong guildId)
         {
             string query = "SELECT " + logType + " FROM log_channels_settings WHERE Guild = @Guild";
 
             #region SQL Parameters
+
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = guildId;
+
             #endregion
 
             try
@@ -60,20 +65,20 @@ namespace DiscordBot.Database
                     return reader.GetUInt64(logType);
                 }
             }
-            
+
             #region Exception Handlers
+
             catch (MySqlException ex)
             {
-
             }
             catch (SqlNullValueException)
             {
-                
             }
             catch (Exception ex)
             {
                 EventHandlers.LogException(ex, guildId);
             }
+
             #endregion
 
             return 0;
@@ -90,7 +95,7 @@ namespace DiscordBot.Database
                 return cmd.ExecuteScalar();
             }
         }
-        
+
         public static MySqlDataReader ExecuteReader(MySqlConnection conn, string query,
             params MySqlParameter[] parameters)
         {

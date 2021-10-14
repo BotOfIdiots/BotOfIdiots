@@ -8,7 +8,7 @@ namespace DiscordBot
     {
         public static void HookClientEvents(BaseSocketClient client)
         {
-            client.JoinedGuild += EventHandlers.MemberJoinGuildHandler;
+            client.JoinedGuild += EventHandlers.ClientJoinGuildHandler;
         }
         
         public static void HookMemberEvents(BaseSocketClient client)

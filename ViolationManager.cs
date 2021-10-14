@@ -44,54 +44,7 @@ namespace DiscordBot
             newViolation.Insert();
 
             return new ViolationEmbedBuilder(newViolation, context.Client.CurrentUser.Id).Build();
-
-            try
-            {
-                // DateTime date = DateTime.Now;
-                //
-                // Violation violation = new Violation
-                // {
-                //     UserId = violator.Id,
-                //     ModeratorId = context.User.Id,
-                //     Type = violationType,
-                //     Reason = reason,
-                //     Date = date
-                // };
-                //
-                //
-                // InsertViolation(violation);
-                //
-                // violation = GetCreatedRecord(date);
-                //
-                // return ViolationEmbed(violation, context);
-            }
-
-            catch (IndexOutOfRangeException)
-            {
-                Embed error = new EmbedBuilder
-                    {
-                        Title = "Te weinig argumenten"
-                    }
-                    .WithDescription("Commando is uitgevoerd met te weinig argumenten")
-                    .AddField("Example", DiscordBot.Config["CommandPrefix"] + "ban [user] {reason}")
-                    .Build();
-
-                return error;
-            }
-
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                Embed error = new EmbedBuilder
-                    {
-                        Title = "Exception"
-                    }
-                    .WithDescription(Format.Sanitize(e.ToString()))
-                    .AddField("Time", DateTime.Now)
-                    .Build();
-
-                return error;
-            }
+            
         }
         #endregion
         
@@ -138,7 +91,7 @@ namespace DiscordBot
         {
             List<Violation> violations = new List<Violation>();
 
-            string query = "SELECT ViolationId FROM violations WHERE Guild = @Guild AND User = @User";
+            string query = "SELECT CAST(ViolationId as VARCHAR(6)) as ViolationId FROM violations WHERE Guild = @Guild AND User = @User";
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = guildId;
@@ -152,13 +105,23 @@ namespace DiscordBot
                 using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
 
+                List<int> violationIds = new List<int>();
+
                 while (reader.Read())
                 {
-                    violations.Add(Violation.ReturnViolation(guildId, reader.GetInt32("ViolationId")));
+                    violationIds.Add( reader.GetInt32("ViolationId"));
+                }
+                reader.Close();
+
+                foreach (int id in violationIds)
+                {
+                    Console.WriteLine(id);
+                    violations.Add(Violation.Select(guildId, id));
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
             }
 
             return violations;
@@ -173,7 +136,7 @@ namespace DiscordBot
         /// <returns></returns>
         public static Embed GetViolation(int id, SocketCommandContext context)
         {
-            Violation violation = Violation.ReturnViolation(context.Guild.Id, id);
+            Violation violation = Violation.Select(context.Guild.Id, id);
 
             return new ViolationEmbedBuilder(violation, context.Client.CurrentUser.Id).Build();
         }

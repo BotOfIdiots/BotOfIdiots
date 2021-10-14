@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -30,8 +31,8 @@ namespace DiscordBot.Modules
                         Title = exception.Message
                     }
                     .WithColor(Color.Red)
-                    .WithDescription(exception.StackTrace)
-                    .AddField("Source", exception.Source)
+                    // .WithDescription(exception.StackTrace)
+                    // .AddField("Source", exception.Source)
                     .WithFooter(DiscordBot.Version())
                     .WithCurrentTimestamp()
                     .Build();
@@ -329,8 +330,8 @@ namespace DiscordBot.Modules
             {
                 if (DiscordBot.Config.GetChildren().Any(item => item.Key == "PrivateChannels"))
                 {
-                    PrivateChannel.CreateChannelHandler(stateAfter, user).GetAwaiter();
-                    PrivateChannel.DestroyChannelHandler(stateBefore).GetAwaiter();
+                    PrivateChannel.CreatePrivateChannelHandler(stateAfter, user).GetAwaiter();
+                    PrivateChannel.DestroyPrivateChannelHandler(stateBefore).GetAwaiter();
                 }
             }
             catch (Exception e)
@@ -416,11 +417,11 @@ namespace DiscordBot.Modules
             return Task.CompletedTask;
         }
         
-        public static Task MemberJoinGuildHandler(SocketGuild guild)
+        public static Task ClientJoinGuildHandler(SocketGuild guild)
         {
             JoinedGuild.AddGuild(guild);
             JoinedGuild.DownloadMembers(guild.Users, guild.Id);
-            JoinedGuild.SetGuildOwner(guild.OwnerId);
+            JoinedGuild.SetGuildOwner(guild.OwnerId, guild.Id);
 
             return Task.CompletedTask;
         }
@@ -511,7 +512,7 @@ namespace DiscordBot.Modules
 
         public static Task ChannelDeleteHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketTextChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild.Id);
             if (logChannel == null)
             {
                 return Task.CompletedTask;
@@ -531,7 +532,7 @@ namespace DiscordBot.Modules
 
         public static Task ChannelCreatedHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketTextChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild.Id);
             if (logChannel == null)
             {
                 return Task.CompletedTask;

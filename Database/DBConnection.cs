@@ -7,10 +7,13 @@ namespace DiscordBot.Database
     public class DbConnection
     {
         #region Fields
+
         public readonly MySqlConnection SqlConnection;
+
         #endregion
-        
+
         #region Constructors
+
         public DbConnection(XmlNodeList settings)
         {
             MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
@@ -43,9 +46,11 @@ namespace DiscordBot.Database
             SqlConnection = new MySqlConnection(builder.ConnectionString);
             CheckConnection();
         }
+
         #endregion
-        
+
         #region Methods
+
         public int ExecuteNonQuery(string query, params MySqlParameter[] parameters)
         {
             CheckConnection();
@@ -86,6 +91,7 @@ namespace DiscordBot.Database
                 }
             }
         }
+
         #endregion
     }
 }

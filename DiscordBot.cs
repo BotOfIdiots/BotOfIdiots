@@ -59,7 +59,6 @@ namespace DiscordBot
             Client.Log += _client_log;
             LoadDiscordEventHandlers();
             
-            
             await RegisterCommandsAsync();
             await Client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
             await Client.StartAsync();
