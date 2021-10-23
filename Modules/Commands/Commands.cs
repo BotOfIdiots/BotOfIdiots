@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -243,6 +245,20 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(DiscordBot.GuildId.ToString());
         }
 
+        [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage =
+            "You don't have permission to use this command")]
+        [Command("setupbot")]
+        public async Task SetupBot()
+        {
+            JoinedGuild.AddGuild(Context.Guild);
+            JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id);
+            JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id);
+
+            await Task.CompletedTask;
+        }
+        
+        
+        
         #endregion
     }
 }

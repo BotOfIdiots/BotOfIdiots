@@ -1,5 +1,7 @@
 using System;
 using System.Data.SqlTypes;
+using Discord;
+using Discord.WebSocket;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
 
@@ -82,6 +84,43 @@ namespace DiscordBot.Database
             #endregion
 
             return 0;
+        }
+
+        public static SocketRole GetMutedRole(SocketGuild socketGuild)
+        {
+            string query = "SELECT MutedRole FROM guild_configurations WHERE Guild = @Guild";
+            
+            #region parameters
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
+            #endregion
+
+            try
+            {
+                DiscordBot.DbConnection.CheckConnection();
+                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                MySqlDataReader reader = ExecuteReader(conn, query, guild);
+
+                while (reader.Read())
+                {
+                    return socketGuild.GetRole(reader.GetUInt64("MutedRole"));
+                }
+            }
+            #region Exception Handlers
+
+            catch (MySqlException ex)
+            {
+            }
+            catch (SqlNullValueException)
+            {
+            }
+            catch (Exception ex)
+            {
+                EventHandlers.LogException(ex, socketGuild.Id);
+            }
+
+            #endregion
+
+            return null;
         }
 
         public static Object ExecuteScalar(MySqlConnection conn, string query,

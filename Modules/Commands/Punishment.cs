@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Database;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -18,12 +19,7 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
-        #region Fields
-        private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-        #endregion
-
-        #region Warn Related Commands
+       #region Warn Related Commands
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -76,7 +72,9 @@ namespace DiscordBot.Modules.Commands
         {
             Embed embed;
 
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            SocketRole mutedRole = DbOperations.GetMutedRole(mutedUser.Guild);
+            
+            if (mutedRole == null)
             {
                 embed = new EmbedBuilder
                 {
@@ -96,7 +94,7 @@ namespace DiscordBot.Modules.Commands
                         }.Build();
                     }
 
-                    else if (mutedUser.Roles.Contains(MutedRole)
+                    else if (mutedUser.Roles.Contains(mutedRole)
                     )
                     {
                         embed = new EmbedBuilder
@@ -110,7 +108,7 @@ namespace DiscordBot.Modules.Commands
                         embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
 
                         await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                        await mutedUser.AddRoleAsync(MutedRole);
+                        await mutedUser.AddRoleAsync(mutedRole);
                         await EventHandlers.LogViolation(embed, Context.Guild.Id);
                     }
 
@@ -137,6 +135,8 @@ namespace DiscordBot.Modules.Commands
         {
             Embed embed;
             
+            SocketRole mutedRole = DbOperations.GetMutedRole(unmutedUser.Guild);
+            
             if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
             {
                 embed = new EmbedBuilder
@@ -157,7 +157,7 @@ namespace DiscordBot.Modules.Commands
                             Title = "You can't unmute that user."
                         }.Build();
                     }
-                    else if (!unmutedUser.Roles.Contains(MutedRole))
+                    else if (!unmutedUser.Roles.Contains(mutedRole))
                     {
                         embed = new EmbedBuilder
                         {
@@ -170,7 +170,7 @@ namespace DiscordBot.Modules.Commands
 
                         await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
                         await EventHandlers.LogViolation(embed, Context.Guild.Id);
-                        await unmutedUser.RemoveRoleAsync(MutedRole);
+                        await unmutedUser.RemoveRoleAsync(mutedRole);
                     }
 
                     await ReplyAsync(embed: embed);
