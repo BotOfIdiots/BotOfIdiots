@@ -1,4 +1,4 @@
-
+using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -209,6 +209,36 @@ namespace DiscordBot.Modules.Commands
                 await ReplyAsync(embed: reactionEmbed);
             }
 
+        }
+        #endregion
+
+        #region Private Channels
+
+        [Command("privatechannel")]
+        public async Task PrivateChannel(ulong categorySnowflake, ulong voiceChannelSnowflake)
+        {
+            String query = "INSERT INTO private_channels_setups VALUE (@Guild, @Category, @Channel);";
+
+            #region SQL Parameters
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
+            MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64) { Value = categorySnowflake };
+            MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64)
+                { Value = voiceChannelSnowflake };
+            #endregion
+
+            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, channel, guild, category);
+
+            if (succes == 1)
+            {
+                Embed reactionEmbed = new EmbedBuilder
+                    {
+                        Color = Color.Green
+                    }
+                    .WithDescription("Succesfully enabled Private Channels")
+                    .Build();
+
+                await ReplyAsync(embed: reactionEmbed);
+            }
         }
         #endregion
     }

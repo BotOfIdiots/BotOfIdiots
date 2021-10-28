@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.Design;
 using System.Data.SqlTypes;
 using Discord;
 using Discord.WebSocket;
@@ -24,6 +25,25 @@ namespace DiscordBot.Database
             return check;
         }
 
+        public static bool CheckPrivateChannel(ulong snowflake)
+        {
+            String query = "SELECT CategoryId FROM private_channels_setups WHERE Guild = @Guild;";
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) {Value = snowflake};
+
+            DiscordBot.DbConnection.CheckConnection();
+            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            MySqlDataReader reader = ExecuteReader(conn, query, guild);
+
+            while (reader.Read())
+            {
+                if (reader.GetUInt64("CategoryId") != 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         #endregion
 
         #region Database Inserts

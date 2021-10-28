@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
@@ -24,7 +25,7 @@ namespace DiscordBot.Modules
                 OverwritePermissions permissions = new OverwritePermissions(manageChannel: PermValue.Allow);
                 RestVoiceChannel createdChannel = CreateChannel(user, guild, channel.Category.Id);
                 await createdChannel.AddPermissionOverwriteAsync(user, permissions);
-                MoveUserToCreatedChannel(user, createdChannel);
+                await MoveUserToCreatedChannel(user, createdChannel, guild);
             }
 
             await Task.CompletedTask;
@@ -33,17 +34,19 @@ namespace DiscordBot.Modules
         private static RestVoiceChannel CreateChannel(SocketUser user, SocketGuild guild, ulong categoryId)
         {
             return guild.CreateVoiceChannelAsync(user.Username + "'s Channel", channelProperties =>
-            {
-                channelProperties.CategoryId = categoryId;
-                channelProperties.UserLimit = 4;
-            }).GetAwaiter().GetResult();
+                {
+                    channelProperties.CategoryId = categoryId;
+                    channelProperties.UserLimit = 4;
+                }
+            ).GetAwaiter().GetResult();
         }
 
-        private static void MoveUserToCreatedChannel(SocketUser user, RestVoiceChannel createdChannel)
+        private static Task MoveUserToCreatedChannel(SocketUser user, RestVoiceChannel createdChannel, SocketGuild guild)
         {
-            IGuildUser guildUser = DiscordBot.Client.GetGuild(DiscordBot.GuildId).GetUser(user.Id);
+            IGuildUser guildUser = guild.GetUser(user.Id);
 
             guildUser.ModifyAsync(properties => { properties.Channel = createdChannel; });
+            return Task.CompletedTask;
         }
 
         #endregion
@@ -82,14 +85,14 @@ namespace DiscordBot.Modules
             return false;
         }
 
-        private static bool CheckCategory(ulong categoryChannel, ulong socketGuild)
+        public static bool CheckCategory(ulong categoryChannel, ulong socketGuild)
         {
             string query =
                 "SELECT CategoryId FROM private_channels_setups WHERE CategoryId = @Category AND Guild = @Guild";
 
             #region SQL Parameters
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild  };
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild };
 
             MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64) { Value = categoryChannel };
 
@@ -114,7 +117,7 @@ namespace DiscordBot.Modules
             {
                 Console.WriteLine(e);
             }
-            
+
             return false;
         }
 
@@ -153,7 +156,7 @@ namespace DiscordBot.Modules
                 Console.WriteLine(e);
                 throw;
             }
-            
+
             return false;
         }
 

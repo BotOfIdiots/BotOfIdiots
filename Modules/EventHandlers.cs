@@ -317,17 +317,17 @@ namespace DiscordBot.Modules
             
             if (stateAfter.VoiceChannel != null)
             {
-                guildId=stateAfter.VoiceChannel.Guild.Id;
+                guildId = stateAfter.VoiceChannel.Guild.Id;
             }
 
             if (stateBefore.VoiceChannel != null)
             {
-                guildId=stateBefore.VoiceChannel.Guild.Id;
+                guildId = stateBefore.VoiceChannel.Guild.Id;
             }
 
             try
             {
-                if (DiscordBot.Config.GetChildren().Any(item => item.Key == "PrivateChannels"))
+                if (DbOperations.CheckPrivateChannel(guildId))
                 {
                     PrivateChannel.CreatePrivateChannelHandler(stateAfter, user).GetAwaiter();
                     PrivateChannel.DestroyPrivateChannelHandler(stateBefore).GetAwaiter();
