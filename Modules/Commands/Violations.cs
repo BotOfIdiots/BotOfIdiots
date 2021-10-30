@@ -32,7 +32,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -88,7 +88,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -122,7 +122,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
     }

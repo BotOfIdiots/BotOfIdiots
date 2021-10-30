@@ -15,16 +15,17 @@ namespace DiscordBot.Modules
     public static class EventHandlers
     {
         #region Exception Event Handlers
-        public static Task LogException(Exception exception, ulong guildId)
+
+        public static Task LogException(Exception exception, SocketGuild guild)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Exceptions(guildId);
+                SocketTextChannel logChannel = LogChannels.Exceptions(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 Embed exceptionEmbed = new EmbedBuilder
                     {
                         Title = exception.Message
@@ -48,24 +49,26 @@ namespace DiscordBot.Modules
                 return Task.CompletedTask;
             }
         }
+
         #endregion
 
         #region Message Event Handlers
+
         public static Task MessageDeleteHandler(Cacheable<IMessage, ulong> cachedMessage,
             ISocketMessageChannel channel)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 if (cachedMessage.HasValue)
                 {
                     var message = cachedMessage.Value;
-                    
+
                     Embed messageDeleteEmbed = new EmbedBuilder
                         {
                             Title = "Message Deleted"
@@ -106,7 +109,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, (channel as SocketTextChannel).Guild.Id);
+                LogException(e, (channel as SocketTextChannel).Guild);
                 return Task.CompletedTask;
             }
         }
@@ -116,12 +119,12 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 if (cachedData.Count > 0)
                 {
                     Embed messageBulkDeleteEmbed = new EmbedBuilder
@@ -143,7 +146,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, (channel as SocketTextChannel).Guild.Id);
+                LogException(e, (channel as SocketTextChannel).Guild);
                 return Task.CompletedTask;
             }
         }
@@ -153,12 +156,12 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 if (!cachedMessage.HasValue || message.Content == null)
                 {
                     Embed messageDeleteEmbed = new EmbedBuilder
@@ -208,32 +211,32 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, (channel as SocketTextChannel).Guild.Id);
+                LogException(e, (channel as SocketTextChannel).Guild);
                 return Task.CompletedTask;
             }
         }
+
         #endregion
 
         #region Member Event Handlers
+
         public static Task MemberJoinGuildHandler(SocketGuildUser joinedUser)
         {
             try
             {
                 if (joinedUser != null)
                 {
-                    if (DbOperations.CheckJoinRole())
+                    if (DbOperations.CheckJoinRole(joinedUser.Guild))
                     {
-                        IRole role = DiscordBot.Client.GetGuild(
-                            DiscordBot.GuildId
-                        ).GetRole(
+                        IRole role = joinedUser.Guild.GetRole(
                             Convert.ToUInt64(DiscordBot.Config["JoinRole"])
                         );
                         joinedUser.AddRoleAsync(role);
                     }
 
-                    DbOperations.InsertUser(joinedUser.Id, joinedUser.Guild.Id);
-                    
-                    SocketTextChannel logChannel = LogChannels.JoinLeave(joinedUser.Guild.Id);
+                    DbOperations.InsertUser(joinedUser.Id, joinedUser.Guild);
+
+                    SocketTextChannel logChannel = LogChannels.JoinLeave(joinedUser.Guild);
                     if (logChannel == null)
                     {
                         return Task.CompletedTask;
@@ -262,7 +265,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, joinedUser.Guild.Id);
+                LogException(e, joinedUser.Guild);
                 return Task.CompletedTask;
             }
         }
@@ -273,7 +276,7 @@ namespace DiscordBot.Modules
             {
                 if (leavingUser != null)
                 {
-                    SocketTextChannel logChannel = LogChannels.JoinLeave(leavingUser.Guild.Id);
+                    SocketTextChannel logChannel = LogChannels.JoinLeave(leavingUser.Guild);
                     if (logChannel == null)
                     {
                         return Task.CompletedTask;
@@ -300,7 +303,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, leavingUser.Guild.Id);
+                LogException(e, leavingUser.Guild);
                 return Task.CompletedTask;
             }
         }
@@ -308,26 +311,26 @@ namespace DiscordBot.Modules
         public static Task MemberVoiceStateHandler(SocketUser user, SocketVoiceState stateBefore,
             SocketVoiceState stateAfter)
         {
-            ulong guildId = 0;
-            
+            SocketGuild guild = null;
+
             if (stateAfter.VoiceChannel == stateBefore.VoiceChannel)
             {
                 return Task.CompletedTask;
             }
-            
+
             if (stateAfter.VoiceChannel != null)
             {
-                guildId = stateAfter.VoiceChannel.Guild.Id;
+                guild = stateAfter.VoiceChannel.Guild;
             }
 
             if (stateBefore.VoiceChannel != null)
             {
-                guildId = stateBefore.VoiceChannel.Guild.Id;
+                guild = stateBefore.VoiceChannel.Guild;
             }
 
             try
             {
-                if (DbOperations.CheckPrivateChannel(guildId))
+                if (DbOperations.CheckPrivateChannel(guild))
                 {
                     PrivateChannel.CreatePrivateChannelHandler(stateAfter, user).GetAwaiter();
                     PrivateChannel.DestroyPrivateChannelHandler(stateBefore).GetAwaiter();
@@ -335,17 +338,17 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, guildId);
+                LogException(e, guild);
             }
 
             try
             {
-                SocketTextChannel logChannel = LogChannels.Voice(guildId);
+                SocketTextChannel logChannel = LogChannels.Voice(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 Embed logEmbed = null;
 
                 if (stateAfter.VoiceChannel == null)
@@ -373,7 +376,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, guildId);
+                LogException(e, guild);
                 return Task.CompletedTask;
             }
         }
@@ -384,12 +387,12 @@ namespace DiscordBot.Modules
             {
                 if (before.Roles.Count != after.Roles.Count)
                 {
-                    SocketTextChannel logChannel = LogChannels.Roles(before.Guild.Id);
+                    SocketTextChannel logChannel = LogChannels.Roles(before.Guild);
                     if (logChannel == null)
                     {
                         return Task.CompletedTask;
                     }
-                    
+
                     logChannel.SendMessageAsync(
                         embed: new MemberRolesUpdateEmbedBuilder(after, before.Roles.ToList()).Build()
                     );
@@ -397,12 +400,12 @@ namespace DiscordBot.Modules
 
                 if (before.Nickname != after.Nickname)
                 {
-                    SocketTextChannel logChannel = LogChannels.Nickname(before.Guild.Id);
+                    SocketTextChannel logChannel = LogChannels.Nickname(before.Guild);
                     if (logChannel == null)
                     {
                         return Task.CompletedTask;
                     }
-                    
+
                     logChannel.SendMessageAsync(
                         embed: new NicknameUpdateEmbedBuilder(after, before.Nickname).Build()
                     );
@@ -410,12 +413,12 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, before.Guild.Id);
+                LogException(e, before.Guild);
             }
 
             return Task.CompletedTask;
         }
-        
+
         public static Task ClientJoinGuildHandler(SocketGuild guild)
         {
             JoinedGuild.AddGuild(guild);
@@ -424,14 +427,16 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
+
         #endregion
 
         #region Member Ban event Hanlders
+
         public static Task MemberBannedHandler(SocketUser user, SocketGuild guild)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guild.Id);
+                SocketTextChannel logChannel = LogChannels.Logs(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -451,7 +456,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, guild.Id);
+                LogException(e, guild);
                 return Task.CompletedTask;
             }
         }
@@ -460,12 +465,12 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guild.Id);
+                SocketTextChannel logChannel = LogChannels.Logs(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 logChannel.SendMessageAsync(
                     embed: new EmbedBuilder()
                         .WithTitle("User Unbanned")
@@ -480,13 +485,15 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, guild.Id);
+                LogException(e, guild);
                 return Task.CompletedTask;
             }
         }
+
         #endregion
 
         #region Channel Event Handlers
+
         // public static Task ChannelUpdateHandler(SocketChannel channelBefore, SocketChannel channel)
         // {
         //     if (channelBefore == channel)
@@ -511,12 +518,12 @@ namespace DiscordBot.Modules
 
         public static Task ChannelDeleteHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild);
             if (logChannel == null)
             {
                 return Task.CompletedTask;
             }
-            
+
             if (channel.GetType() == typeof(SocketDMChannel) || channel.GetType() == typeof(SocketGroupChannel))
             {
                 return Task.CompletedTask;
@@ -531,12 +538,12 @@ namespace DiscordBot.Modules
 
         public static Task ChannelCreatedHandler(SocketChannel channel)
         {
-            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild.Id);
+            SocketTextChannel logChannel = LogChannels.ChannelUpdates((channel as SocketGuildChannel).Guild);
             if (logChannel == null)
             {
                 return Task.CompletedTask;
             }
-            
+
             if (channel.GetType() == typeof(SocketDMChannel) || channel.GetType() == typeof(SocketGroupChannel))
             {
                 return Task.CompletedTask;
@@ -548,31 +555,34 @@ namespace DiscordBot.Modules
             return Task.CompletedTask;
         }
 
-        public static Task LogViolation(Embed violationEmbed, ulong guildId)
+        public static Task LogViolation(Embed violationEmbed, SocketGuild guild)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guildId);
+                SocketTextChannel logChannel = LogChannels.Logs(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
                 logChannel.SendMessageAsync(embed: violationEmbed);
             }
             catch (Exception e)
             {
-                LogException(e, guildId);
+                LogException(e, guild);
             }
 
             return Task.CompletedTask;
         }
+
         #endregion
-        
+
         #region Reaction Event Handlers
+
         public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
+            SocketTextChannel textChannel = (SocketTextChannel)channel;
             IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
 
             if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
@@ -581,7 +591,7 @@ namespace DiscordBot.Modules
 
                 if (reactionMessage.GetChildren().Any(item => item.Key == reaction.Emote.Name))
                 {
-                    SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId);
+                    SocketGuild socketGuild = textChannel.Guild;
 
                     IRole reactionRole = socketGuild.GetRole(Convert.ToUInt64(reactionMessage[reaction.Emote.Name]));
                     SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
@@ -595,6 +605,8 @@ namespace DiscordBot.Modules
         public static Task ReactionRemovedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
+            SocketTextChannel textChannel = (SocketTextChannel)channel;
+
             IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
 
             if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
@@ -603,29 +615,30 @@ namespace DiscordBot.Modules
 
                 if (reactionMessage.GetChildren().Any(item => item.Key == reaction.Emote.Name))
                 {
-                    SocketGuild socketGuild = DiscordBot.Client.GetGuild(DiscordBot.GuildId);
+                    SocketGuild socketGuild = textChannel.Guild;
 
                     IRole reactionRole = socketGuild.GetRole(Convert.ToUInt64(reactionMessage[reaction.Emote.Name]));
-                    SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
+                    SocketGuildUser user = textChannel.Guild.GetUser(reaction.UserId);
                     user.RemoveRoleAsync(reactionRole);
                 }
             }
-
             return Task.CompletedTask;
         }
+
         #endregion
 
         #region Command Event Handlers
+
         public static Task LogExecutedCommand(SocketCommandContext context, SocketUserMessage message)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Commands(context.Guild.Id);
+                SocketTextChannel logChannel = LogChannels.Commands(context.Guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
                 }
-                
+
 
                 Embed embed = new ExecutedCommand(context, message).Build();
 
@@ -633,11 +646,12 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, context.Guild.Id);
+                LogException(e, context.Guild);
             }
 
             return Task.CompletedTask;
         }
+
         #endregion
     }
 }

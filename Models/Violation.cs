@@ -156,7 +156,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, Guild);
+                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
             }
 
             #endregion
@@ -204,7 +204,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, guildId);
+                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(guildId));
             }
 
             #endregion
@@ -237,7 +237,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, Guild);
+                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
             }
 
             #endregion

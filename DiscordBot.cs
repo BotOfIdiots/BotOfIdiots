@@ -29,7 +29,6 @@ namespace DiscordBot
         public static DiscordSocketClient Client;
         public static CommandService Commands;
         public static IConfiguration Config;
-        public static ulong GuildId;
         private XmlDocument settings = new XmlDocument();
         public static DbConnection DbConnection;
         #endregion
@@ -116,7 +115,6 @@ namespace DiscordBot
                 .AddJsonFile(path: "config.json");
             Config = builder.Build();
             Config = Config.GetSection("DiscordBot");
-            GuildId = Convert.ToUInt64(Config["GuildId"]);
         }
 
         private DiscordSocketConfig BuildBotConfig(XmlNodeList settings)

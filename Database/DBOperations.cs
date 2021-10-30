@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.Design;
 using System.Data.SqlTypes;
+using System.Net.Sockets;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules;
@@ -12,24 +13,23 @@ namespace DiscordBot.Database
     {
         #region Database Checks
 
-        public static bool CheckJoinRole()
+        public static bool CheckJoinRole(SocketGuild socketGuild)
         {
             bool check = false;
-            //ulong guildId
             string query = "SELECT JoinRole FROM guild_configurations WHERE Guild = @Guild";
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            // guild.Value = guildId;
+            guild.Value = socketGuild.Id;
 
             // if ()
             return check;
         }
 
-        public static bool CheckPrivateChannel(ulong snowflake)
+        public static bool CheckPrivateChannel(SocketGuild socketGuild)
         {
             String query = "SELECT CategoryId FROM private_channels_setups WHERE Guild = @Guild;";
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) {Value = snowflake};
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) {Value = socketGuild.Id};
 
             DiscordBot.DbConnection.CheckConnection();
             using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
@@ -48,7 +48,7 @@ namespace DiscordBot.Database
 
         #region Database Inserts
 
-        public static void InsertUser(ulong userId, ulong guildId)
+        public static void InsertUser(ulong userId, SocketGuild socketGuild)
         {
             string query = "INSERT INTO users (Guild, Snowflake) VALUES (@Guild, @Snowflake)";
 
@@ -56,7 +56,7 @@ namespace DiscordBot.Database
             snowflake.Value = userId;
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = guildId;
+            guild.Value = socketGuild.Id;
 
             DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
         }
@@ -65,14 +65,14 @@ namespace DiscordBot.Database
 
         #region Database Selects
 
-        public static ulong GetLogChannel(string logType, ulong guildId)
+        public static ulong GetLogChannel(string logType, SocketGuild socketGuild)
         {
             string query = "SELECT " + logType + " FROM log_channels_settings WHERE Guild = @Guild";
 
             #region SQL Parameters
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = guildId;
+            guild.Value = socketGuild.Id;
 
             #endregion
 
@@ -98,7 +98,7 @@ namespace DiscordBot.Database
             }
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, guildId);
+                EventHandlers.LogException(ex, socketGuild);
             }
 
             #endregion
@@ -135,7 +135,7 @@ namespace DiscordBot.Database
             }
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, socketGuild.Id);
+                EventHandlers.LogException(ex, socketGuild);
             }
 
             #endregion

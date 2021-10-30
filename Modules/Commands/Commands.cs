@@ -28,7 +28,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -124,7 +124,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -195,7 +195,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e, Context.Guild.Id);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -242,7 +242,7 @@ namespace DiscordBot.Modules.Commands
         [Command("GuildID")]
         public async Task guildID()
         {
-            await ReplyAsync(DiscordBot.GuildId.ToString());
+            await ReplyAsync(Context.Guild.ToString());
         }
 
         [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage =
