@@ -1,20 +1,25 @@
 using System;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Twitch.Models
 {
     public class TwitchApiToken
     {
-        public string ClientId;
-        public string Token;
-        public string TokenType;
-        public DateTime ExpirationDateTime;
+        public readonly string Token;
+        public readonly string ClientId;
+        public readonly string TokenType;
+        private readonly DateTime _expirationDateTime;
 
-        public TwitchApiToken(string clientId, string token, string tokenType, DateTime expirationDateTime)
+        public TwitchApiToken(string token, string tokenType, DateTime expirationDateTime, string clientId)
         {
-            ClientId = clientId;
             Token = token;
             TokenType = tokenType;
-            ExpirationDateTime = expirationDateTime;
+            _expirationDateTime = expirationDateTime;
+            ClientId = clientId;
+        }
+
+        public bool IsValid()
+        {
+            return _expirationDateTime > DateTime.Now;
         }
     }
 }

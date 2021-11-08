@@ -1,52 +1,45 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Sockets;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using TwitchLib.Client.Events;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Twitch.Models
 {
     public class TwitchOauth
     {
-        private static readonly HttpClient client = new HttpClient();
-        private FormUrlEncodedContent RequestContent;
+        private static readonly HttpClient Client = new HttpClient();
+        private readonly FormUrlEncodedContent _requestContent;
 
         private string _clientId;
         private string _accessToken;
         private string _tokenType;
         private DateTime _expirationDate;
-        public string TokenType;
 
         public TwitchOauth(string clientId, string secret, string scope = "channel:manage:videos")
         {
             _clientId = clientId;
-
+            
             var values = new Dictionary<string, string>
             {
-                {"client_id", _clientId},
+                {"client_id", clientId},
                 {"client_secret", secret},
                 {"grant_type", "client_credentials"},
                 {"scope", scope}
             };
 
-            RequestContent = new FormUrlEncodedContent(values);
+            _requestContent = new FormUrlEncodedContent(values);
         }
 
         public TwitchApiToken Authenticate()
         {
             PostRequest();
-            return new TwitchApiToken(_clientId, _accessToken, _tokenType, _expirationDate);
+            return new TwitchApiToken(_accessToken, _tokenType, _expirationDate, _clientId);
         }
 
         private async void PostRequest()
         {
             var httpResponse =
-                await client.PostAsync("https://id.twitch.tv/oauth2/token", RequestContent);
+                await Client.PostAsync("https://id.twitch.tv/oauth2/token", _requestContent);
 
             if (httpResponse.IsSuccessStatusCode)
             {
@@ -60,10 +53,10 @@ namespace DiscordBot.Models
             }
         }
 
-        private DateTime SetExpirationDate(long expires_in)
+        private DateTime SetExpirationDate(long expiresIn)
         {
             var now = DateTime.Now;
-            return new DateTime(now.Ticks + expires_in*1000);
+            return new DateTime(now.Ticks + expiresIn*1000);
         }
     }
 }
