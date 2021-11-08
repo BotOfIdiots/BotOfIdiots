@@ -11,12 +11,18 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0-preview.4.20251.6" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0-preview.4.20251.6" />
     <PackageReference Include="MySql.Data" Version="8.0.26" />
+    <PackageReference Include="TwitchLib.Api" Version="3.4.0-preview-a272cfef1296250c1711ab62d9778c7d47500d0e" />
+    <PackageReference Include="TwitchLib.Client" Version="3.2.5-preview-eb210b24b724f0df6e3ce9566fe25ba3ce6ab13f" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="MySql.Data, Version=8.0.26.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d">
       <HintPath>..\..\..\..\..\Program Files (x86)\MySQL\MySQL Connector Net 8.0.26\Assemblies\net5.0\MySql.Data.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Twitch" />
   </ItemGroup>
 
 </Project>

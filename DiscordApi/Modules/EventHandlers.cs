@@ -8,9 +8,10 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Models;
 using DiscordBot.Models.Embeds;
+using DiscordBot.Modules;
 using Microsoft.Extensions.Configuration;
 
-namespace DiscordBot.Modules
+namespace DiscordBot.DiscordApi.Modules
 {
     public static class EventHandlers
     {
@@ -33,7 +34,7 @@ namespace DiscordBot.Modules
                     .WithColor(Color.Red)
                     // .WithDescription(exception.StackTrace)
                     // .AddField("Source", exception.Source)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(Base.Version())
                     .WithCurrentTimestamp()
                     .Build();
 
@@ -229,7 +230,7 @@ namespace DiscordBot.Modules
                     if (DbOperations.CheckJoinRole(joinedUser.Guild))
                     {
                         IRole role = joinedUser.Guild.GetRole(
-                            Convert.ToUInt64(DiscordBot.Config["JoinRole"])
+                            Convert.ToUInt64(Bot.Config["JoinRole"])
                         );
                         joinedUser.AddRoleAsync(role);
                     }
@@ -583,7 +584,7 @@ namespace DiscordBot.Modules
             SocketReaction reaction)
         {
             SocketTextChannel textChannel = (SocketTextChannel)channel;
-            IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
+            IConfiguration reactionMessages = Bot.Config.GetSection("ReactionMessages");
 
             if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
             {
@@ -607,7 +608,7 @@ namespace DiscordBot.Modules
         {
             SocketTextChannel textChannel = (SocketTextChannel)channel;
 
-            IConfiguration reactionMessages = DiscordBot.Config.GetSection("ReactionMessages");
+            IConfiguration reactionMessages = Bot.Config.GetSection("ReactionMessages");
 
             if (reactionMessages.GetChildren().Any(item => item.Key == message.Id.ToString()))
             {
@@ -653,5 +654,10 @@ namespace DiscordBot.Modules
         }
 
         #endregion
+
+        public static void LogDebugMessage(string message)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -7,6 +7,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
+using DiscordBot.DiscordApi.Modules;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -49,7 +51,7 @@ namespace DiscordBot.Modules.Commands
                 Title = "Bot Commands",
                 Color = Color.Teal
             };
-            foreach (CommandInfo command in DiscordBot.Commands.Commands)
+            foreach (CommandInfo command in Bot.Commands.Commands)
             {
                 string summary;
                 switch (command.Summary)
@@ -199,10 +201,10 @@ namespace DiscordBot.Modules.Commands
             {
                 Embed embed = new EmbedBuilder
                     {
-                        Title = "Version: " + DiscordBot.Version(),
+                        Title = "Version: " + Base.Version(),
                     }
                     .WithAuthor(Context.Client.CurrentUser)
-                    .WithFooter(DiscordBot.Version())
+                    .WithFooter(Base.Version())
                     .WithCurrentTimestamp()
                     .Build();
 
@@ -225,7 +227,7 @@ namespace DiscordBot.Modules.Commands
             EmbedBuilder embedBuilder = new EmbedBuilder()
                 .WithTitle("Bot Config");
 
-            var configOptions = DiscordBot.Config.GetChildren();
+            var configOptions = Bot.Config.GetChildren();
 
             foreach (var option in configOptions)
             {

@@ -8,6 +8,8 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
+using DiscordBot.DiscordApi.Modules;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -137,7 +139,7 @@ namespace DiscordBot.Modules.Commands
             
             SocketRole mutedRole = DbOperations.GetMutedRole(unmutedUser.Guild);
             
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            if (Bot.Config["MutedRole"] == null || Bot.Config["MutedRole"] == "")
             {
                 embed = new EmbedBuilder
                 {

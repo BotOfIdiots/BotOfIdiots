@@ -4,6 +4,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules.Commands
@@ -30,9 +31,9 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64) { Value = voiceChannel.Id };
             #endregion
             
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, category, channel);
+            Bot.DbConnection.CheckConnection();
+            using MySqlConnection conn = Bot.DbConnection.SqlConnection;
+            Bot.DbConnection.ExecuteNonQuery(query, guild, category, channel);
 
             await Task.CompletedTask;
         }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.DiscordApi;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules.Commands
@@ -24,7 +25,7 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
             joinRole.Value = role.Id;
 
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
 
             if (succes == 1)
             {
@@ -63,7 +64,7 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
             joinRole.Value = role.Id;
 
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
 
             if (succes == 1)
             {
@@ -102,7 +103,7 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
             joinRole.Value = role.Id;
 
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, guild, joinRole);
 
             if (succes == 1)
             {
@@ -145,7 +146,7 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter exceptions = new MySqlParameter("@Exceptions", MySqlDbType.UInt64);
             exceptions.Value = exceptionsChannel.Id;
             
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, logs, exceptions);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, guild, logs, exceptions);
             
             if (succes == 1)
             {
@@ -183,7 +184,7 @@ namespace DiscordBot.Modules.Commands
             MySqlParameter channel = new MySqlParameter("@Logs", MySqlDbType.UInt64);
             channel.Value = logChannel.Id;
 
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, channel, guild);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, channel, guild);
             
             if (succes == 1)
             {
@@ -226,7 +227,7 @@ namespace DiscordBot.Modules.Commands
                 { Value = voiceChannelSnowflake };
             #endregion
 
-            int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, channel, guild, category);
+            int succes = Bot.DbConnection.ExecuteNonQuery(query, channel, guild, category);
 
             if (succes == 1)
             {

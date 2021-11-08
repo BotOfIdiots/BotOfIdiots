@@ -5,6 +5,7 @@ using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules
@@ -100,8 +101,8 @@ namespace DiscordBot.Modules
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, category, guild);
 
                 while (reader.Read())
@@ -138,8 +139,8 @@ namespace DiscordBot.Modules
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, channel);
 
                 while (reader.Read())

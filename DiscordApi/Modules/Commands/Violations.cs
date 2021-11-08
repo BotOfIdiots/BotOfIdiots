@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.DiscordApi.Modules;
 using DiscordBot.Models;
 
 namespace DiscordBot.Modules.Commands

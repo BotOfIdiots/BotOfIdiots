@@ -4,6 +4,8 @@ using System.Data.SqlTypes;
 using System.Net.Sockets;
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.DiscordApi;
+using DiscordBot.DiscordApi.Modules;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
 
@@ -31,8 +33,8 @@ namespace DiscordBot.Database
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) {Value = socketGuild.Id};
 
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            Bot.DbConnection.CheckConnection();
+            using MySqlConnection conn = Bot.DbConnection.SqlConnection;
             MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
             while (reader.Read())
@@ -58,7 +60,7 @@ namespace DiscordBot.Database
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = socketGuild.Id;
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+            Bot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
         }
 
         #endregion
@@ -78,8 +80,8 @@ namespace DiscordBot.Database
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
                 while (reader.Read())
@@ -116,8 +118,8 @@ namespace DiscordBot.Database
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
                 while (reader.Read())

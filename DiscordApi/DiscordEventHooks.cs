@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Discord.WebSocket;
+using DiscordBot.DiscordApi.Modules;
 using DiscordBot.Modules;
 
 namespace DiscordBot

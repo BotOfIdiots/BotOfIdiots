@@ -6,46 +6,41 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Modules;
+using DiscordBot.DiscordApi.Modules;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DiscordBot
+namespace DiscordBot.DiscordApi
 {
-    internal class DiscordBot
+    public class Bot
     {
-        #region Main Method
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args) => new DiscordBot().RunBotAsync().GetAwaiter().GetResult();
-        #endregion
+        // #region Main Method
+        // /// <summary>
+        // /// 
+        // /// </summary>
+        // /// <param name="args"></param>
+        // public static void Main(string[] args) => new Bot().RunBotAsync().GetAwaiter().GetResult();
+        // #endregion
         
         #region Fields
-        private static readonly string _version = "0.0.6";
+        
         private static IServiceProvider _services;
-        public static string WorkingDirectory;
+        private readonly string _apiToken;
+        public static bool Ready = false;
         public static DiscordSocketClient Client;
         public static CommandService Commands;
         public static IConfiguration Config;
-        private XmlDocument settings = new XmlDocument();
         public static DbConnection DbConnection;
-        #endregion
+
         
-        #region Startup Logic
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public async Task RunBotAsync()
+        #endregion
+
+        public Bot()
         {
-            _setWorkingDirectory(_detectOS());
-            _loadSettings();
-
-            DbConnection = new DbConnection(settings.DocumentElement["SQLSettings"].ChildNodes);
-
-            var discordConfig = BuildBotConfig(settings.DocumentElement["DiscordConfig"].ChildNodes);
+            _apiToken = Base.settings.SelectSingleNode("config/BotToken").InnerText;
+            DbConnection = new DbConnection(Base.settings.DocumentElement["SQLSettings"].ChildNodes);
+           
+            var discordConfig = BuildBotConfig(Base.settings.DocumentElement["DiscordConfig"].ChildNodes);
             
             Client = new DiscordSocketClient(discordConfig);
             Commands = new CommandService();
@@ -57,10 +52,17 @@ namespace DiscordBot
             
             Client.Log += _client_log;
             LoadDiscordEventHandlers();
-            
-            await RegisterCommandsAsync();
-            await Client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
+            RegisterCommandsAsync().GetAwaiter();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public async Task StartBotAsync()
+        {
+            await Client.LoginAsync(TokenType.Bot, _apiToken);
             await Client.StartAsync();
+            Ready = true;
             await Task.Delay(-1);
         }
 
@@ -76,46 +78,46 @@ namespace DiscordBot
             DiscordEventHooks.HookBanEvents(Client);
         }
 
-        /// <summary>
-        /// Detect the OS and build all OS based variables
-        /// </summary>
-        private int _detectOS()
-        {
-            return (int)Environment.OSVersion.Platform;
-        }
+        // /// <summary>
+        // /// Detect the OS and build all OS based variables
+        // /// </summary>
+        // private int _detectOS()
+        // {
+        //     return (int)Environment.OSVersion.Platform;
+        // }
 
-        /// <summary>
-        /// Get the config file location based on the enviroment
-        /// </summary>
-        /// <param name="enviroment"></param>
-        private void _setWorkingDirectory(int enviroment)
-        {
-            switch (enviroment)
-            {
-                case 4: //Location of the Linux Config
-                    WorkingDirectory = Environment.CurrentDirectory;
-                    Console.WriteLine(WorkingDirectory);
-                    break;
-                case 2: //Location of the Windows Config
-                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                                       "\\.discordtestbot";
-                    Console.WriteLine(WorkingDirectory);
-                    break;
-            }
-        }
+        // /// <summary>
+        // /// Get the config file location based on the enviroment
+        // /// </summary>
+        // /// <param name="enviroment"></param>
+        // private void _setWorkingDirectory(int enviroment)
+        // {
+        //     switch (enviroment)
+        //     {
+        //         case 4: //Location of the Linux Config
+        //             WorkingDirectory = Environment.CurrentDirectory;
+        //             Console.WriteLine(WorkingDirectory);
+        //             break;
+        //         case 2: //Location of the Windows Config
+        //             WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+        //                                "\\.discordtestbot";
+        //             Console.WriteLine(WorkingDirectory);
+        //             break;
+        //     }
+        // }
 
-        /// <summary>
-        /// Create the config object based on the config.json file
-        /// </summary>
-        private void _loadSettings()
-        {
-            settings.Load(WorkingDirectory + "/config.xml");
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(WorkingDirectory)
-                .AddJsonFile(path: "config.json");
-            Config = builder.Build();
-            Config = Config.GetSection("DiscordBot");
-        }
+        // /// <summary>
+        // /// Create the config object based on the config.json file
+        // /// </summary>
+        // private void _loadSettings()
+        // {
+        //     settings.Load(WorkingDirectory + "/config.xml");
+        //     var builder = new ConfigurationBuilder()
+        //         .SetBasePath(WorkingDirectory)
+        //         .AddJsonFile(path: "config.json");
+        //     Config = builder.Build();
+        //     Config = Config.GetSection("Bot");
+        // }
 
         private DiscordSocketConfig BuildBotConfig(XmlNodeList settings)
         {
@@ -141,7 +143,6 @@ namespace DiscordBot
                 MessageCacheSize = messageCacheSize
             };
         }
-        #endregion
 
         #region Methods
         /// <summary>
@@ -163,15 +164,6 @@ namespace DiscordBot
         {
             Client.MessageReceived += HandleCommandAsync;
             await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static string Version()
-        {
-            return _version;
         }
 
         /// <summary>

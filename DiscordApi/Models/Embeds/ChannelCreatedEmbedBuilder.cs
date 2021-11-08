@@ -31,12 +31,12 @@ namespace DiscordBot.Models.Embeds
         //         string fieldName = "";
         //         if (overwrite.TargetType.ToString() == "Role")
         //         {
-        //             fieldName = "Role:" + DiscordBot.Client.GetGuild(DiscordBot.GuildId).GetRole(overwrite.TargetId).Name;
+        //             fieldName = "Role:" + Bot.Client.GetGuild(Bot.GuildId).GetRole(overwrite.TargetId).Name;
         //         }
         //
         //         if (overwrite.TargetType.ToString() == "User")
         //         {
-        //             fieldName = "User: " + DiscordBot.Client.GetGuild(DiscordBot.GuildId).GetUser(overwrite.TargetId).Username;
+        //             fieldName = "User: " + Bot.Client.GetGuild(Bot.GuildId).GetUser(overwrite.TargetId).Username;
         //         }
         //
         //         if (fieldName != "")

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Threading.Channels;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
 using DiscordBot.Models;
 using DiscordBot.Models.Embeds;
 using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Crypto.Digests;
 
 namespace DiscordBot
 
@@ -66,8 +64,8 @@ namespace DiscordBot
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
 
                 while (reader.Read())
@@ -101,8 +99,8 @@ namespace DiscordBot
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
 
                 List<int> violationIds = new List<int>();

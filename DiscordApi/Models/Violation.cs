@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using DiscordBot.Database;
+using DiscordBot.DiscordApi;
+using DiscordBot.DiscordApi.Modules;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
 
@@ -80,8 +82,8 @@ namespace DiscordBot.Models
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
 
                 reader.Read();
@@ -144,7 +146,7 @@ namespace DiscordBot.Models
 
             try
             {
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violationId, user, moderator, confidential, type,
+                Bot.DbConnection.ExecuteNonQuery(query, guild, violationId, user, moderator, confidential, type,
                     reason, date, expires);
             }
 
@@ -156,7 +158,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+                EventHandlers.LogException(ex, Bot.Client.GetGuild(Guild));
             }
 
             #endregion
@@ -176,8 +178,8 @@ namespace DiscordBot.Models
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                Bot.DbConnection.CheckConnection();
+                using MySqlConnection conn = Bot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, violation);
 
                 while (reader.Read())
@@ -204,7 +206,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(guildId));
+                EventHandlers.LogException(ex, Bot.Client.GetGuild(guildId));
             }
 
             #endregion
@@ -226,7 +228,7 @@ namespace DiscordBot.Models
             
             try
             {
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violation);
+                Bot.DbConnection.ExecuteNonQuery(query, guild, violation);
             }
 
             #region Exception Handling
@@ -237,7 +239,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+                EventHandlers.LogException(ex, Bot.Client.GetGuild(Guild));
             }
 
             #endregion

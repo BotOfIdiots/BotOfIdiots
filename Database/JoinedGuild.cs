@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Discord.WebSocket;
+using DiscordBot.DiscordApi;
 using Google.Protobuf.WellKnownTypes;
 using MySql.Data.MySqlClient;
 
@@ -22,10 +23,10 @@ namespace DiscordBot.Database
                 Value = guild.Name
             };
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
+            Bot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
             
             string guildConfigurationQuery = "INSERT INTO guild_configurations (Guild) VALUES (@Snowflake)";
-            DiscordBot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
+            Bot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
         }
 
         public static void DownloadMembers(IReadOnlyCollection<SocketGuildUser> UserList, ulong GuildId)
@@ -41,7 +42,7 @@ namespace DiscordBot.Database
             foreach (SocketGuildUser user in UserList)
             {
                 snowflake.Value = user.Id;
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+                Bot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
             }
         }
 
@@ -59,7 +60,7 @@ namespace DiscordBot.Database
                 Value = GuildOwner
             };
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guildOwner, guildId);
+            Bot.DbConnection.ExecuteNonQuery(query, guildOwner, guildId);
         }
     }
 }
