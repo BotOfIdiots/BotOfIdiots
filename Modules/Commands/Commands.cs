@@ -7,6 +7,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.Models.Embeds;
+using Org.BouncyCastle.Bcpg.Sig;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -19,6 +21,7 @@ namespace DiscordBot.Modules.Commands
         /// </summary>
         /// <returns></returns>
         [Command("ping")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("$ping - Responds with Pong")]
         public async Task Ping()
         {
@@ -77,38 +80,11 @@ namespace DiscordBot.Modules.Commands
         public async Task UserInfo(SocketGuildUser user = null)
         {
             Embed embed;
-            String roles = null;
-
             try
             {
-                if (user == null)
-                {
-                    user = Context.Guild.GetUser(Context.User.Id);
-                }
+                user ??= Context.Guild.GetUser(Context.User.Id);
 
-                foreach (IRole role in user.Roles.Distinct())
-                {
-                    if (roles == null)
-                    {
-                        roles = role.Mention;
-                    }
-                    else
-                    {
-                        roles += role.Mention;
-                    }
-                }
-
-                embed = new EmbedBuilder { }
-                    .AddField("User", user.Mention)
-                    .WithThumbnailUrl(user.GetAvatarUrl())
-                    // .AddField("Violation Count:", ViolationManager.CountUserViolations(user.Id))
-                    .AddField("Created At", user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true)
-                    .AddField("Joined At", user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true)
-                    .AddField("Roles", roles)
-                    .WithAuthor(user)
-                    .WithFooter("UserID: " + user.Id)
-                    .WithCurrentTimestamp()
-                    .Build();
+                embed = new UserInfo(user).Build();
 
                 await ReplyAsync(embed: embed);
             }
@@ -182,14 +158,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed = new EmbedBuilder
-                    {
-                        Title = "Version: " + DiscordBot.Version(),
-                    }
-                    .WithAuthor(Context.Client.CurrentUser)
-                    .WithFooter(DiscordBot.Version())
-                    .WithCurrentTimestamp()
-                    .Build();
+                Embed embed = new BotVersion().Build();
 
                 await ReplyAsync(embed: embed);
             }
@@ -197,44 +166,6 @@ namespace DiscordBot.Modules.Commands
             {
                 await EventHandlers.LogException(e, Context.Guild);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [RequireUserPermission(GuildPermission.Administrator,
-            ErrorMessage = "You don't have permission to use this command")]
-        [Command("Config")]
-        public async Task Config()
-        {
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle("Bot Config");
-
-            var configOptions = DiscordBot.Config.GetChildren();
-
-            foreach (var option in configOptions)
-            {
-                if (option.GetChildren().Any())
-                {
-                    var section = option.GetChildren();
-
-                    foreach (var suboption in section)
-                    {
-                        embedBuilder.AddField(suboption.Key, suboption.Value);
-                    }
-                }
-                else
-                {
-                    if (option.Key != "Token")
-                    {
-                        embedBuilder.AddField(option.Key, option.Value);
-                    }
-                }
-            }
-
-            Embed embed = embedBuilder.Build();
-
-            await ReplyAsync(embed: embed);
         }
 
         [RequireUserPermission(GuildPermission.Administrator,
@@ -256,9 +187,6 @@ namespace DiscordBot.Modules.Commands
 
             await Task.CompletedTask;
         }
-        
-        
-        
         #endregion
     }
 }

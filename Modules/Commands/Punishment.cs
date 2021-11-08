@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -255,8 +254,7 @@ namespace DiscordBot.Modules.Commands
                     await bannedUser.BanAsync(1, reason);
                     await EventHandlers.LogViolation(embed, Context.Guild);
                 }
-
-
+                
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)

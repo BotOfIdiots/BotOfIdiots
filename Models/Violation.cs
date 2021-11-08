@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using DiscordBot.Database;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
@@ -86,7 +85,8 @@ namespace DiscordBot.Models
 
                 reader.Read();
                 // Console.WriteLine(reader.GetString("maxId"));
-                return reader.GetInt32("maxId") + 1;
+                if(reader.GetInt32("maxId") != null) return reader.GetInt32("maxId") + 1;
+                return 0;
             }
 
             #region Exception Handling

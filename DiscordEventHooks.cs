@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using DiscordBot.Modules;
 
 namespace DiscordBot
@@ -13,19 +12,32 @@ namespace DiscordBot
         
         public static void HookMemberEvents(BaseSocketClient client)
         {
+            //Member joined and leave logging hooks
             client.UserJoined += EventHandlers.MemberJoinGuildHandler;
             client.UserLeft += EventHandlers.MemberLeaveGuildHandler;
+            
+            //Member update logging hook
             client.GuildMemberUpdated += EventHandlers.MemberUpdatedHandler;
+            
+            //Voicestate logging hook
             client.UserVoiceStateUpdated += EventHandlers.MemberVoiceStateHandler;
         }
         
         public static void HookMessageEvents(BaseSocketClient client)
         {
+            //Message logging hooks
             client.MessageDeleted += EventHandlers.MessageDeleteHandler;
             client.MessagesBulkDeleted += EventHandlers.MessageBulkDeleteHandler;
             client.MessageUpdated += EventHandlers.MessageUpdateHandler;
-            client.ReactionAdded += EventHandlers.ReactionAddedHandler;
-            client.ReactionRemoved += EventHandlers.ReactionRemovedHandler;
+            
+            //Reaction role hooks
+            client.ReactionAdded += ReactionMessage.ReactionAdded;
+            client.ReactionRemoved += ReactionMessage.ReactionRemoved;
+            
+            //Level system hooks
+            // client.MessageReceived += Levels.AddMessageXp;
+            client.ReactionAdded += Levels.AddReactionXp;
+            client.ReactionRemoved += Levels.RemoveReactionXp;
         }
 
         public static void HookBanEvents(BaseSocketClient client)

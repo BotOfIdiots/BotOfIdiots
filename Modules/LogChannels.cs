@@ -1,10 +1,8 @@
 ﻿using System;
-using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using Microsoft.Extensions.Configuration;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Modules
 {
     public static class LogChannels
     {

@@ -23,7 +23,7 @@ namespace DiscordBot
         #endregion
         
         #region Fields
-        private static readonly string _version = "0.0.6";
+        private static readonly string _version = "0.0.7";
         private static IServiceProvider _services;
         public static string WorkingDirectory;
         public static DiscordSocketClient Client;

@@ -136,6 +136,7 @@ namespace DiscordBot.Modules.Commands
         {
             string query = "INSERT INTO log_channels_settings (Guild, Logs, Exceptions) VALUE (@Guild, @Logs, @Exceptions)";
 
+            #region SQL Parameters
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = logsChannel.Guild.Id;
             
@@ -144,6 +145,7 @@ namespace DiscordBot.Modules.Commands
             
             MySqlParameter exceptions = new MySqlParameter("@Exceptions", MySqlDbType.UInt64);
             exceptions.Value = exceptionsChannel.Id;
+            #endregion
             
             int succes = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, logs, exceptions);
             
