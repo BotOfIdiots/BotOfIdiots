@@ -17,7 +17,9 @@ namespace DiscordBot.Modules.Commands
         /// <summary>
         /// Replies with pong
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// Returns a message to the channel were the command is issued
+        /// </returns>
         [Command("ping")]
         [Summary("$ping - Responds with Pong")]
         public async Task Ping()
@@ -32,6 +34,12 @@ namespace DiscordBot.Modules.Commands
             }
         }
 
+        /// <summary>
+        /// View embed with all bot commands
+        /// </summary>
+        /// <returns>
+        /// Embed with all bot commands to the channel were the command is issued
+        /// </returns>
         [Command("help")]
         [Summary("$help - returns a list of available commands")]
         public async Task Help()
@@ -70,7 +78,9 @@ namespace DiscordBot.Modules.Commands
         /// Get the account information of a user
         /// </summary>
         /// <param name="user">user to return userinfo of</param>
-        /// <returns></returns>
+        /// <returns>
+        /// Embed with a users information sent in the channel were the command is issued
+        /// </returns>
         [Command("userinfo")]
         [Summary("$userinfo {user/snowflake} - Shows userinfo")]
         [RequireUserPermission(GuildPermission.KickMembers)]
@@ -129,9 +139,12 @@ namespace DiscordBot.Modules.Commands
         }
 
         /// <summary>
-        /// 
+        /// Delete certain amount of messages at once
         /// </summary>
         /// <param name="amount"></param>
+        /// <returns>
+        /// Deletes user specified amount of messages were the command is issued
+        /// </returns>
         [Command("purge")]
         [Summary(
             "$purge <amount> - removes the amount of messages specified. (You don't have to count the command message as it is included by default")]
@@ -171,7 +184,9 @@ namespace DiscordBot.Modules.Commands
         /// <summary>
         /// Return the current version of the bot
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// Embed with the current bot version sent in the channel were the command is issued
+        /// </returns>
         [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
         "You don't have permission to use this command")]
 
@@ -237,14 +252,12 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(embed: embed);
         }
 
-        [RequireUserPermission(GuildPermission.Administrator,
-            ErrorMessage = "You don't have permission to use this command")]
-        [Command("GuildID")]
-        public async Task guildID()
-        {
-            await ReplyAsync(Context.Guild.ToString());
-        }
-
+        /// <summary>
+        /// If automatic setup failed, issue this manual command
+        /// </summary>
+        /// <summary>
+        /// Sets up the bot for a new server
+        /// </summary>
         [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage =
             "You don't have permission to use this command")]
         [Command("setupbot")]
@@ -256,9 +269,7 @@ namespace DiscordBot.Modules.Commands
 
             await Task.CompletedTask;
         }
-        
-        
-        
+
         #endregion
     }
 }
