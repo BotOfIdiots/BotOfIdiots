@@ -8,6 +8,7 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Models.Embeds;
 using DiscordBot.Models.Embeds.Messages;
+using DiscordBot.Models.Embeds.Punishments;
 using Microsoft.Extensions.Configuration;
 
 namespace DiscordBot.Modules
@@ -62,12 +63,15 @@ namespace DiscordBot.Modules
                 logChannel.SendMessageAsync(embed: messageDeleteEmbed);
                 return Task.CompletedTask;
             }
+
             #region Exceptions
+
             catch (Exception e)
             {
                 LogException(e, (channel as SocketTextChannel).Guild);
                 return Task.CompletedTask;
             }
+
             #endregion
         }
 
@@ -102,7 +106,7 @@ namespace DiscordBot.Modules
             try
             {
                 if (cachedMessage.Value.Content == message.Content) return Task.CompletedTask;
-                
+
                 SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
                 if (logChannel == null) return Task.CompletedTask;
 
@@ -129,7 +133,7 @@ namespace DiscordBot.Modules
                 if (joinedUser != null)
                 {
                     DbOperations.InsertUser(joinedUser.Id, joinedUser.Guild);
-                    
+
                     if (DbOperations.CheckJoinRole(joinedUser.Guild))
                     {
                         IRole role = joinedUser.Guild.GetRole(
@@ -137,14 +141,14 @@ namespace DiscordBot.Modules
                         );
                         joinedUser.AddRoleAsync(role);
                     }
-                    
+
                     SocketTextChannel logChannel = LogChannels.JoinLeave(joinedUser.Guild);
                     if (logChannel == null)
                     {
                         return Task.CompletedTask;
                     }
 
-                    Embed memberJoinEmbed = new Joined(joinedUser).Build();
+                    Embed memberJoinEmbed = new JoinLeave(joinedUser, false).Build();
 
                     logChannel.SendMessageAsync(embed: memberJoinEmbed);
                     return Task.CompletedTask;
@@ -171,18 +175,7 @@ namespace DiscordBot.Modules
                         return Task.CompletedTask;
                     }
 
-                    Embed memberJoinEmbed = new EmbedBuilder
-                        {
-                            Title = "Member Left Server"
-                        }
-                        .WithAuthor(leavingUser)
-                        .AddField("Username", leavingUser.Mention)
-                        .AddField("User Created At", leavingUser.CreatedAt.ToLocalTime()
-                            .ToString("HH:mm:ss dd-MM-yyyy"))
-                        .WithColor(Color.Red)
-                        .WithCurrentTimestamp()
-                        .WithFooter("UserID: " + leavingUser.Id)
-                        .Build();
+                    Embed memberJoinEmbed = new JoinLeave(leavingUser, true).Build();
 
                     logChannel.SendMessageAsync(embed: memberJoinEmbed);
                     return Task.CompletedTask;
@@ -202,20 +195,13 @@ namespace DiscordBot.Modules
         {
             SocketGuild guild = null;
 
-            if (stateAfter.VoiceChannel == stateBefore.VoiceChannel)
-            {
-                return Task.CompletedTask;
-            }
+            if (stateAfter.VoiceChannel == stateBefore.VoiceChannel) return Task.CompletedTask;
 
-            if (stateAfter.VoiceChannel != null)
-            {
-                guild = stateAfter.VoiceChannel.Guild;
-            }
+            if (stateAfter.VoiceChannel != null) guild = stateAfter.VoiceChannel.Guild;
 
-            if (stateBefore.VoiceChannel != null)
-            {
-                guild = stateBefore.VoiceChannel.Guild;
-            }
+            if (stateBefore.VoiceChannel != null) guild = stateBefore.VoiceChannel.Guild;
+
+            #region Private Channels
 
             try
             {
@@ -230,6 +216,10 @@ namespace DiscordBot.Modules
                 LogException(e, guild);
             }
 
+            #endregion
+
+            #region Voice State Logging
+
             try
             {
                 SocketTextChannel logChannel = LogChannels.Voice(guild);
@@ -241,19 +231,14 @@ namespace DiscordBot.Modules
                 Embed logEmbed = null;
 
                 if (stateAfter.VoiceChannel == null)
-                {
                     logEmbed = new VoiceStateEmbedBuilder(0, user, stateBefore, stateAfter).Build();
-                }
 
                 if (stateBefore.VoiceChannel == null)
-                {
                     logEmbed = new VoiceStateEmbedBuilder(1, user, stateBefore, stateAfter).Build();
-                }
 
                 if (stateAfter.VoiceChannel != null && stateBefore.VoiceChannel != null)
-                {
                     logEmbed = new VoiceStateEmbedBuilder(2, user, stateBefore, stateAfter).Build();
-                }
+
 
                 if (logEmbed != null)
                 {
@@ -268,6 +253,8 @@ namespace DiscordBot.Modules
                 LogException(e, guild);
                 return Task.CompletedTask;
             }
+
+            #endregion
         }
 
         public static Task MemberUpdatedHandler(SocketGuildUser before, SocketGuildUser after)
@@ -277,10 +264,7 @@ namespace DiscordBot.Modules
                 if (before.Roles.Count != after.Roles.Count)
                 {
                     SocketTextChannel logChannel = LogChannels.Roles(before.Guild);
-                    if (logChannel == null)
-                    {
-                        return Task.CompletedTask;
-                    }
+                    if (logChannel == null) return Task.CompletedTask;
 
                     logChannel.SendMessageAsync(
                         embed: new MemberRolesUpdateEmbedBuilder(after, before.Roles.ToList()).Build()
@@ -290,11 +274,8 @@ namespace DiscordBot.Modules
                 if (before.Nickname != after.Nickname)
                 {
                     SocketTextChannel logChannel = LogChannels.Nickname(before.Guild);
-                    if (logChannel == null)
-                    {
-                        return Task.CompletedTask;
-                    }
-
+                    if (logChannel == null) return Task.CompletedTask;
+                    
                     logChannel.SendMessageAsync(
                         embed: new NicknameUpdateEmbedBuilder(after, before.Nickname).Build()
                     );
@@ -326,28 +307,18 @@ namespace DiscordBot.Modules
             try
             {
                 SocketTextChannel logChannel = LogChannels.Logs(guild);
-                if (logChannel == null)
-                {
-                    return Task.CompletedTask;
-                }
+                if (logChannel == null) return Task.CompletedTask;
 
-                logChannel.SendMessageAsync(
-                    embed: new EmbedBuilder()
-                        .WithTitle("User Banned")
-                        .AddField("user", user.Mention)
-                        .WithCurrentTimestamp()
-                        .WithColor(Color.Red)
-                        .WithFooter("UserID: " + user.Id)
-                        .Build()
-                );
-
+                logChannel.SendMessageAsync(embed: new Banned(user).Build());
                 return Task.CompletedTask;
             }
+            #region Exceptions
             catch (Exception e)
             {
                 LogException(e, guild);
                 return Task.CompletedTask;
             }
+            #endregion
         }
 
         public static Task MemberUnbannedHandler(SocketUser user, SocketGuild guild)
@@ -355,28 +326,18 @@ namespace DiscordBot.Modules
             try
             {
                 SocketTextChannel logChannel = LogChannels.Logs(guild);
-                if (logChannel == null)
-                {
-                    return Task.CompletedTask;
-                }
+                if (logChannel == null) return Task.CompletedTask;
 
-                logChannel.SendMessageAsync(
-                    embed: new EmbedBuilder()
-                        .WithTitle("User Unbanned")
-                        .AddField("user", user.Mention)
-                        .WithCurrentTimestamp()
-                        .WithColor(Color.Green)
-                        .WithFooter("UserID: " + user.Id)
-                        .Build()
-                );
-
+                logChannel.SendMessageAsync(embed: new Unbanned(user).Build());
                 return Task.CompletedTask;
             }
+            #region Exceptions
             catch (Exception e)
             {
                 LogException(e, guild);
                 return Task.CompletedTask;
             }
+            #endregion
         }
 
         #endregion

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using DiscordBot.Database;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
@@ -85,12 +86,17 @@ namespace DiscordBot.Models
 
                 reader.Read();
                 // Console.WriteLine(reader.GetString("maxId"));
-                if(reader.GetInt32("maxId") != null) return reader.GetInt32("maxId") + 1;
-                return 0;
+                return reader.GetInt32("maxId") + 1;
             }
 
-            #region Exception Handling
+            #region Exception Handlinh
 
+            catch (DataException ex)
+            {
+                if (ex.Message.Contains("Data is Null")) return 0;
+                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+            }
+            
             catch (MySqlException ex)
             {
                 Console.WriteLine(ex.ToString());
