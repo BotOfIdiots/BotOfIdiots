@@ -14,7 +14,7 @@ namespace DiscordBot.Models
         #region Fields
 
         public ulong Guild { get; set; }
-        public long ViolationId { get; set; }
+        public int ViolationId { get; set; }
         public ulong User { get; set; }
         public ulong Moderator { get; set; }
         public bool Confidential { get; set; }
@@ -30,7 +30,7 @@ namespace DiscordBot.Models
         public Violation(ulong guild)
         {
             Guild = guild;
-            ViolationId = GenerateViolationId();
+            GenerateViolationId();
         }
 
         public Violation(ulong guild, ulong userId, ulong moderatorId, int type, string reason,
@@ -50,7 +50,7 @@ namespace DiscordBot.Models
             }
             else
             {
-                ViolationId = GenerateViolationId();
+                GenerateViolationId();
             }
         }
 
@@ -65,8 +65,9 @@ namespace DiscordBot.Models
 
         #region Methods
 
-        private int GenerateViolationId()
+        private void GenerateViolationId()
         {
+            int id = 0;
             string query = "SELECT max(ViolationId) as maxId FROM violations WHERE Guild = @Guild";
 
             #region SQL Parameters
@@ -84,27 +85,29 @@ namespace DiscordBot.Models
                 using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
 
-                reader.Read();
-                // Console.WriteLine(reader.GetString("maxId"));
-                return reader.GetInt32("maxId") + 1;
+                while (reader.Read())
+                {
+                    if (reader.HasRows && reader.VisibleFieldCount > 0)
+                    {
+                        id = reader.GetInt32("maxId") + 1;
+                    }
+                }
             }
 
-            #region Exception Handlinh
+            #region Exception Handling
 
-            catch (DataException ex)
-            {
-                if (ex.Message.Contains("Data is Null")) return 0;
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
-            }
-            
             catch (MySqlException ex)
             {
-                Console.WriteLine(ex.ToString());
+                // if (ex.Message.Contains("Data is Null")) return 0;
+                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
             }
 
             #endregion
 
-            return 0;
+            finally
+            {
+                ViolationId = id;
+            }
         }
 
         #endregion
@@ -170,7 +173,8 @@ namespace DiscordBot.Models
 
         public static Violation Select(ulong guildId, int violationId)
         {
-            string query = "SELECT User, Moderator, Confidential, Type, Reason, Date, Expires FROM violations WHERE Guild = @Guild AND ViolationId = @ViolationId";
+            string query =
+                "SELECT User, Moderator, Confidential, Type, Reason, Date, Expires FROM violations WHERE Guild = @Guild AND ViolationId = @ViolationId";
 
             #region SQL Parameters
 
@@ -221,7 +225,7 @@ namespace DiscordBot.Models
         public void Remove()
         {
             string query = "DELETE FROM violations WHERE Guild = @Guild AND ViolationId = @ViolationId";
-            
+
             #region SQL Parameters
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Guild };
@@ -229,7 +233,7 @@ namespace DiscordBot.Models
             MySqlParameter violation = new MySqlParameter("@ViolationId", MySqlDbType.Int32) { Value = ViolationId };
 
             #endregion
-            
+
             try
             {
                 DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violation);
@@ -247,7 +251,6 @@ namespace DiscordBot.Models
             }
 
             #endregion
-            
         }
 
         #endregion

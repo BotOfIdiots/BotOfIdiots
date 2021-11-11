@@ -8,6 +8,7 @@ namespace DiscordBot.Models.Embeds.Punishments
         public Unbanned(SocketUser user)
         {
             WithTitle("User Unbanned");
+            WithAuthor(new EmbedAuthor(user));
             AddField("user", user.Mention);
             WithCurrentTimestamp();
             WithColor(Discord.Color.Green);

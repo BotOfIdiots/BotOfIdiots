@@ -29,7 +29,7 @@ namespace DiscordBot.Database
         {
             String query = "SELECT CategoryId FROM private_channels_setups WHERE Guild = @Guild;";
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) {Value = socketGuild.Id};
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
 
             DiscordBot.DbConnection.CheckConnection();
             using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
@@ -42,15 +42,19 @@ namespace DiscordBot.Database
                     return true;
                 }
             }
+
             return false;
         }
+
         #endregion
 
         #region Database Inserts
 
-        public static void InsertUser(ulong userId, SocketGuild socketGuild)
+        public static bool InsertUser(ulong userId, SocketGuild socketGuild)
         {
             string query = "INSERT INTO users (Guild, Snowflake) VALUES (@Guild, @Snowflake)";
+
+            #region SQL Parameters
 
             MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64);
             snowflake.Value = userId;
@@ -58,7 +62,39 @@ namespace DiscordBot.Database
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = socketGuild.Id;
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+            #endregion
+
+            int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+
+            if (result == 1)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool InsertReactionMessage(ulong messageSnowflake, SocketGuild socketGuild)
+        {
+            string query = "INSERT INTO reaction_messages (Guild, MessageSnowflake) VALUE (@Guild, @Snowflake);";
+
+            #region SQL Parameters
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
+
+            MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64)
+                { Value = messageSnowflake };
+
+            #endregion
+
+            int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+
+            if (result == 1)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
@@ -109,9 +145,11 @@ namespace DiscordBot.Database
         public static SocketRole GetMutedRole(SocketGuild socketGuild)
         {
             string query = "SELECT MutedRole FROM guild_configurations WHERE Guild = @Guild";
-            
+
             #region parameters
+
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
+
             #endregion
 
             try
@@ -125,6 +163,7 @@ namespace DiscordBot.Database
                     return socketGuild.GetRole(reader.GetUInt64("MutedRole"));
                 }
             }
+
             #region Exception Handlers
 
             catch (MySqlException ex)
@@ -166,6 +205,7 @@ namespace DiscordBot.Database
                 return cmd.ExecuteReader();
             }
         }
+
         #endregion
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Discord.WebSocket;
 using Google.Protobuf.WellKnownTypes;
@@ -23,7 +25,7 @@ namespace DiscordBot.Database
             };
 
             DiscordBot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
-            
+
             string guildConfigurationQuery = "INSERT INTO guild_configurations (Guild) VALUES (@Snowflake)";
             DiscordBot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
         }
@@ -60,6 +62,22 @@ namespace DiscordBot.Database
             };
 
             DiscordBot.DbConnection.ExecuteNonQuery(query, guildOwner, guildId);
+        }
+
+        public static void GenerateDefaultViolation(SocketGuild socketGuild, SocketUser socketUser)
+        {
+            string query =
+                "INSERT INTO violations (Guild, ViolationId, User, Moderator, Type, Reason, Date) VALUE (@Guild, 0, @User, @User, 0, 'Default violation for initialization', @Date);";
+            
+            #region SQL Parameters
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
+            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64) { Value = socketUser.Id };
+            MySqlParameter date = new MySqlParameter("@Date", MySqlDbType.DateTime) { Value = DateTime.Now };
+
+            #endregion
+
+            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, user, date);
         }
     }
 }

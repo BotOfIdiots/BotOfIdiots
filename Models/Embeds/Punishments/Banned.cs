@@ -8,6 +8,7 @@ namespace DiscordBot.Models.Embeds.Punishments
         public Banned(SocketUser user)
         {
             WithTitle("User Banned");
+            WithAuthor(new EmbedAuthor(user));
             AddField("user", user.Mention);
             WithCurrentTimestamp();
             WithColor(Discord.Color.Red);

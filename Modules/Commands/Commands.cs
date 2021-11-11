@@ -184,6 +184,7 @@ namespace DiscordBot.Modules.Commands
             JoinedGuild.AddGuild(Context.Guild);
             JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id);
             JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id);
+            JoinedGuild.GenerateDefaultViolation(Context.Guild, Context.Client.CurrentUser);
 
             await Task.CompletedTask;
         }
