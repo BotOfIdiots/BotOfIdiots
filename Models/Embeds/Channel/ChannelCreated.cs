@@ -8,6 +8,8 @@ namespace DiscordBot.Models.Embeds
 {
     public class ChannelCreatedEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
+
         public ChannelCreatedEmbedBuilder(SocketGuildChannel channel)
         {
             WithTitle("Channel Created");
@@ -19,6 +21,9 @@ namespace DiscordBot.Models.Embeds
             WithFooter("ChannelId: " + channel.Id);
         }
 
+        #endregion
+
+        #region Methods
         // private void AddPermissionOverwriteField(List<Overwrite> permissionOverwrites)
         // {
         //     foreach (Overwrite overwrite in permissionOverwrites)
@@ -45,7 +50,6 @@ namespace DiscordBot.Models.Embeds
         //         }
         //     }
         // }
+        #endregion
     }
-    
-    
 }

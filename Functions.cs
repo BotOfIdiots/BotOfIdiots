@@ -30,5 +30,10 @@ namespace DiscordBot
                 await replyChannel.SendMessageAsync(embed: embed);
             }
         }
+
+        public static IUser GetUserFromGuild(ulong user, ulong guild)
+        {
+            return DiscordBot.Client.GetGuild(guild).GetUser(user);
+        }
     }
 }

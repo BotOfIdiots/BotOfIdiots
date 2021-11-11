@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Database;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -18,10 +18,7 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
     public class Punishment : ModuleBase<SocketCommandContext>
     {
-        private static readonly IRole MutedRole = DiscordBot.Client.GetGuild(DiscordBot.GuildId)
-            .GetRole(Convert.ToUInt64(DiscordBot.Config["MutedRole"]));
-
-
+       #region Warn Related Commands
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -48,17 +45,19 @@ namespace DiscordBot.Modules.Commands
                     embed = ViolationManager.NewViolation(warnedUser, reason, Context);
 
                     await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild);
                 }
 
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
+        #endregion
 
+        #region Mute Related Commands
         /// <summary>
         /// Mute a user
         /// </summary>
@@ -72,7 +71,9 @@ namespace DiscordBot.Modules.Commands
         {
             Embed embed;
 
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            SocketRole mutedRole = DbOperations.GetMutedRole(mutedUser.Guild);
+            
+            if (mutedRole == null)
             {
                 embed = new EmbedBuilder
                 {
@@ -92,7 +93,7 @@ namespace DiscordBot.Modules.Commands
                         }.Build();
                     }
 
-                    else if (mutedUser.Roles.Contains(MutedRole)
+                    else if (mutedUser.Roles.Contains(mutedRole)
                     )
                     {
                         embed = new EmbedBuilder
@@ -106,15 +107,15 @@ namespace DiscordBot.Modules.Commands
                         embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
 
                         await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
-                        await mutedUser.AddRoleAsync(MutedRole);
-                        await EventHandlers.LogViolation(embed);
+                        await mutedUser.AddRoleAsync(mutedRole);
+                        await EventHandlers.LogViolation(embed, Context.Guild);
                     }
 
                     await ReplyAsync(embed: embed);
                 }
                 catch (Exception e)
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild);
                 }
             }
         }
@@ -132,6 +133,8 @@ namespace DiscordBot.Modules.Commands
         public async Task Unmute(SocketGuildUser unmutedUser, [Remainder] string reason = "No reason specified.")
         {
             Embed embed;
+            
+            SocketRole mutedRole = DbOperations.GetMutedRole(unmutedUser.Guild);
             
             if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
             {
@@ -153,7 +156,7 @@ namespace DiscordBot.Modules.Commands
                             Title = "You can't unmute that user."
                         }.Build();
                     }
-                    else if (!unmutedUser.Roles.Contains(MutedRole))
+                    else if (!unmutedUser.Roles.Contains(mutedRole))
                     {
                         embed = new EmbedBuilder
                         {
@@ -165,19 +168,21 @@ namespace DiscordBot.Modules.Commands
                         embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
 
                         await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
-                        await EventHandlers.LogViolation(embed);
-                        await unmutedUser.RemoveRoleAsync(MutedRole);
+                        await EventHandlers.LogViolation(embed, Context.Guild);
+                        await unmutedUser.RemoveRoleAsync(mutedRole);
                     }
 
                     await ReplyAsync(embed: embed);
                 }
                 catch (Exception e)
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild);
                 }
             }
         }
+        #endregion
 
+        #region Kick Related Commands
         /// <summary>
         /// Kick a user
         /// </summary>
@@ -205,17 +210,19 @@ namespace DiscordBot.Modules.Commands
 
                     await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
                     await kickedUser.KickAsync(reason);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild);
                 }
 
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
+        #endregion
 
+        #region Ban Related Commands
         /// <summary>
         /// Ban a user
         /// </summary>
@@ -245,15 +252,14 @@ namespace DiscordBot.Modules.Commands
                     
                     await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
                     await bannedUser.BanAsync(1, reason);
-                    await EventHandlers.LogViolation(embed);
+                    await EventHandlers.LogViolation(embed, Context.Guild);
                 }
-
-
+                
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -282,7 +288,7 @@ namespace DiscordBot.Modules.Commands
                     .WithFooter("UserID: " + bannedUserId)
                     .Build();
                 await Context.Guild.RemoveBanAsync(bannedUserId);
-                await EventHandlers.LogViolation(embed);
+                await EventHandlers.LogViolation(embed, Context.Guild);
                 await ReplyAsync(embed: embed);
             }
             catch (HttpException e)
@@ -298,13 +304,14 @@ namespace DiscordBot.Modules.Commands
                 }
                 else
                 {
-                    await EventHandlers.LogException(e);
+                    await EventHandlers.LogException(e, Context.Guild);
                 }
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
+        #endregion
     }
 }
