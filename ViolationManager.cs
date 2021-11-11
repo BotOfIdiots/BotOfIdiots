@@ -43,7 +43,7 @@ namespace DiscordBot
             
             newViolation.Insert();
 
-            return new ViolationEmbedBuilder(newViolation, context.Client.CurrentUser.Id).Build();
+            return new ViolationEmbedBuilder(newViolation).Build();
             
         }
         #endregion
@@ -138,7 +138,7 @@ namespace DiscordBot
         {
             Violation violation = Violation.Select(context.Guild.Id, id);
 
-            return new ViolationEmbedBuilder(violation, context.Client.CurrentUser.Id).Build();
+            return new ViolationEmbedBuilder(violation).Build();
         }
         #endregion
 

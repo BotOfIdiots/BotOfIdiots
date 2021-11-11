@@ -1,14 +1,17 @@
+using System;
 using Discord;
+using DiscordBot.Modules.Commands;
 
 namespace DiscordBot.Models.Embeds
 {
     public class ViolationEmbedBuilder :EmbedBuilder
     {
         #region Constructors
-        public ViolationEmbedBuilder(Violation violation, ulong author)
+        public ViolationEmbedBuilder(Violation violation)
         {
+            SetTitle(violation.Type);
             WithColor(Discord.Color.Red);
-            WithAuthor("<@!" + author + ">");
+            WithAuthor(new EmbedAuthor(Functions.GetUserFromGuild(violation.Moderator, violation.Guild)));
             AddField("User:", "<@!" + violation.User + ">", true);
             AddField("Date:", violation.Date, true);
             AddField("Moderator:", "<@!" + violation.Moderator + ">");
