@@ -306,7 +306,7 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guild);
+                SocketTextChannel logChannel = LogChannels.JoinLeave(guild);
                 if (logChannel == null) return Task.CompletedTask;
 
                 logChannel.SendMessageAsync(embed: new Banned(user).Build());
@@ -325,7 +325,7 @@ namespace DiscordBot.Modules
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guild);
+                SocketTextChannel logChannel = LogChannels.JoinLeave(guild);
                 if (logChannel == null) return Task.CompletedTask;
 
                 logChannel.SendMessageAsync(embed: new Unbanned(user).Build());
@@ -404,12 +404,16 @@ namespace DiscordBot.Modules
             logChannel.SendMessageAsync(embed: embed);
             return Task.CompletedTask;
         }
+        
+        #endregion
+
+        #region Command Event Handlers
 
         public static Task LogViolation(Embed violationEmbed, SocketGuild guild)
         {
             try
             {
-                SocketTextChannel logChannel = LogChannels.Logs(guild);
+                SocketTextChannel logChannel = LogChannels.Punishments(guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -429,11 +433,7 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
-
-        #endregion
-
-        #region Command Event Handlers
-
+        
         public static Task LogExecutedCommand(SocketCommandContext context, SocketUserMessage message)
         {
             try
