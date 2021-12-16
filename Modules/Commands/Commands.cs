@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Models.Embeds;
-using Org.BouncyCastle.Bcpg.Sig;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -76,7 +72,6 @@ namespace DiscordBot.Modules.Commands
         /// <returns></returns>
         [Command("userinfo")]
         [Summary("$userinfo {user/snowflake} - Shows userinfo")]
-        [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task UserInfo(SocketGuildUser user = null)
         {
             Embed embed;
@@ -84,8 +79,15 @@ namespace DiscordBot.Modules.Commands
             {
                 user ??= Context.Guild.GetUser(Context.User.Id);
 
-                embed = new UserInfo(user).Build();
-
+                if (user.GuildPermissions.KickMembers)
+                {
+                    embed = new UserInfo(user, true).Build();
+                }
+                else
+                {
+                    embed = new UserInfo(user).Build();
+                }
+                
                 await ReplyAsync(embed: embed);
             }
             catch (NullReferenceException)
@@ -104,6 +106,7 @@ namespace DiscordBot.Modules.Commands
             }
         }
 
+        
         /// <summary>
         /// 
         /// </summary>
@@ -171,7 +174,7 @@ namespace DiscordBot.Modules.Commands
         [RequireUserPermission(GuildPermission.Administrator,
             ErrorMessage = "You don't have permission to use this command")]
         [Command("GuildID")]
-        public async Task guildID()
+        public async Task GuildId()
         {
             await ReplyAsync(Context.Guild.ToString());
         }
