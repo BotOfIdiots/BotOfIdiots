@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
+using DiscordBot.Objects;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -100,7 +100,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Violation violation = Models.Violation.Select(Context.Guild.Id, violationId);
+                Violation violation = Objects.Violation.Select(Context.Guild.Id, violationId);
                 Embed embed = new EmbedBuilder
                     {
                         Title = "Violation Removed",

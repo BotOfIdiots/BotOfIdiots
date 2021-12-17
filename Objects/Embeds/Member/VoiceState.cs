@@ -2,7 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Member
 {
     public class VoiceStateEmbedBuilder : EmbedBuilder
     {

@@ -4,7 +4,8 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Models.Embeds;
+using DiscordBot.Objects.Embeds;
+using DiscordBot.Objects.Embeds.Member;
 
 namespace DiscordBot.Modules.Commands
 {

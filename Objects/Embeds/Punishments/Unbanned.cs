@@ -1,17 +1,17 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds.Punishments
+namespace DiscordBot.Objects.Embeds.Punishments
 {
-    public class Banned : EmbedBuilder
+    public class Unbanned : EmbedBuilder
     {
-        public Banned(SocketUser user)
+        public Unbanned(SocketUser user)
         {
-            WithTitle("User Banned");
+            WithTitle("User Unbanned");
             WithAuthor(new EmbedAuthor(user));
             AddField("user", user.Mention);
             WithCurrentTimestamp();
-            WithColor(Discord.Color.Red);
+            WithColor(Discord.Color.Green);
             WithFooter("UserID: " + user.Id);
         }
     }

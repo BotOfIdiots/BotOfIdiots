@@ -1,8 +1,8 @@
 using System;
 using Discord;
-using DiscordBot.Modules.Commands;
+using DiscordBot.Objects;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds
 {
     public class ViolationEmbedBuilder :EmbedBuilder
     {

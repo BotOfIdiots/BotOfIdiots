@@ -1,6 +1,6 @@
 using Discord;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds
 {
     public class ExceptionLog : EmbedBuilder
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Member
 {
     public class UserInfo : EmbedBuilder
     {

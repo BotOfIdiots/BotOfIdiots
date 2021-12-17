@@ -2,7 +2,7 @@ using System;
 using Discord;
 using Discord.Commands;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds
 {
     public class BotVersion : EmbedBuilder
     {

@@ -4,7 +4,7 @@ using DiscordBot.Database;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Objects
 {
     /// <summary>
     /// This object contains all the information for a violation

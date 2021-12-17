@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds.Messages
+namespace DiscordBot.Objects.Embeds.Messages
 {
     public class BulkMessagesDeleted : EmbedBuilder
     {

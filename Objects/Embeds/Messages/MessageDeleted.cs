@@ -1,6 +1,6 @@
 using Discord;
 
-namespace DiscordBot.Models.Embeds.Messages
+namespace DiscordBot.Objects.Embeds.Messages
 {
     public class MessageDeleted : EmbedBuilder
     {

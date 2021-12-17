@@ -1,7 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Channel
 {
     public class ChannelDeletedEmbedBuilder : EmbedBuilder
     {
