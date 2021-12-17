@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -33,7 +34,24 @@ namespace DiscordBot
 
         public static IUser GetUserFromGuild(ulong user, ulong guild)
         {
-            return DiscordBot.Client.GetGuild(guild).GetUser(user);
+            return DiscordBot.ShardedClient.GetGuild(guild).GetUser(user);
+        }
+        
+        public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)
+        {
+            String roles = null;
+            foreach (IRole role in roleCollection)
+            {
+                if (roles == null)
+                {
+                    roles = role.Mention;
+                }
+                else
+                {
+                    roles += role.Mention;
+                }
+            }
+            return roles;
         }
     }
 }

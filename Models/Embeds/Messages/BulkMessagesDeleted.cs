@@ -13,7 +13,7 @@ namespace DiscordBot.Models.Embeds.Messages
             AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")");
             AddField("Amount", cachedData.Count);
 
-            WithAuthor(new EmbedAuthor(DiscordBot.Client.CurrentUser));
+            WithAuthor(new EmbedAuthor(DiscordBot.ShardedClient.CurrentUser));
             WithColor(Discord.Color.Red);
             WithFooter("Message Count: " + cachedData.Count);
             WithCurrentTimestamp();
