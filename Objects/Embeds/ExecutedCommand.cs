@@ -2,7 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds
 {
     public class ExecutedCommand : EmbedBuilder
     {

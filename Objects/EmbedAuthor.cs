@@ -1,7 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Objects
 {
     public class EmbedAuthor : EmbedAuthorBuilder
     {

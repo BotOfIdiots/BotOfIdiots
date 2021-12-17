@@ -4,11 +4,12 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Models.Embeds;
+using DiscordBot.Objects.Embeds;
+using DiscordBot.Objects.Embeds.Member;
 
 namespace DiscordBot.Modules.Commands
 {
-    public class Commands : ModuleBase<SocketCommandContext>
+    public class Commands : ModuleBase<ShardedCommandContext>
     {
         #region User Commands
 
@@ -161,7 +162,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed = new BotVersion().Build();
+                Embed embed = new BotVersion(Context).Build();
 
                 await ReplyAsync(embed: embed);
             }
@@ -192,5 +193,12 @@ namespace DiscordBot.Modules.Commands
             await Task.CompletedTask;
         }
         #endregion
+
+        [Command("serverinfo")]
+        public async Task ServerInfo()
+        {
+            Embed embed = new ServerInfo(Context.Guild).Build();
+            await ReplyAsync(embed: embed);
+        }
     }
 }

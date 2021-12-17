@@ -6,10 +6,10 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Models.Embeds;
-using DiscordBot.Models.Embeds.Messages;
-using DiscordBot.Models.Embeds.Punishments;
-using Microsoft.Extensions.Configuration;
+using DiscordBot.Objects.Embeds.Channel;
+using DiscordBot.Objects.Embeds.Member;
+using DiscordBot.Objects.Embeds.Messages;
+using DiscordBot.Objects.Embeds.Punishments;
 
 namespace DiscordBot.Modules
 {

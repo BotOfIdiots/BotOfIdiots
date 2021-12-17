@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Threading.Channels;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Models;
-using DiscordBot.Models.Embeds;
+using DiscordBot.Objects;
+using DiscordBot.Objects.Embeds;
 using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Crypto.Digests;
 
 namespace DiscordBot
 

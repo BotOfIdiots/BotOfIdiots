@@ -4,7 +4,7 @@ using DiscordBot.Database;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
 
-namespace DiscordBot.Models
+namespace DiscordBot.Objects
 {
     /// <summary>
     /// This object contains all the information for a violation
@@ -99,7 +99,7 @@ namespace DiscordBot.Models
             catch (MySqlException ex)
             {
                 // if (ex.Message.Contains("Data is Null")) return 0;
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
             }
 
             #endregion
@@ -165,7 +165,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
             }
 
             #endregion
@@ -214,7 +214,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(guildId));
+                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(guildId));
             }
 
             #endregion
@@ -247,7 +247,7 @@ namespace DiscordBot.Models
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.Client.GetGuild(Guild));
+                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
             }
 
             #endregion

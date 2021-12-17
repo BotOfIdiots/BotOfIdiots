@@ -5,7 +5,7 @@ namespace DiscordBot
 {
     public static class DiscordEventHooks
     {
-        public static void HookClientEvents(BaseSocketClient client)
+        public static void HookClientEvents(DiscordShardedClient client)
         {
             client.JoinedGuild += EventHandlers.ClientJoinGuildHandler;
         }
@@ -46,7 +46,7 @@ namespace DiscordBot
             client.UserBanned += EventHandlers.MemberBannedHandler;
         }
         
-        public static void HookChannelEvents(DiscordSocketClient client)
+        public static void HookChannelEvents(DiscordShardedClient client)
         {
             // client.ChannelUpdated += EventHandlers.ChannelUpdateHandler;
             client.ChannelCreated += EventHandlers.ChannelCreatedHandler;
