@@ -49,13 +49,15 @@ namespace DiscordBot.Modules
         #region Message Event Handlers
 
         public static Task MessageDeleteHandler(Cacheable<IMessage, ulong> cachedMessage,
-            ISocketMessageChannel channel)
+            Cacheable<IMessageChannel, ulong> cachedChannel)
         {
-            if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
-            
+            SocketGuildChannel channel = cachedChannel.Value as SocketGuildChannel;
+
+            if (DbOperations.CheckLogExemption(channel)) return Task.CompletedTask;
+
             try
             {
-                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
+                SocketTextChannel logChannel = LogChannels.Messages((channel).Guild);
                 if (logChannel == null)
                 {
                     return Task.CompletedTask;
@@ -79,18 +81,21 @@ namespace DiscordBot.Modules
         }
 
         public static Task MessageBulkDeleteHandler(IReadOnlyCollection<Cacheable<IMessage, ulong>> cachedData,
-            ISocketMessageChannel channel)
+            Cacheable<IMessageChannel, ulong> cachedChannel)
         {
-            if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
-            
+            SocketGuildChannel channel = cachedChannel.Value as SocketGuildChannel;
+
+            if (DbOperations.CheckLogExemption(channel)) return Task.CompletedTask;
+
             try
             {
-                SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
+                SocketTextChannel logChannel = LogChannels.Messages((channel).Guild);
                 if (logChannel == null) return Task.CompletedTask;
 
                 if (cachedData.Count > 0)
                 {
-                    Embed messageBulkDeleteEmbed = new BulkMessagesDeleted(cachedData, channel).Build();
+                    Embed messageBulkDeleteEmbed =
+                        new BulkMessagesDeleted(cachedData, channel as ISocketMessageChannel).Build();
 
                     logChannel.SendMessageAsync(embed: messageBulkDeleteEmbed);
                     return Task.CompletedTask;
@@ -100,7 +105,7 @@ namespace DiscordBot.Modules
             }
             catch (Exception e)
             {
-                LogException(e, (channel as SocketTextChannel).Guild);
+                LogException(e, channel.Guild);
                 return Task.CompletedTask;
             }
         }
@@ -109,7 +114,7 @@ namespace DiscordBot.Modules
             ISocketMessageChannel channel)
         {
             if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
-            
+
             try
             {
                 if (cachedMessage.Value.Content == message.Content) return Task.CompletedTask;
@@ -170,8 +175,10 @@ namespace DiscordBot.Modules
             }
         }
 
-        public static Task MemberLeaveGuildHandler(SocketGuildUser leavingUser)
+        public static Task MemberLeaveGuildHandler(SocketGuild socketGuild, SocketUser socketUser)
         {
+            SocketGuildUser leavingUser = socketUser as SocketGuildUser;
+
             try
             {
                 if (leavingUser != null)
@@ -264,48 +271,48 @@ namespace DiscordBot.Modules
             #endregion
         }
 
-        public static Task MemberUpdatedHandler(SocketGuildUser before, SocketGuildUser after)
+        public static Task MemberUpdatedHandler(Cacheable<SocketGuildUser, ulong> before, SocketGuildUser after)
         {
             try
             {
-                if (before.Roles.Count != after.Roles.Count)
+                if (before.Value.Roles.Count != after.Roles.Count)
                 {
-                    SocketTextChannel logChannel = LogChannels.Roles(before.Guild);
+                    SocketTextChannel logChannel = LogChannels.Roles(before.Value.Guild);
                     if (logChannel == null) return Task.CompletedTask;
 
                     logChannel.SendMessageAsync(
-                        embed: new MemberRolesUpdateEmbedBuilder(after, before.Roles.ToList()).Build()
+                        embed: new MemberRolesUpdateEmbedBuilder(after, before.Value.Roles.ToList()).Build()
                     );
                 }
 
-                if (before.Nickname != after.Nickname)
+                if (before.Value.Nickname != after.Nickname)
                 {
-                    SocketTextChannel logChannel = LogChannels.Nickname(before.Guild);
+                    SocketTextChannel logChannel = LogChannels.Nickname(before.Value.Guild);
                     if (logChannel == null) return Task.CompletedTask;
-                    
+
                     logChannel.SendMessageAsync(
-                        embed: new NicknameUpdateEmbedBuilder(after, before.Nickname).Build()
+                        embed: new NicknameUpdateEmbedBuilder(after, before.Value.Nickname).Build()
                     );
                 }
             }
             catch (Exception e)
             {
-                LogException(e, before.Guild);
+                LogException(e, before.Value.Guild);
             }
 
             return Task.CompletedTask;
         }
 
         #endregion
-        
+
         #region Client Event Handlers
-        
+
         public static Task ClientJoinGuildHandler(SocketGuild guild)
         {
             JoinedGuild.AddGuild(guild);
             JoinedGuild.DownloadMembers(guild.Users, guild.Id);
             JoinedGuild.SetGuildOwner(guild.OwnerId, guild.Id);
-            JoinedGuild.GenerateDefaultViolation(guild, DiscordBot.Client.CurrentUser);
+            JoinedGuild.GenerateDefaultViolation(guild, DiscordBot.ShardedClient.CurrentUser);
 
             return Task.CompletedTask;
         }
@@ -324,12 +331,15 @@ namespace DiscordBot.Modules
                 logChannel.SendMessageAsync(embed: new Banned(user).Build());
                 return Task.CompletedTask;
             }
+
             #region Exceptions
+
             catch (Exception e)
             {
                 LogException(e, guild);
                 return Task.CompletedTask;
             }
+
             #endregion
         }
 
@@ -343,12 +353,15 @@ namespace DiscordBot.Modules
                 logChannel.SendMessageAsync(embed: new Unbanned(user).Build());
                 return Task.CompletedTask;
             }
+
             #region Exceptions
+
             catch (Exception e)
             {
                 LogException(e, guild);
                 return Task.CompletedTask;
             }
+
             #endregion
         }
 
@@ -416,7 +429,7 @@ namespace DiscordBot.Modules
             logChannel.SendMessageAsync(embed: embed);
             return Task.CompletedTask;
         }
-        
+
         #endregion
 
         #region Command Event Handlers
@@ -445,7 +458,7 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
-        
+
         public static Task LogExecutedCommand(SocketCommandContext context, SocketUserMessage message)
         {
             try
@@ -475,20 +488,31 @@ namespace DiscordBot.Modules
 
         #endregion
 
-        public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message,
+            Cacheable<IMessageChannel, ulong> cachedChannel, SocketReaction reaction)
         {
+            ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
+
             ReactionMessage.ReactionAdded(message, channel, reaction);
             // Levels.AddReactionXp(message, channel, reaction);
-            
+
             return Task.CompletedTask;
         }
 
-        public static Task ReactionRemovedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        public static Task ReactionRemovedHandler(Cacheable<IUserMessage, ulong> message,
+            Cacheable<IMessageChannel, ulong> cachedChannel, SocketReaction reaction)
         {
+            ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
+
             ReactionMessage.ReactionRemoved(message, channel, reaction);
             // Levels.RemoveReactionXp(message, channel, reaction);
-            
+
             return Task.CompletedTask;
+        }
+
+        public static Task PresenceUpdatedHandler(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
+        {
+            throw new NotImplementedException();
         }
     }
 }

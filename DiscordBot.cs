@@ -108,9 +108,6 @@ namespace DiscordBot
             {
                 switch (node.Name)
                 {
-                    case "ExclusiveBulkDelete":
-                        DiscordSocketConfig.ExclusiveBulkDelete = Convert.ToBoolean(node.InnerText);
-                        break;
                     case "MessageCacheSize":
                         DiscordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
                         break;
