@@ -1,13 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Channel
 {
     public class ChannelCreatedEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
+
         public ChannelCreatedEmbedBuilder(SocketGuildChannel channel)
         {
             WithTitle("Channel Created");
@@ -19,6 +18,9 @@ namespace DiscordBot.Models.Embeds
             WithFooter("ChannelId: " + channel.Id);
         }
 
+        #endregion
+
+        #region Methods
         // private void AddPermissionOverwriteField(List<Overwrite> permissionOverwrites)
         // {
         //     foreach (Overwrite overwrite in permissionOverwrites)
@@ -45,7 +47,6 @@ namespace DiscordBot.Models.Embeds
         //         }
         //     }
         // }
+        #endregion
     }
-    
-    
 }

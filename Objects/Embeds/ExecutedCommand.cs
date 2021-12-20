@@ -2,10 +2,11 @@
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds
 {
     public class ExecutedCommand : EmbedBuilder
     {
+        #region Constructors
         public ExecutedCommand(SocketCommandContext context, IMessage message)
         {
             IUser author = message.Author;
@@ -18,5 +19,6 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("UserID: " + author.Id);
         }
+        #endregion
     }
 }

@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Channel
 {
     public class ChannelDeletedEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
         public ChannelDeletedEmbedBuilder(SocketGuildChannel channel)
         {
             WithTitle("Channel Deleted");
@@ -14,6 +15,7 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("ChannelId: " + channel.Id);
         }
+        #endregion
     }
     
 }

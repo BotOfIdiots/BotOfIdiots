@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
-using LiteDB;
+using DiscordBot.Database;
+using DiscordBot.Objects;
+using DiscordBot.Objects.Embeds;
+using MySql.Data.MySqlClient;
 
 namespace DiscordBot
 
 {
     public static class ViolationManager
     {
+        #region New Violation Creation
+
         /// <summary>
         /// Create a New violation insert it into the database and return an embed
         /// </summary>
@@ -18,73 +22,61 @@ namespace DiscordBot
         /// <param name="violator">User that committed the violation</param>
         /// <param name="reason">Reason for the violation</param>
         /// <param name="context">Command Context</param>
+        /// <param name="confidential">Is it a confidential violation? If yes </param>
         /// <returns>Embed</returns>
         public static Embed NewViolation(SocketGuildUser violator, string reason, SocketCommandContext context,
-            int violationType = 0)
+            int violationType = 0, bool confidential = false)
 
         {
-            try
+            Violation newViolation = new Violation(violator.Guild.Id)
             {
-                DateTime date = DateTime.Now;
+                User = violator.Id,
+                Moderator = context.User.Id,
+                Confidential = confidential,
+                Type = violationType,
+                Reason = reason,
+                Date = DateTime.Now
+            };
+            
+            newViolation.Insert();
 
-                Violation violation = new Violation
-                {
-                    UserId = violator.Id,
-                    ModeratorId = context.User.Id,
-                    Type = violationType,
-                    Reason = reason,
-                    Date = date
-                };
-
-
-                InsertViolation(violation);
-
-                violation = GetCreatedRecord(date);
-
-                return ViolationEmbed(violation, context);
-            }
-
-            catch (IndexOutOfRangeException)
-            {
-                Embed error = new EmbedBuilder
-                    {
-                        Title = "Te weinig argumenten"
-                    }
-                    .WithDescription("Commando is uitgevoerd met te weinig argumenten")
-                    .AddField("Example", DiscordBot.Config["CommandPrefix"] + "ban [user] {reason}")
-                    .Build();
-
-                return error;
-            }
-
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                Embed error = new EmbedBuilder
-                    {
-                        Title = "Exception"
-                    }
-                    .WithDescription(Format.Sanitize(e.ToString()))
-                    .AddField("Time", DateTime.Now)
-                    .Build();
-
-                return error;
-            }
+            return new ViolationEmbedBuilder(newViolation).Build();
+            
         }
-
+        #endregion
+        
+        #region Violation Management
         /// <summary>
         /// Returns the total ammount of violations for a specified user
         /// </summary>
         /// <param name="userId">id of the user to return the violation count of</param>
         /// <returns>int</returns>
-        public static int CountUserViolations(ulong userId)
+        public static int CountUserViolations(ulong userId, ulong guildId)
         {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
+            string query = "SELECT count(*) FROM violations WHERE Guild = @Guild AND User = @User";
 
-                return table.Count(x => x.UserId == userId);
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+            guild.Value = guildId;
+
+            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64);
+            user.Value = userId;
+
+            try
+            {
+                DiscordBot.DbConnection.CheckConnection();
+                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
+
+                while (reader.Read())
+                {
+                    return reader.GetInt32("count(*)");
+                }
             }
+            catch
+            {
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -92,19 +84,41 @@ namespace DiscordBot
         /// </summary>
         /// <param name="user">The user of which to return the violations</param>
         /// <returns>List<Violations></returns>
-        public static List<Violation> GetViolations(ulong user)
+        public static List<Violation> GetViolations(ulong userId, ulong guildId)
         {
             List<Violation> violations = new List<Violation>();
 
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-                IEnumerable<Violation> queryData = table.Find(x => x.UserId == user);
+            string query = "SELECT CAST(ViolationId as VARCHAR(6)) as ViolationId FROM violations WHERE Guild = @Guild AND User = @User";
 
-                foreach (Violation record in queryData)
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+            guild.Value = guildId;
+
+            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64);
+            user.Value = userId;
+
+            try
+            {
+                DiscordBot.DbConnection.CheckConnection();
+                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
+
+                List<int> violationIds = new List<int>();
+
+                while (reader.Read())
                 {
-                    violations.Add(record);
+                    violationIds.Add( reader.GetInt32("ViolationId"));
                 }
+                reader.Close();
+
+                foreach (int id in violationIds)
+                {
+                    Console.WriteLine(id);
+                    violations.Add(Violation.Select(guildId, id));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
 
             return violations;
@@ -119,114 +133,39 @@ namespace DiscordBot
         /// <returns></returns>
         public static Embed GetViolation(int id, SocketCommandContext context)
         {
-            Violation violation = GetViolationRecord(id);
+            Violation violation = Violation.Select(context.Guild.Id, id);
 
-            return ViolationEmbed(violation, context);
+            return new ViolationEmbedBuilder(violation).Build();
         }
+        #endregion
 
-
-        /// <summary>
-        /// This functions returns an embed with the information of the committed violation
-        /// </summary>
-        /// <param name="violation">The violation information</param>
-        /// <param name="context">The context of the command that wants the Embed</param>
-        /// <returns></returns>
-        private static Embed ViolationEmbed(Violation violation, SocketCommandContext context)
-        {
-            String violationTitle;
-            switch (violation.Type)
-            {
-                case 1:
-                    violationTitle = "Banned";
-                    break;
-                case 2:
-                    violationTitle = "Kicked";
-                    break;
-                case 3:
-                    violationTitle = "Muted";
-                    break;
-                case 4:
-                    violationTitle = "Unmuted";
-                    break;
-                default:
-                    violationTitle = "Warned";
-                    break;
-            }
-
-            Embed embed = new EmbedBuilder
-                {
-                    Title = violationTitle,
-                    Color = Color.Red
-                }
-                .WithAuthor(context.Client.CurrentUser)
-                .AddField("User:", "<@!" + violation.UserId + ">", true)
-                .AddField("Date:", DateTime.Now, true)
-                .AddField("Moderator:", context.User.Mention)
-                .AddField("Reason:", violation.Reason)
-                .AddField("Violation ID:", violation.Id, true)
-                .WithCurrentTimestamp()
-                .WithFooter("UserID: " + violation.UserId)
-                .Build();
-
-            return embed;
-        }
-
-        /// <summary>
-        /// Insert a Violation object into the database
-        /// </summary>
-        /// <param name="record">The object to insert</param>
-        public static void InsertViolation(Violation record)
-        {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-
-                table.Insert(record);
-            }
-        }
-
-        /// <summary>
-        /// Delete a violation
-        /// </summary>
-        /// <param name="violationId">Id of violation to delete</param>
-        public static void DeleteViolationRecord(int violationId)
-        {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-
-                table.Delete(violationId);
-            }
-        }
-
-        /// <summary>
-        /// Return a Database record based on the specified date
-        /// </summary>
-        /// <param name="date"> Date of created record to return</param>
-        /// <returns></returns>
-        public static Violation GetCreatedRecord(DateTime date)
-        {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-
-                return table.FindOne(x => x.Date == date);
-            }
-        }
-
-        /// <summary>
-        /// Return a Database record bases on a specified Identifier
-        /// </summary>
-        /// <param name="id">identifier of the record to return</param>
-        /// <returns></returns>
-        public static Violation GetViolationRecord(int id)
-        {
-            using (var db = new LiteDatabase(DiscordBot.WorkingDirectory + "/Database.db"))
-            {
-                var table = db.GetCollection<Violation>("violations");
-
-                return table.FindOne(x => x.Id == id);
-            }
-        }
+        // /// <summary>
+        // /// This functions returns an embed with the information of the committed violation
+        // /// </summary>
+        // /// <param name="violation">The violation information</param>
+        // /// <param name="context">The context of the command that wants the Embed</param>
+        // /// <returns></returns>
+        // private static Embed ViolationEmbed(Violation violation, SocketCommandContext context)
+        // {
+        //     String violationTitle;
+        //
+        //
+        //     Embed embed = new EmbedBuilder
+        //         {
+        //             Title = violationTitle,
+        //             Color = Color.Red
+        //         }
+        //         .WithAuthor(context.Client.CurrentUser)
+        //         .AddField("User:", "<@!" + violation.UserId + ">", true)
+        //         .AddField("Date:", DateTime.Now, true)
+        //         .AddField("Moderator:", context.User.Mention)
+        //         .AddField("Reason:", violation.Reason)
+        //         .AddField("Violation ID:", violation.Id, true)
+        //         .WithCurrentTimestamp()
+        //         .WithFooter("UserID: " + violation.UserId)
+        //         .Build();
+        //
+        //     return embed;
+        // }
     }
 }

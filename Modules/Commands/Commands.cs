@@ -1,20 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
+using DiscordBot.Objects.Embeds;
+using DiscordBot.Objects.Embeds.Member;
 
 namespace DiscordBot.Modules.Commands
 {
-    public class Commands : ModuleBase<SocketCommandContext>
+    public class Commands : ModuleBase<ShardedCommandContext>
     {
+        #region User Commands
+
         /// <summary>
         /// Replies with pong
         /// </summary>
         /// <returns></returns>
         [Command("ping")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         [Summary("$ping - Responds with Pong")]
         public async Task Ping()
         {
@@ -24,116 +28,8 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
-        }
-
-        /// <summary>
-        /// Return the current version of the bot
-        /// </summary>
-        /// <returns></returns>
-        [RequireUserPermission(GuildPermission.Administrator)]
-        [Command("version")]
-        [Summary("$version - returns the current bot version")]
-        // Return the current version of the bot
-        public async Task Version()
-        {
-            try
-            {
-                Embed embed = new EmbedBuilder
-                    {
-                        Title = "Version: " + DiscordBot.Version(),
-                    }
-                    .WithAuthor(Context.Client.CurrentUser)
-                    .WithFooter(DiscordBot.Version())
-                    .WithCurrentTimestamp()
-                    .Build();
-
-                await ReplyAsync(embed: embed);
-            }
-            catch (Exception e)
-            {
-                await EventHandlers.LogException(e);
-            }
-        }
-
-        /// <summary>
-        /// Get the account information of a user
-        /// </summary>
-        /// <param name="user">user to return userinfo of</param>
-        /// <returns></returns>
-        [Command("userinfo")]
-        [Summary("$userinfo {user/snowflake} - Shows userinfo")]
-        public async Task UserInfo(SocketGuildUser user = null)
-        {
-            Embed embed;
-            String roles = null;
-
-            try
-            {
-                if (user == null)
-                {
-                    user = Context.Guild.GetUser(Context.User.Id);
-                }
-
-                foreach (IRole role in user.Roles.Distinct())
-                {
-                    if (roles == null)
-                    {
-                        roles = role.Mention;
-                    }
-                    else
-                    {
-                        roles += role.Mention;
-                    }
-                }
-
-                embed = new EmbedBuilder { }
-                    .AddField("User", user.Mention)
-                    .WithThumbnailUrl(user.GetAvatarUrl())
-                    .AddField("Violation Count:", ViolationManager.CountUserViolations(user.Id))
-                    .AddField("Created At", user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true)
-                    .AddField("Joined At", user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true)
-                    .AddField("Roles", roles)
-                    .WithAuthor(user)
-                    .WithFooter("UserID: " + user.Id)
-                    .WithCurrentTimestamp()
-                    .Build();
-
-                await ReplyAsync(embed: embed);
-            }
-            catch (NullReferenceException)
-            {
-                embed = new EmbedBuilder
-                    {
-                        Title = "Missing Username/Snowflake"
-                    }
-                    .AddField("Example", "$userinfo [username/snowflake]")
-                    .Build();
-                await ReplyAsync(embed: embed);
-            }
-            catch (Exception e)
-            {
-                await EventHandlers.LogException(e);
-            }
-        }
-
-        /// <summary>
-        /// Returns User Snowflake
-        /// </summary>
-        /// <param name="user">User from which to get Snowflake</param>
-        /// <returns></returns>
-        [Command("snowflake")]
-        [Summary("$snowflake <user/snowflake> - returns the snowflake of the user")]
-        public async Task Snowflake(SocketGuildUser user)
-        {
-            Embed embed = new EmbedBuilder
-                {
-                    Title = "Snowflake for user " + user.Username
-                }.AddField("snowflake", user.Id)
-                .Build();
-
-            await ReplyAsync(embed: embed);
         }
 
         [Command("help")]
@@ -166,47 +62,56 @@ namespace DiscordBot.Modules.Commands
             await ReplyAsync(embed: helpEmbed);
         }
 
-        [RequireUserPermission(GuildPermission.Administrator,
-            ErrorMessage = "You don't have permission to use this command")]
-        [Command("Config")]
-        public async Task Config()
+        #endregion
+
+        #region Moderation Commands
+
+        /// <summary>
+        /// Get the account information of a user
+        /// </summary>
+        /// <param name="user">user to return userinfo of</param>
+        /// <returns></returns>
+        [Command("userinfo")]
+        [Summary("$userinfo {user/snowflake} - Shows userinfo")]
+        public async Task UserInfo(SocketGuildUser user = null)
         {
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle("Bot Config");
-
-            var configOptions = DiscordBot.Config.GetChildren();
-
-            foreach (var option in configOptions)
+            Embed embed;
+            try
             {
-                if (option.GetChildren().Any())
-                {
-                    var section = option.GetChildren();
+                user ??= Context.Guild.GetUser(Context.User.Id);
 
-                    foreach (var suboption in section)
-                    {
-                        embedBuilder.AddField(suboption.Key, suboption.Value);
-                    }
+                if (user.GuildPermissions.KickMembers)
+                {
+                    embed = new UserInfo(user, true).Build();
                 }
                 else
                 {
-                    if (option.Key != "Token")
-                    {
-                        embedBuilder.AddField(option.Key, option.Value);
-                    }
+                    embed = new UserInfo(user).Build();
                 }
+                
+                await ReplyAsync(embed: embed);
             }
-
-            Embed embed = embedBuilder.Build();
-
-            await ReplyAsync(embed: embed);
+            catch (NullReferenceException)
+            {
+                embed = new EmbedBuilder
+                    {
+                        Title = "Missing Username/Snowflake"
+                    }
+                    .AddField("Example", "$userinfo [username/snowflake]")
+                    .Build();
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await EventHandlers.LogException(e, Context.Guild);
+            }
         }
 
-        [Command("GuildID")]
-        public async Task guildID()
-        {
-            await ReplyAsync(DiscordBot.GuildId.ToString());
-        }
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="amount"></param>
         [Command("purge")]
         [Summary(
             "$purge <amount> - removes the amount of messages specified. (You don't have to count the command message as it is included by default")]
@@ -215,9 +120,85 @@ namespace DiscordBot.Modules.Commands
         {
             var messageList = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
 
-            (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messageList);
+            await (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messageList);
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Returns User Snowflake
+        /// </summary>
+        /// <param name="user">User from which to get Snowflake</param>
+        /// <returns></returns>
+        [Command("snowflake")]
+        [Summary("$snowflake <user/snowflake> - returns the snowflake of the user")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task Snowflake(SocketGuildUser user)
+        {
+            Embed embed = new EmbedBuilder
+                {
+                    Title = "Snowflake for user " + user.Username
+                }.AddField("snowflake", user.Id)
+                .Build();
+
+            await ReplyAsync(embed: embed);
+        }
+
+        #endregion
+
+        #region Administration Commands
+
+        /// <summary>
+        /// Return the current version of the bot
+        /// </summary>
+        /// <returns></returns>
+        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
+        "You don't have permission to use this command")]
+
+        [Command("version")]
+        [Summary("$version - returns the current bot version")]
+        // Return the current version of the bot
+        public async Task Version()
+        {
+            try
+            {
+                Embed embed = new BotVersion(Context).Build();
+
+                await ReplyAsync(embed: embed);
+            }
+            catch (Exception e)
+            {
+                await EventHandlers.LogException(e, Context.Guild);
+            }
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator,
+            ErrorMessage = "You don't have permission to use this command")]
+        [Command("GuildID")]
+        public async Task GuildId()
+        {
+            await ReplyAsync(Context.Guild.ToString());
+        }
+
+        [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage =
+            "You don't have permission to use this command")]
+        [Command("setupbot")]
+        public async Task SetupBot()
+        {
+            JoinedGuild.AddGuild(Context.Guild);
+            JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id);
+            JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id);
+            JoinedGuild.GenerateDefaultViolation(Context.Guild, Context.Client.CurrentUser);
+
+            await Task.CompletedTask;
+        }
+        #endregion
+
+        [Command("serverinfo")]
+        public async Task ServerInfo()
+        {
+            Embed embed = new ServerInfo(Context.Guild).Build();
+            await ReplyAsync(embed: embed);
         }
     }
 }

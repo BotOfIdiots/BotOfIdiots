@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot.Models.Embeds
+namespace DiscordBot.Objects.Embeds.Member
 {
     public class NicknameUpdateEmbedBuilder : EmbedBuilder
     {
+        #region Constructors
         public NicknameUpdateEmbedBuilder(SocketGuildUser user, string OldNickname)
         {
             WithTitle("User Nickname updated");
@@ -18,7 +19,9 @@ namespace DiscordBot.Models.Embeds
             WithCurrentTimestamp();
             WithFooter("UserID: " + user.Id);
         }
+        #endregion
 
+        #region Methods
         private void _oldNickname(string nickname = null)
         {
             if (nickname == null)
@@ -38,6 +41,6 @@ namespace DiscordBot.Models.Embeds
             
             AddField("New Nickname", nickname);
         }
-
+        #endregion
     }
 }

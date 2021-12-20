@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordBot.Models;
+using DiscordBot.Objects;
 
 namespace DiscordBot.Modules.Commands
 {
@@ -32,7 +32,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -47,7 +47,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id);
+                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id, Context.Guild.Id);
 
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.WithTitle("Violations")
@@ -79,7 +79,7 @@ namespace DiscordBot.Modules.Commands
                             break;
                     }
 
-                    embedBuilder.AddField("Violation", violation.Id + " - " + violationType);
+                    embedBuilder.AddField("Violation", violation.ViolationId + " - " + violationType);
                 }
 
                 Embed embed = embedBuilder.Build();
@@ -88,7 +88,7 @@ namespace DiscordBot.Modules.Commands
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
 
@@ -100,29 +100,29 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Violation violation = ViolationManager.GetViolationRecord(violationId);
+                Violation violation = Objects.Violation.Select(Context.Guild.Id, violationId);
                 Embed embed = new EmbedBuilder
                     {
                         Title = "Violation Removed",
                         Color = Color.Orange
                     }
                     .WithAuthor(Context.Client.CurrentUser)
-                    .AddField("User", "<@!" + violation.UserId + ">", true)
+                    .AddField("User", "<@!" + violation.User + ">", true)
                     .AddField("Date", DateTime.Now, true)
                     .AddField("Moderator", Context.User.Mention)
                     .AddField("Reason", reason)
                     .AddField("Original Violation Date", violation.Date)
                     .AddField("Original Violation Reason", violation.Reason)
-                    .WithFooter("UserID: " + violation.UserId)
+                    .WithFooter("UserID: " + violation.User)
                     .WithTimestamp(DateTime.Now)
                     .Build();
-
-                ViolationManager.DeleteViolationRecord(violationId);
+        
+                violation.Remove();
                 await ReplyAsync(embed: embed);
             }
             catch (Exception e)
             {
-                await EventHandlers.LogException(e);
+                await EventHandlers.LogException(e, Context.Guild);
             }
         }
     }

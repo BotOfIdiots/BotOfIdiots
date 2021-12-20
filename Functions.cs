@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -29,6 +30,28 @@ namespace DiscordBot
                 SocketTextChannel replyChannel = context.Guild.GetTextChannel(context.Channel.Id);
                 await replyChannel.SendMessageAsync(embed: embed);
             }
+        }
+
+        public static IUser GetUserFromGuild(ulong user, ulong guild)
+        {
+            return DiscordBot.ShardedClient.GetGuild(guild).GetUser(user);
+        }
+        
+        public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)
+        {
+            String roles = null;
+            foreach (IRole role in roleCollection)
+            {
+                if (roles == null)
+                {
+                    roles = role.Mention;
+                }
+                else
+                {
+                    roles += role.Mention;
+                }
+            }
+            return roles;
         }
     }
 }
