@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -13,7 +15,7 @@ namespace DiscordBot.Modules
     [RequireUserPermission(GuildPermission.ManageChannels)]
     [RequireBotPermission(GuildPermission.ManageChannels)]
     [Group("privatechannels")]
-    public class PrivateChannel : ModuleBase<SocketCommandContext>
+    public class PrivateChannel : ModuleBase<ShardedCommandContext>
     {
         private static bool CheckChannel(SocketVoiceChannel voiceChannel, SocketGuild socketGuild)
         {
@@ -167,6 +169,30 @@ namespace DiscordBot.Modules
         [Command("list")]
         public async Task ListPrivateChannels()
         {
+            string query = "SELECT CategoryId, CreateChannelId FROM private_channels_setups WHERE Guild = @Guild ";
+            
+            #region SQL Parameters
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
+            
+            #endregion
+            
+            DiscordBot.DbConnection.CheckConnection();
+            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+
+            List<ulong> snowflakes = new List<ulong>(2);
+
+            while (reader.Read())
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    snowflakes[i] = reader.GetUInt64(i);
+                }
+            }
+
+            await ReplyAsync("Category: <#" + snowflakes[0] + ">. Channel: <#" + snowflakes[2] + ">.");
+            
             await Task.CompletedTask;
         }
 

@@ -21,9 +21,11 @@ namespace DiscordBot
         private static IServiceProvider _services;
         public static string WorkingDirectory;
         public static DiscordShardedClient ShardedClient;
+        public static ulong ControleGuild;
+        private static int[] shardId;
         public static CommandService Commands;
         public static IConfiguration Config;
-        public static DiscordSocketConfig DiscordConfig;
+        public static DiscordSocketConfig DiscordSocketConfig;
         private XmlDocument settings = new XmlDocument();
         public static DbConnection DbConnection;
 
@@ -53,10 +55,10 @@ namespace DiscordBot
 
             DbConnection = new DbConnection(settings.DocumentElement["SQLSettings"].ChildNodes);
             
-            DiscordConfig = BuildBotConfig(settings.DocumentElement["DiscordConfig"].ChildNodes);
-            int[] shardId = { Convert.ToInt32(settings.DocumentElement["ShardId"].InnerText) };
+            BuildDiscordSocketConfig(settings.DocumentElement["DiscordSocketConfig"].ChildNodes);
+            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].InnerText);
 
-            ShardedClient = new DiscordShardedClient(shardId, DiscordConfig);
+            ShardedClient = new DiscordShardedClient(shardId, DiscordSocketConfig);
             Commands = new CommandService();
 
             _services = new ServiceCollection()
@@ -98,34 +100,28 @@ namespace DiscordBot
             Config = Config.GetSection("DiscordBot");
         }
 
-        private DiscordSocketConfig BuildBotConfig(XmlNodeList settings)
+        private void BuildDiscordSocketConfig(XmlNodeList settings)
         {
-            bool exclusiveBulkDelete = false;
-            int messageCacheSize = 0;
-            int totalShards = 0;
+            DiscordSocketConfig = new DiscordSocketConfig();
 
             foreach (XmlNode node in settings)
             {
                 switch (node.Name)
                 {
                     case "ExclusiveBulkDelete":
-                        exclusiveBulkDelete = Convert.ToBoolean(node.InnerText);
+                        DiscordSocketConfig.ExclusiveBulkDelete = Convert.ToBoolean(node.InnerText);
                         break;
                     case "MessageCacheSize":
-                        messageCacheSize = Convert.ToInt32(node.InnerText);
+                        DiscordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
                         break;
                     case "TotalShards":
-                        totalShards = Convert.ToInt32((node.InnerText));
+                        DiscordSocketConfig.TotalShards = Convert.ToInt32((node.InnerText));
+                        break;
+                    case "ShardId":
+                        shardId = new int[] { Convert.ToInt32(node.InnerText) };
                         break;
                 }
             }
-
-            return new DiscordSocketConfig
-            {
-                ExclusiveBulkDelete = exclusiveBulkDelete,
-                MessageCacheSize = messageCacheSize,
-                TotalShards = totalShards
-            };
         }
 
         #endregion
