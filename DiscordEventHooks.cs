@@ -31,11 +31,10 @@ namespace DiscordBot
             client.MessageUpdated += EventHandlers.MessageUpdateHandler;
             
             //Reaction role hooks
-            client.ReactionAdded += ReactionMessage.ReactionAdded;
-            client.ReactionRemoved += ReactionMessage.ReactionRemoved;
+            client.ReactionAdded += EventHandlers.ReactionAddedHandler;
+            client.ReactionRemoved += EventHandlers.ReactionRemovedHandler;
             
             //Level system hooks
-            // client.MessageReceived += Levels.AddMessageXp;
             client.ReactionAdded += Levels.AddReactionXp;
             client.ReactionRemoved += Levels.RemoveReactionXp;
         }

@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Data.SqlTypes;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules;
@@ -37,10 +38,33 @@ namespace DiscordBot.Database
 
             while (reader.Read())
             {
-                if (reader.GetUInt64("CategoryId") != 0)
-                {
-                    return true;
-                }
+                if (reader.GetUInt64("CategoryId") != 0) return true;
+            }
+
+            return false;
+        }
+
+        public static bool CheckLogExemption(SocketGuildChannel socketGuildChannel)
+        {
+            String query = "SELECT Snowflake FROM exclude_from_logging WHERE Guild = @Guild AND Snowflake = @Channel";
+
+            #region Mysql Parameters
+
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
+                { Value = socketGuildChannel.Guild.Id };
+            
+            MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64)
+                { Value = socketGuildChannel.Id };
+
+            #endregion
+            
+            DiscordBot.DbConnection.CheckConnection();
+            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            MySqlDataReader reader = ExecuteReader(conn, query, guild, channel);
+
+            while (reader.Read())
+            {
+                if (reader.GetUInt64("Snowflake") == socketGuildChannel.Id) return true;
             }
 
             return false;
@@ -66,11 +90,8 @@ namespace DiscordBot.Database
 
             int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
 
-            if (result == 1)
-            {
-                return true;
-            }
-
+            if (result == 1) return true;
+            
             return false;
         }
 
@@ -89,10 +110,7 @@ namespace DiscordBot.Database
 
             int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
 
-            if (result == 1)
-            {
-                return true;
-            }
+            if (result == 1) return true;
 
             return false;
         }

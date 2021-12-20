@@ -7,7 +7,8 @@ using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules.Commands
 {
-    [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage = "You need the Administrator permission to execute this command")]
+    [RequireBotPermission(GuildPermission.ManageGuild, ErrorMessage = "The bot needs the ManageGuild ")]
+    [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage = "You need the ManageGuild permission to execute this command")]
     [Group("set")]
     public class Set : ModuleBase<SocketCommandContext>
     {

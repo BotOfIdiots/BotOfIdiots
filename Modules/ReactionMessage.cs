@@ -2,13 +2,18 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
+using DiscordBot.Objects.Embeds.Config;
 using Microsoft.Extensions.Configuration;
 
 namespace DiscordBot.Modules
 {
-    public class ReactionMessage
+    [Group("reactionmessage")]
+    public class ReactionMessage : ModuleBase<SocketCommandContext>
     {
+        #region Reaction Hanlder
         public static Task ReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
             SocketTextChannel textChannel = (SocketTextChannel)channel;
@@ -51,6 +56,25 @@ namespace DiscordBot.Modules
                 }
             }
             return Task.CompletedTask;
+        }
+        #endregion
+
+        //TODO Implement Reaction Message setup Commands
+        [Command("set message")]
+        public async Task SetMessage(IMessage message)
+        {
+            if (DbOperations.InsertReactionMessage(message.Id, Context.Guild))
+            {
+                Embed reactionMessageConfig = new ReactionMessageConfig(message).Build();
+                await ReplyAsync(embed: reactionMessageConfig);
+            }
+            await Task.CompletedTask;
+        }
+
+        [Command("remove message")]
+        public async Task RemoveMessage()
+        {
+            throw new NotImplementedException();
         }
     }
 }

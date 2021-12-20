@@ -51,6 +51,8 @@ namespace DiscordBot.Modules
         public static Task MessageDeleteHandler(Cacheable<IMessage, ulong> cachedMessage,
             ISocketMessageChannel channel)
         {
+            if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
+            
             try
             {
                 SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
@@ -79,6 +81,8 @@ namespace DiscordBot.Modules
         public static Task MessageBulkDeleteHandler(IReadOnlyCollection<Cacheable<IMessage, ulong>> cachedData,
             ISocketMessageChannel channel)
         {
+            if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
+            
             try
             {
                 SocketTextChannel logChannel = LogChannels.Messages((channel as SocketTextChannel).Guild);
@@ -104,6 +108,8 @@ namespace DiscordBot.Modules
         public static Task MessageUpdateHandler(Cacheable<IMessage, ulong> cachedMessage, SocketMessage message,
             ISocketMessageChannel channel)
         {
+            if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
+            
             try
             {
                 if (cachedMessage.Value.Content == message.Content) return Task.CompletedTask;
@@ -463,5 +469,21 @@ namespace DiscordBot.Modules
         }
 
         #endregion
+
+        public static Task ReactionAddedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            ReactionMessage.ReactionAdded(message, channel, reaction);
+            // Levels.AddReactionXp(message, channel, reaction);
+            
+            return Task.CompletedTask;
+        }
+
+        public static Task ReactionRemovedHandler(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            ReactionMessage.ReactionRemoved(message, channel, reaction);
+            // Levels.RemoveReactionXp(message, channel, reaction);
+            
+            return Task.CompletedTask;
+        }
     }
 }
