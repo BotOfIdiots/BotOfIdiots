@@ -12,33 +12,61 @@ namespace DiscordBot.Database
     {
         public static void AddGuild(SocketGuild guild)
         {
-            string query = "INSERT INTO guilds (Snowflake, GuildName) VALUES (@Snowflake, @GuildName)";
-
-            MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64)
+            if (!GuildConfigExists(guild))
             {
-                Value = guild.Id
-            };
+                string query = "INSERT INTO guilds (Snowflake, GuildName) VALUES (@Snowflake, @GuildName)";
 
-            MySqlParameter guildName = new MySqlParameter("@Guildname", MySqlDbType.VarChar)
+                #region SQL Parameters
+
+                MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64)
+                {
+                    Value = guild.Id
+                };
+
+                MySqlParameter guildName = new MySqlParameter("@Guildname", MySqlDbType.VarChar)
+                {
+                    Value = guild.Name
+                };
+
+                DiscordBot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
+
+                #endregion
+
+                string guildConfigurationQuery = "INSERT INTO guild_configurations (Guild) VALUES (@Snowflake)";
+                DiscordBot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
+            }
+        }
+
+        private static bool GuildConfigExists(SocketGuild socketGuild)
+        {
+            string query = "SELECT Guild FROM guild_configurations WHERE Guild = @Guild";
+            
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
+
+            DiscordBot.DbConnection.CheckConnection();
+            MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+
+            while (reader.Read())
             {
-                Value = guild.Name
-            };
+                if (reader.GetUInt64("Guild") == socketGuild.Id)
+                {
+                    reader.Close();
+                    return true;
+                }
+            }
+            reader.Close();
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
-
-            string guildConfigurationQuery = "INSERT INTO guild_configurations (Guild) VALUES (@Snowflake)";
-            DiscordBot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
+            return false;
         }
 
         public static void DownloadMembers(IReadOnlyCollection<SocketGuildUser> UserList, ulong GuildId)
         {
             string query = "INSERT INTO users (Guild, Snowflake) VALUES (@Guild, @Snowflake)";
+
             MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64);
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
-            {
-                Value = GuildId
-            };
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = GuildId };
 
             foreach (SocketGuildUser user in UserList)
             {
@@ -51,15 +79,13 @@ namespace DiscordBot.Database
         {
             string query = "UPDATE guilds SET GuildOwner = @GuildOwner WHERE Snowflake = @GuildId";
 
-            MySqlParameter guildId = new MySqlParameter("@GuildId", MySqlDbType.UInt64)
-            {
-                Value = GuildId
-            };
+            #region SQL Parameters
 
-            MySqlParameter guildOwner = new MySqlParameter("@GuildOwner", MySqlDbType.UInt64)
-            {
-                Value = GuildOwner
-            };
+            MySqlParameter guildId = new MySqlParameter("@GuildId", MySqlDbType.UInt64) { Value = GuildId };
+
+            MySqlParameter guildOwner = new MySqlParameter("@GuildOwner", MySqlDbType.UInt64) { Value = GuildOwner };
+
+            #endregion
 
             DiscordBot.DbConnection.ExecuteNonQuery(query, guildOwner, guildId);
         }
@@ -68,7 +94,7 @@ namespace DiscordBot.Database
         {
             string query =
                 "INSERT INTO violations (Guild, ViolationId, User, Moderator, Type, Reason, Date) VALUE (@Guild, 0, @User, @User, 0, 'Default violation for initialization', @Date);";
-            
+
             #region SQL Parameters
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
