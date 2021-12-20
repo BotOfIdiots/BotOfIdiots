@@ -6,6 +6,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.Objects.Embeds;
 using DiscordBot.Objects.Embeds.Channel;
 using DiscordBot.Objects.Embeds.Member;
 using DiscordBot.Objects.Embeds.Messages;
