@@ -13,6 +13,7 @@ namespace DiscordBot.Modules.Commands
     public class Set : ModuleBase<SocketCommandContext>
     {
         #region Set Moderation Roles
+        
         [Command("joinrole")]
         [Summary("$set joinrole <role/snowflake> - Set the join role")]
         public async Task JoinRole(IRole role)
@@ -95,7 +96,7 @@ namespace DiscordBot.Modules.Commands
         [Summary("$set moderationrole <role/snowflake> - Set the moderation role")]
         public async Task ModerationRole(IRole role)
         {
-            string query = "UPDATE guild_configurations  SET ModerationRole= @Role WHERE Guild = @Guild";
+            string query = "UPDATE guild_configurations  SET ModerationRole = @Role WHERE Guild = @Guild";
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
             guild.Value = role.Guild.Id;
@@ -129,6 +130,7 @@ namespace DiscordBot.Modules.Commands
                 await ReplyAsync(embed: reactionEmbed);
             }
         }
+
         #endregion
         
         #region Setup Logging

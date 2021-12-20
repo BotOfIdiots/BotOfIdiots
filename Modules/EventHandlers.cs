@@ -296,11 +296,16 @@ namespace DiscordBot.Modules
             return Task.CompletedTask;
         }
 
+        #endregion
+        
+        #region Client Event Handlers
+        
         public static Task ClientJoinGuildHandler(SocketGuild guild)
         {
             JoinedGuild.AddGuild(guild);
             JoinedGuild.DownloadMembers(guild.Users, guild.Id);
             JoinedGuild.SetGuildOwner(guild.OwnerId, guild.Id);
+            JoinedGuild.GenerateDefaultViolation(guild, DiscordBot.Client.CurrentUser);
 
             return Task.CompletedTask;
         }
