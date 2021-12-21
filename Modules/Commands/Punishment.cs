@@ -16,9 +16,11 @@ namespace DiscordBot.Modules.Commands
     [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage = "The bot is missing the KickMembers permissions")]
     [RequireBotPermission(GuildPermission.BanMembers, ErrorMessage = "The bot is missing BanMembers permissions")]
     [RequireBotPermission(GuildPermission.ManageRoles, ErrorMessage = "The bot is missing the ManageRoles permissions")]
-    public class Punishment : ModuleBase<SocketCommandContext>
+    public class Punishment : ModuleBase<ShardedCommandContext>
     {
-       #region Warn Related Commands
+        public DatabaseService DatabaseService { set; get; }
+
+        #region Warn Related Commands
         /// <summary>
         /// Warn a user
         /// </summary>
@@ -42,7 +44,7 @@ namespace DiscordBot.Modules.Commands
                 }
                 else
                 {
-                    embed = ViolationManager.NewViolation(warnedUser, reason, Context);
+                    embed = ViolationManager.NewViolation(warnedUser, reason, Context, DatabaseService);
 
                     await Functions.SendMessageEmbedToUser(warnedUser, embed, Context);
                     await EventHandlers.LogViolation(embed, Context.Guild);
@@ -104,7 +106,7 @@ namespace DiscordBot.Modules.Commands
 
                     else
                     {
-                        embed = ViolationManager.NewViolation(mutedUser, reason, Context, 3);
+                        embed = ViolationManager.NewViolation(mutedUser, reason, Context, DatabaseService,3);
 
                         await Functions.SendMessageEmbedToUser(mutedUser, embed, Context);
                         await mutedUser.AddRoleAsync(mutedRole);
@@ -136,7 +138,7 @@ namespace DiscordBot.Modules.Commands
             
             SocketRole mutedRole = DbOperations.GetMutedRole(unmutedUser.Guild);
             
-            if (DiscordBot.Config["MutedRole"] == null || DiscordBot.Config["MutedRole"] == "")
+            if (mutedRole == null)
             {
                 embed = new EmbedBuilder
                 {
@@ -165,7 +167,7 @@ namespace DiscordBot.Modules.Commands
                     }
                     else
                     {
-                        embed = ViolationManager.NewViolation(unmutedUser, reason, Context, 4);
+                        embed = ViolationManager.NewViolation(unmutedUser, reason, Context, DatabaseService, 4);
 
                         await Functions.SendMessageEmbedToUser(unmutedUser, embed, Context);
                         await EventHandlers.LogViolation(embed, Context.Guild);
@@ -206,7 +208,7 @@ namespace DiscordBot.Modules.Commands
                 }
                 else
                 {
-                    embed = ViolationManager.NewViolation(kickedUser, reason, Context, 2);
+                    embed = ViolationManager.NewViolation(kickedUser, reason, Context, DatabaseService, 2);
 
                     await Functions.SendMessageEmbedToUser(kickedUser, embed, Context);
                     await kickedUser.KickAsync(reason);
@@ -247,7 +249,7 @@ namespace DiscordBot.Modules.Commands
                 }
                 else
                 {
-                    embed = ViolationManager.NewViolation(bannedUser, reason, Context, 1);
+                    embed = ViolationManager.NewViolation(bannedUser, reason, Context, DatabaseService, 1);
                     
                     await Functions.SendMessageEmbedToUser(bannedUser, embed, Context);
                     await bannedUser.BanAsync(1, reason);
@@ -266,6 +268,7 @@ namespace DiscordBot.Modules.Commands
         /// unban a user
         /// </summary>
         /// <param name="bannedUserId">the user to unban</param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "You don't have permission to unban members")]
         [Command("unban")]

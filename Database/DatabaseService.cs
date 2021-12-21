@@ -4,7 +4,7 @@ using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Database
 {
-    public class DbConnection
+    public class DatabaseService
     {
         #region Fields
 
@@ -14,7 +14,7 @@ namespace DiscordBot.Database
 
         #region Constructors
 
-        public DbConnection(XmlNodeList settings)
+        public DatabaseService(XmlNodeList settings)
         {
             MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
             builder.SslMode = MySqlSslMode.None;

@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Discord.WebSocket;
-using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Database
 {
     public class JoinedGuild
     {
-        public static void AddGuild(SocketGuild guild)
+        public static void AddGuild(SocketGuild guild, IServiceProvider services)
         {
-            if (!GuildConfigExists(guild))
+            DatabaseService databaseService = services.GetRequiredService <DatabaseService>();
+            
+            if (!GuildConfigExists(guild, databaseService))
             {
                 string query = "INSERT INTO guilds (Snowflake, GuildName) VALUES (@Snowflake, @GuildName)";
 
@@ -27,24 +27,24 @@ namespace DiscordBot.Database
                 {
                     Value = guild.Name
                 };
-
-                DiscordBot.DbConnection.ExecuteNonQuery(query, snowflake, guildName);
-
+                
                 #endregion
-
+                
+                databaseService.ExecuteNonQuery(query, snowflake, guildName);
+                
                 string guildConfigurationQuery = "INSERT INTO guild_configurations (Guild) VALUES (@Snowflake)";
-                DiscordBot.DbConnection.ExecuteNonQuery(guildConfigurationQuery, snowflake);
+                databaseService.ExecuteNonQuery(guildConfigurationQuery, snowflake);
             }
         }
 
-        private static bool GuildConfigExists(SocketGuild socketGuild)
+        private static bool GuildConfigExists(SocketGuild socketGuild, DatabaseService databaseService)
         {
             string query = "SELECT Guild FROM guild_configurations WHERE Guild = @Guild";
             
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
 
-            DiscordBot.DbConnection.CheckConnection();
-            MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+           databaseService.CheckConnection();
+            MySqlConnection conn = databaseService.SqlConnection;
             MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
 
             while (reader.Read())
@@ -60,8 +60,10 @@ namespace DiscordBot.Database
             return false;
         }
 
-        public static void DownloadMembers(IReadOnlyCollection<SocketGuildUser> UserList, ulong GuildId)
+        public static void DownloadMembers(IReadOnlyCollection<SocketGuildUser> UserList, ulong GuildId, IServiceProvider services)
         {
+            DatabaseService databaseService = services.GetRequiredService <DatabaseService>();
+            
             string query = "INSERT INTO users (Guild, Snowflake) VALUES (@Guild, @Snowflake)";
 
             MySqlParameter snowflake = new MySqlParameter("@Snowflake", MySqlDbType.UInt64);
@@ -71,12 +73,14 @@ namespace DiscordBot.Database
             foreach (SocketGuildUser user in UserList)
             {
                 snowflake.Value = user.Id;
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+                databaseService.ExecuteNonQuery(query, guild, snowflake);
             }
         }
 
-        public static void SetGuildOwner(ulong GuildOwner, ulong GuildId)
+        public static void SetGuildOwner(ulong GuildOwner, ulong GuildId, IServiceProvider services)
         {
+            DatabaseService databaseService = services.GetRequiredService <DatabaseService>();
+            
             string query = "UPDATE guilds SET GuildOwner = @GuildOwner WHERE Snowflake = @GuildId";
 
             #region SQL Parameters
@@ -87,11 +91,14 @@ namespace DiscordBot.Database
 
             #endregion
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guildOwner, guildId);
+            databaseService.ExecuteNonQuery(query, guildOwner, guildId);
         }
 
-        public static void GenerateDefaultViolation(SocketGuild socketGuild, SocketUser socketUser)
+        public static void GenerateDefaultViolation(SocketGuild socketGuild, IServiceProvider services)
         {
+            DatabaseService databaseService = services.GetRequiredService<DatabaseService>();
+            SocketUser socketUser = services.GetRequiredService<DiscordShardedClient>().CurrentUser;
+            
             string query =
                 "INSERT INTO violations (Guild, ViolationId, User, Moderator, Type, Reason, Date) VALUE (@Guild, 0, @User, @User, 0, 'Default violation for initialization', @Date);";
 
@@ -103,7 +110,7 @@ namespace DiscordBot.Database
 
             #endregion
 
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, user, date);
+            databaseService.ExecuteNonQuery(query, guild, user, date);
         }
     }
 }

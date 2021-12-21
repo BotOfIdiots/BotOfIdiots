@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Objects.Embeds.Messages
 {
@@ -13,7 +14,7 @@ namespace DiscordBot.Objects.Embeds.Messages
             AddField("Channel", "<#" + channel.Id + "> (" + channel.Name + "/" + channel.Id + ")");
             AddField("Amount", cachedData.Count);
 
-            WithAuthor(new EmbedAuthor(DiscordBot.ShardedClient.CurrentUser));
+            WithAuthor(new EmbedAuthor(DiscordBot.Services.GetRequiredService<DiscordShardedClient>().CurrentUser));
             WithColor(Discord.Color.Red);
             WithFooter("Message Count: " + cachedData.Count);
             WithCurrentTimestamp();

@@ -12,7 +12,9 @@ public class UserIsDeveloper : PreconditionAttribute
     private readonly ulong _controleGuild;
     private string _errorMessage;
 
-    public UserIsDeveloper(string errorMessage = null)
+    public DatabaseService DbConnection { set; get; }
+
+    public UserIsDeveloper( string errorMessage = null)
     {
         _controleGuild = DiscordBot.ControleGuild;
         if (errorMessage != null)
@@ -43,9 +45,8 @@ public class UserIsDeveloper : PreconditionAttribute
 
         MySqlParameter guild = new MySqlParameter("@UserId", MySqlDbType.UInt64) { Value = user.Id };
 
-        DiscordBot.DbConnection.CheckConnection();
-        using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
-        MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+        DbConnection.CheckConnection();
+        MySqlDataReader reader = DbOperations.ExecuteReader(DbConnection.SqlConnection, query, guild);
 
         while (reader.Read())
         {

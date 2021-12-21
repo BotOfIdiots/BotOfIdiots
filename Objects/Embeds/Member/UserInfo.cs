@@ -1,31 +1,46 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.Database;
 
 namespace DiscordBot.Objects.Embeds.Member
 {
     public class UserInfo : EmbedBuilder
     {
-        public UserInfo(SocketGuildUser user, Boolean moderation = false)
+        private DatabaseService _databaseService;
+        private DiscordShardedClient _client;
+        private SocketGuildUser _user;
+        private bool _moderation;
+        
+        public UserInfo(SocketGuildUser user, DiscordShardedClient client, DatabaseService databaseService,
+            Boolean moderation = false)
         {
-            WithAuthor(DiscordBot.ShardedClient.CurrentUser.Username);
-            WithThumbnailUrl(user.GetAvatarUrl());
-            AddField("User", user.Mention);
+            _client = client;
+            _databaseService = databaseService;
+            _user = user;
+            _moderation = moderation;
             
-            if (moderation)
+            BuildEmbed();
+        }
+
+        private void BuildEmbed()
+        {
+            WithAuthor(_client.CurrentUser.Username);
+            WithThumbnailUrl(_user.GetAvatarUrl());
+            AddField("User", _user.Mention);
+
+            if (_moderation)
             {
-                AddField("Violation Count:", ViolationManager.CountUserViolations(user.Id, user.Guild.Id));
+                AddField("Violation Count:",
+                    ViolationManager.CountUserViolations(_user.Id, _user.Guild.Id, _databaseService, _client));
             }
-            
-            AddField("Created At", user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true);
-            AddField("Joined At", user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true);
-            AddField("Roles", Functions.CreateRolesList(user.Roles));
-           
-            WithFooter("UserID: " + user.Id);
+
+            AddField("Created At", _user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true);
+            AddField("Joined At", _user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true);
+            AddField("Roles", Functions.CreateRolesList(_user.Roles));
+
+            WithFooter("UserID: " + _user.Id);
             WithCurrentTimestamp();
         }
-        
     }
 }

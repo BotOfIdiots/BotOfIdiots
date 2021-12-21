@@ -1,13 +1,17 @@
 using System;
 using System.Data.SqlTypes;
+using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Database
 {
     public static class DbOperations
     {
+        private static readonly DatabaseService _databaseService = DiscordBot.Services.GetRequiredService<DatabaseService>();
+        
         #region Database Checks
 
         public static bool CheckJoinRole(SocketGuild socketGuild)
@@ -28,8 +32,8 @@ namespace DiscordBot.Database
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
 
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            _databaseService.CheckConnection();
+            using MySqlConnection conn = _databaseService.SqlConnection;
             MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
             while (reader.Read())
@@ -54,8 +58,8 @@ namespace DiscordBot.Database
 
             #endregion
             
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+           _databaseService.CheckConnection();
+            using MySqlConnection conn = _databaseService.SqlConnection;
             MySqlDataReader reader = ExecuteReader(conn, query, guild, channel);
 
             while (reader.Read())
@@ -84,7 +88,7 @@ namespace DiscordBot.Database
 
             #endregion
 
-            int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+            int result = _databaseService.ExecuteNonQuery(query, guild, snowflake);
 
             if (result == 1) return true;
             
@@ -104,7 +108,7 @@ namespace DiscordBot.Database
 
             #endregion
 
-            int result = DiscordBot.DbConnection.ExecuteNonQuery(query, guild, snowflake);
+            int result = _databaseService.ExecuteNonQuery(query, guild, snowflake);
 
             if (result == 1) return true;
 
@@ -128,8 +132,8 @@ namespace DiscordBot.Database
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                _databaseService.CheckConnection();
+                using MySqlConnection conn = _databaseService.SqlConnection;
                 MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
                 while (reader.Read())
@@ -168,8 +172,8 @@ namespace DiscordBot.Database
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                _databaseService.CheckConnection();
+                using MySqlConnection conn = _databaseService.SqlConnection;
                 MySqlDataReader reader = ExecuteReader(conn, query, guild);
 
                 while (reader.Read())
@@ -221,5 +225,10 @@ namespace DiscordBot.Database
         }
 
         #endregion
+
+        public static IRole GetJoinRole()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

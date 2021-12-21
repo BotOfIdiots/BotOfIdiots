@@ -7,7 +7,6 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Modules;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,18 +16,55 @@ namespace DiscordBot
     {
         #region Fields
 
+        /// <summary>
+        /// 
+        /// </summary>
         private static readonly string _version = "0.0.7";
-        private static IServiceProvider _services;
-        public static string WorkingDirectory;
-        public static DiscordShardedClient ShardedClient;
-        public static ulong ControleGuild;
-        private static int[] shardId;
-        public static CommandService Commands;
-        public static IConfiguration Config;
-        public static DiscordSocketConfig DiscordSocketConfig;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        private static int[] _shardId;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        private static DiscordSocketConfig _discordSocketConfig;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        private static IConfiguration _config;
+        
+        /// <summary>
+        /// 
+        /// </summary>
         private XmlDocument settings = new XmlDocument();
-        public static DbConnection DbConnection;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public static IServiceProvider Services;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        private static DiscordShardedClient _client;
 
+        ///
+        ///
+        private static CommandService _commandService;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static string WorkingDirectory;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public static ulong ControleGuild;
+        
         #endregion
 
         #region Main Method
@@ -53,25 +89,24 @@ namespace DiscordBot
             WorkingDirectory = Directory.GetCurrentDirectory();
             _loadSettings();
 
-            DbConnection = new DbConnection(settings.DocumentElement["SQLSettings"].ChildNodes);
-            
             BuildDiscordSocketConfig(settings.DocumentElement["DiscordSocketConfig"].ChildNodes);
             ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].InnerText);
 
-            ShardedClient = new DiscordShardedClient(shardId, DiscordSocketConfig);
-            Commands = new CommandService();
+            _client = new DiscordShardedClient(_shardId, _discordSocketConfig);
+            _commandService = new CommandService();
 
-            _services = new ServiceCollection()
-                .AddSingleton(ShardedClient)
-                .AddSingleton(Commands)
+            Services = new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton(_commandService)
+                .AddSingleton(new DatabaseService(settings.DocumentElement["SQLSettings"].ChildNodes))
                 .BuildServiceProvider();
 
-            ShardedClient.Log += ClientLog;
+            _client.Log += ClientLog;
             LoadDiscordEventHandlers();
 
             await RegisterCommandsAsync();
-            await ShardedClient.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
-            await ShardedClient.StartAsync();
+            await _client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
+            await _client.StartAsync();
             await Task.Delay(-1);
         }
 
@@ -80,11 +115,11 @@ namespace DiscordBot
         /// </summary>
         private void LoadDiscordEventHandlers()
         {
-            DiscordEventHooks.HookClientEvents(ShardedClient);
-            DiscordEventHooks.HookMessageEvents(ShardedClient);
-            DiscordEventHooks.HookMemberEvents(ShardedClient);
-            DiscordEventHooks.HookChannelEvents(ShardedClient);
-            DiscordEventHooks.HookBanEvents(ShardedClient);
+            DiscordEventHooks.HookClientEvents(_client);
+            DiscordEventHooks.HookMessageEvents(_client);
+            DiscordEventHooks.HookMemberEvents(_client);
+            DiscordEventHooks.HookChannelEvents(_client);
+            DiscordEventHooks.HookBanEvents(_client);
         }
 
         /// <summary>
@@ -96,26 +131,26 @@ namespace DiscordBot
             var builder = new ConfigurationBuilder()
                 .SetBasePath(WorkingDirectory)
                 .AddJsonFile(path: "config.json");
-            Config = builder.Build();
-            Config = Config.GetSection("DiscordBot");
+            _config = builder.Build();
+            _config = _config.GetSection("DiscordBot");
         }
 
         private void BuildDiscordSocketConfig(XmlNodeList settings)
         {
-            DiscordSocketConfig = new DiscordSocketConfig();
+            _discordSocketConfig = new DiscordSocketConfig();
 
             foreach (XmlNode node in settings)
             {
                 switch (node.Name)
                 {
                     case "MessageCacheSize":
-                        DiscordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
+                        _discordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
                         break;
                     case "TotalShards":
-                        DiscordSocketConfig.TotalShards = Convert.ToInt32((node.InnerText));
+                        _discordSocketConfig.TotalShards = Convert.ToInt32((node.InnerText));
                         break;
                     case "ShardId":
-                        shardId = new int[] { Convert.ToInt32(node.InnerText) };
+                        _shardId = new int[] { Convert.ToInt32(node.InnerText) };
                         break;
                 }
             }
@@ -142,8 +177,8 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RegisterCommandsAsync()
         {
-            ShardedClient.MessageReceived += HandleCommandAsync;
-            await Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            DiscordEventHooks.CommandEvents(_client);
+            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
         }
 
         /// <summary>
@@ -155,38 +190,8 @@ namespace DiscordBot
             return _version;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="arg"></param>
-        /// <returns></returns>
-        private async Task HandleCommandAsync(SocketMessage arg)
-        {
-            var message = arg as SocketUserMessage;
-            var context = new ShardedCommandContext(ShardedClient, message);
-            if (message.Author.IsBot) return;
-
-            int argPos = 0;
-            if (message.HasStringPrefix("$", ref argPos))
-            {
-                var result = await Commands.ExecuteAsync(context, argPos, _services);
-
-                if (!result.IsSuccess)
-                {
-                    Embed exceptionEmbed = new EmbedBuilder()
-                        .WithColor(Color.Red)
-                        .WithDescription(result.ErrorReason)
-                        .Build();
-
-                    await context.Channel.SendMessageAsync(embed: exceptionEmbed);
-                }
-
-                if (result.IsSuccess)
-                {
-                    await EventHandlers.LogExecutedCommand(context, message);
-                }
-            }
-        }
+        
+        
         #endregion
     }
 }

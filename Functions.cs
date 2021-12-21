@@ -32,9 +32,9 @@ namespace DiscordBot
             }
         }
 
-        public static IUser GetUserFromGuild(ulong user, ulong guild)
+        public static IUser GetUserFromGuild(ulong user, ulong guild, DiscordShardedClient client)
         {
-            return DiscordBot.ShardedClient.GetGuild(guild).GetUser(user);
+            return client.GetGuild(guild).GetUser(user);
         }
         
         public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)

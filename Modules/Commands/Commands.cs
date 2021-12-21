@@ -11,6 +11,9 @@ namespace DiscordBot.Modules.Commands
 {
     public class Commands : ModuleBase<ShardedCommandContext>
     {
+        public DatabaseService DatabaseService { get; set;}
+        public CommandService CommandService { get; set; }
+
         #region User Commands
 
         /// <summary>
@@ -41,7 +44,7 @@ namespace DiscordBot.Modules.Commands
                 Title = "Bot Commands",
                 Color = Color.Teal
             };
-            foreach (CommandInfo command in DiscordBot.Commands.Commands)
+            foreach (CommandInfo command in CommandService.Commands)
             {
                 string summary;
                 switch (command.Summary)
@@ -82,11 +85,11 @@ namespace DiscordBot.Modules.Commands
 
                 if (user.GuildPermissions.KickMembers)
                 {
-                    embed = new UserInfo(user, true).Build();
+                    embed = new UserInfo(user, Context.Client, DatabaseService, true).Build();
                 }
                 else
                 {
-                    embed = new UserInfo(user).Build();
+                    embed = new UserInfo(user, Context.Client, DatabaseService).Build();
                 }
                 
                 await ReplyAsync(embed: embed);
@@ -185,10 +188,10 @@ namespace DiscordBot.Modules.Commands
         [Command("setupbot")]
         public async Task SetupBot()
         {
-            JoinedGuild.AddGuild(Context.Guild);
-            JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id);
-            JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id);
-            JoinedGuild.GenerateDefaultViolation(Context.Guild, Context.Client.CurrentUser);
+            JoinedGuild.AddGuild(Context.Guild, DiscordBot.Services);
+            JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id, DiscordBot.Services);
+            JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id, DiscordBot.Services);
+            JoinedGuild.GenerateDefaultViolation(Context.Guild, DiscordBot.Services);
 
             await Task.CompletedTask;
         }

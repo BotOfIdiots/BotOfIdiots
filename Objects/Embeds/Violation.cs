@@ -1,17 +1,16 @@
-using System;
 using Discord;
-using DiscordBot.Objects;
+using Discord.WebSocket;
 
 namespace DiscordBot.Objects.Embeds
 {
     public class ViolationEmbedBuilder :EmbedBuilder
     {
         #region Constructors
-        public ViolationEmbedBuilder(Violation violation)
+        public ViolationEmbedBuilder(Violation violation, DiscordShardedClient client)
         {
             SetTitle(violation.Type);
             WithColor(Discord.Color.Red);
-            WithAuthor(new EmbedAuthor(Functions.GetUserFromGuild(violation.Moderator, violation.Guild)));
+            WithAuthor(new EmbedAuthor(Functions.GetUserFromGuild(violation.Moderator, violation.Guild, client)));
             AddField("User:", "<@!" + violation.User + ">", true);
             AddField("Date:", violation.Date, true);
             AddField("Moderator:", "<@!" + violation.Moderator + ">");

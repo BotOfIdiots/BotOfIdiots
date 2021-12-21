@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data;
+using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;
@@ -22,20 +22,28 @@ namespace DiscordBot.Objects
         public string Reason { get; set; }
         public DateTime Date { get; set; }
         public DateTime Expires { get; set; }
+        private readonly DatabaseService _databaseService;
+        private readonly DiscordShardedClient _client;
 
         #endregion
 
         #region Constructors
 
-        public Violation(ulong guild)
+        public Violation(DiscordShardedClient client, DatabaseService databaseService, ulong guild)
         {
+            _client = client;
+            _databaseService = databaseService;
             Guild = guild;
             GenerateViolationId();
         }
 
-        public Violation(ulong guild, ulong userId, ulong moderatorId, int type, string reason,
-            DateTime date, int violationId = -1, bool confidential = false)
+        private Violation(DiscordShardedClient client, DatabaseService databaseService, ulong guild, ulong userId,
+            ulong moderatorId, int type, string reason, DateTime date, DateTime expires, int violationId = -1,
+            bool confidential = false)
         {
+            _client = client;
+            _databaseService = databaseService;
+            Expires = expires;
             Guild = guild;
             User = userId;
             Moderator = moderatorId;
@@ -52,13 +60,6 @@ namespace DiscordBot.Objects
             {
                 GenerateViolationId();
             }
-        }
-
-        public Violation(ulong guild, ulong userId, ulong moderatorId, int type, string reason,
-            DateTime date, DateTime expires, int violationId = -1, bool confidential = false) :
-            this(guild, userId, moderatorId, type, reason, date, violationId, confidential)
-        {
-            Expires = expires;
         }
 
         #endregion
@@ -81,9 +82,8 @@ namespace DiscordBot.Objects
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+                _databaseService.CheckConnection();
+                MySqlDataReader reader = DbOperations.ExecuteReader(_databaseService.SqlConnection, query, guild);
 
                 while (reader.Read())
                 {
@@ -99,7 +99,7 @@ namespace DiscordBot.Objects
             catch (MySqlException ex)
             {
                 // if (ex.Message.Contains("Data is Null")) return 0;
-                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
+                EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion
@@ -153,7 +153,7 @@ namespace DiscordBot.Objects
 
             try
             {
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violationId, user, moderator, confidential, type,
+                _databaseService.ExecuteNonQuery(query, guild, violationId, user, moderator, confidential, type,
                     reason, date, expires);
             }
 
@@ -165,13 +165,14 @@ namespace DiscordBot.Objects
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
+                EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion
         }
 
-        public static Violation Select(ulong guildId, int violationId)
+        public static Violation Select(ulong guildId, int violationId, DatabaseService databaseService,
+            DiscordShardedClient client)
         {
             string query =
                 "SELECT User, Moderator, Confidential, Type, Reason, Date, Expires FROM violations WHERE Guild = @Guild AND ViolationId = @ViolationId";
@@ -186,9 +187,9 @@ namespace DiscordBot.Objects
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, violation);
+                databaseService.CheckConnection();
+                MySqlDataReader reader =
+                    DbOperations.ExecuteReader(databaseService.SqlConnection, query, guild, violation);
 
                 while (reader.Read())
                 {
@@ -200,7 +201,7 @@ namespace DiscordBot.Objects
                     DateTime date = reader.GetDateTime("Date");
                     DateTime expires = reader.GetDateTime("Expires");
 
-                    return new Violation(guildId, user, moderator, type, reason, date, expires,
+                    return new Violation(client, databaseService, guildId, user, moderator, type, reason, date, expires,
                         violationId, confidential);
                 }
             }
@@ -214,7 +215,7 @@ namespace DiscordBot.Objects
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(guildId));
+                EventHandlers.LogException(ex, client.GetGuild(guildId));
             }
 
             #endregion
@@ -236,7 +237,7 @@ namespace DiscordBot.Objects
 
             try
             {
-                DiscordBot.DbConnection.ExecuteNonQuery(query, guild, violation);
+                _databaseService.ExecuteNonQuery(query, guild, violation);
             }
 
             #region Exception Handling
@@ -247,7 +248,7 @@ namespace DiscordBot.Objects
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, DiscordBot.ShardedClient.GetGuild(Guild));
+                EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion
