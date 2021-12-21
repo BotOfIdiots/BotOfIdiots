@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
 using DiscordBot.Objects;
 
 namespace DiscordBot.Modules.Commands
@@ -13,8 +14,14 @@ namespace DiscordBot.Modules.Commands
     [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to use this command")]
     [Group("violation")]
     [Summary("Everything to do with violations")]
-    public class Violations : ModuleBase<SocketCommandContext>
+    public class Violations : ModuleBase<ShardedCommandContext>
     {
+        #region Services
+
+        public DatabaseService DatabaseService { get; set; }
+
+        #endregion
+
         /// <summary>
         /// Get a specific violation
         /// </summary>
@@ -26,7 +33,7 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Embed embed = ViolationManager.GetViolation(violationId, Context);
+                Embed embed = ViolationManager.GetViolation(violationId, Context, DatabaseService);
 
                 await ReplyAsync(embed: embed);
             }
@@ -47,7 +54,8 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                List<Violation> violations = ViolationManager.GetViolations(guildUser.Id, Context.Guild.Id);
+                List<Violation> violations =
+                    ViolationManager.GetViolations(guildUser.Id, Context.Guild.Id, DatabaseService, Context.Client);
 
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.WithTitle("Violations")
@@ -100,7 +108,8 @@ namespace DiscordBot.Modules.Commands
         {
             try
             {
-                Violation violation = Objects.Violation.Select(Context.Guild.Id, violationId);
+                Violation violation =
+                    Objects.Violation.Select(Context.Guild.Id, violationId, DatabaseService, Context.Client);
                 Embed embed = new EmbedBuilder
                     {
                         Title = "Violation Removed",
@@ -116,7 +125,7 @@ namespace DiscordBot.Modules.Commands
                     .WithFooter("UserID: " + violation.User)
                     .WithTimestamp(DateTime.Now)
                     .Build();
-        
+
                 violation.Remove();
                 await ReplyAsync(embed: embed);
             }

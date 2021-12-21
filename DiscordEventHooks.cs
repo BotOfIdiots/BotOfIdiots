@@ -51,5 +51,11 @@ namespace DiscordBot
             client.ChannelCreated += EventHandlers.ChannelCreatedHandler;
             client.ChannelDestroyed += EventHandlers.ChannelDeleteHandler;
         }
+
+        public static void CommandEvents(DiscordShardedClient client)
+        {
+            client.SlashCommandExecuted += CommandHandler.HandleSlashCommandAsync;
+            client.MessageReceived += CommandHandler.HandleCommandAsync;
+        }
     }
 }

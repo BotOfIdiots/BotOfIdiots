@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Mail;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules
@@ -17,7 +16,11 @@ namespace DiscordBot.Modules
     [Group("privatechannels")]
     public class PrivateChannel : ModuleBase<ShardedCommandContext>
     {
-        private static bool CheckChannel(SocketVoiceChannel voiceChannel, SocketGuild socketGuild)
+        private DatabaseService _databaseService { get; set; }
+        
+        
+        
+        private static bool CheckChannel(SocketVoiceChannel voiceChannel, SocketGuild socketGuild, DatabaseService databaseService)
         {
             string query =
                 "SELECT CreateChannelId FROM private_channels_setups WHERE Guild = @Guild AND CreateChannelId = @Channel";
@@ -32,8 +35,8 @@ namespace DiscordBot.Modules
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                databaseService.CheckConnection();
+                using MySqlConnection conn = databaseService.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, channel);
 
                 while (reader.Read())
@@ -56,12 +59,13 @@ namespace DiscordBot.Modules
         
         #region Create Private Channel
 
-        public static async Task CreatePrivateChannelHandler(SocketVoiceState stateAfter, SocketUser user)
+        public static async Task CreatePrivateChannelHandler(SocketVoiceState stateAfter, SocketUser user,
+            IServiceProvider serviceProvider)
         {
             SocketGuild guild = stateAfter.VoiceChannel.Guild;
             SocketVoiceChannel channel = stateAfter.VoiceChannel;
 
-            if (CheckChannel(channel, guild))
+            if (CheckChannel(channel, guild, serviceProvider.GetRequiredService<DatabaseService>()))
             {
                 OverwritePermissions permissions = new OverwritePermissions(manageChannel: PermValue.Allow);
                 RestVoiceChannel createdChannel = CreateChannel(user, guild, channel.Category.Id);
@@ -94,25 +98,27 @@ namespace DiscordBot.Modules
 
         #region Remove Private Channel
 
-        public static async Task DestroyPrivateChannelHandler(SocketVoiceState stateBefore)
+        public static async Task DestroyPrivateChannelHandler(SocketVoiceState stateBefore,
+            IServiceProvider serviceProvider)
         {
             SocketVoiceChannel channel = stateBefore.VoiceChannel;
             SocketGuild guild = stateBefore.VoiceChannel.Guild;
 
-            if (CheckDestroyChannel(channel, guild))
+            if (CheckDestroyChannel(channel, guild, serviceProvider.GetRequiredService<DatabaseService>()))
             {
                 await stateBefore.VoiceChannel.DeleteAsync();
             }
         }
 
-        private static bool CheckDestroyChannel(SocketVoiceChannel channel, SocketGuild guild)
+        private static bool CheckDestroyChannel(SocketVoiceChannel channel, SocketGuild guild,
+            DatabaseService databaseService)
         {
             try
             {
                 ICategoryChannel category = channel.Category;
-                if (CheckCategory(category.Id, guild.Id))
+                if (CheckCategory(category.Id, guild.Id, databaseService))
                 {
-                    if (channel.Users.Count == 0 && !CheckChannel(channel, guild))
+                    if (channel.Users.Count == 0 && !CheckChannel(channel, guild, databaseService))
                     {
                         return true;
                     }
@@ -126,7 +132,7 @@ namespace DiscordBot.Modules
             return false;
         }
 
-        public static bool CheckCategory(ulong categoryChannel, ulong socketGuild)
+        public static bool CheckCategory(ulong categoryChannel, ulong socketGuild, DatabaseService databaseService)
         {
             string query =
                 "SELECT CategoryId FROM private_channels_setups WHERE CategoryId = @Category AND Guild = @Guild";
@@ -141,8 +147,8 @@ namespace DiscordBot.Modules
 
             try
             {
-                DiscordBot.DbConnection.CheckConnection();
-                using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+                databaseService.CheckConnection();
+                using MySqlConnection conn = databaseService.SqlConnection;
                 MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, category, guild);
 
                 while (reader.Read())
@@ -177,8 +183,8 @@ namespace DiscordBot.Modules
             
             #endregion
             
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
+            _databaseService.CheckConnection();
+            using MySqlConnection conn = _databaseService.SqlConnection;
             MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
 
             List<ulong> snowflakes = new List<ulong>(2);
@@ -206,10 +212,10 @@ namespace DiscordBot.Modules
             MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64) { Value = categoryChannel.Id };
             MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64) { Value = voiceChannel.Id };
             #endregion
-            
-            DiscordBot.DbConnection.CheckConnection();
-            using MySqlConnection conn = DiscordBot.DbConnection.SqlConnection;
-            DiscordBot.DbConnection.ExecuteNonQuery(query, guild, category, channel);
+
+            _databaseService.CheckConnection();
+            using MySqlConnection conn = _databaseService.SqlConnection;
+            _databaseService.ExecuteNonQuery(query, guild, category, channel);
 
             await Task.CompletedTask;
         }

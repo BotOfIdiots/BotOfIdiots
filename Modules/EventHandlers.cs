@@ -16,6 +16,8 @@ namespace DiscordBot.Modules
 {
     public static class EventHandlers
     {
+        private static IServiceProvider _serviceProvider = DiscordBot.Services;
+        
         #region Exception Event Handlers
 
         public static Task LogException(Exception exception, SocketGuild guild)
@@ -148,9 +150,7 @@ namespace DiscordBot.Modules
 
                     if (DbOperations.CheckJoinRole(joinedUser.Guild))
                     {
-                        IRole role = joinedUser.Guild.GetRole(
-                            Convert.ToUInt64(DiscordBot.Config["JoinRole"])
-                        );
+                        IRole role = DbOperations.GetJoinRole();
                         joinedUser.AddRoleAsync(role);
                     }
 
@@ -221,8 +221,8 @@ namespace DiscordBot.Modules
             {
                 if (DbOperations.CheckPrivateChannel(guild))
                 {
-                    PrivateChannel.CreatePrivateChannelHandler(stateAfter, user).GetAwaiter();
-                    PrivateChannel.DestroyPrivateChannelHandler(stateBefore).GetAwaiter();
+                    PrivateChannel.CreatePrivateChannelHandler(stateAfter, user, _serviceProvider).GetAwaiter();
+                    PrivateChannel.DestroyPrivateChannelHandler(stateBefore, _serviceProvider).GetAwaiter();
                 }
             }
             catch (Exception e)
@@ -309,10 +309,10 @@ namespace DiscordBot.Modules
 
         public static Task ClientJoinGuildHandler(SocketGuild guild)
         {
-            JoinedGuild.AddGuild(guild);
-            JoinedGuild.DownloadMembers(guild.Users, guild.Id);
-            JoinedGuild.SetGuildOwner(guild.OwnerId, guild.Id);
-            JoinedGuild.GenerateDefaultViolation(guild, DiscordBot.ShardedClient.CurrentUser);
+            JoinedGuild.AddGuild(guild, DiscordBot.Services);
+            JoinedGuild.DownloadMembers(guild.Users, guild.Id, DiscordBot.Services);
+            JoinedGuild.SetGuildOwner(guild.OwnerId, guild.Id, DiscordBot.Services);
+            JoinedGuild.GenerateDefaultViolation(guild, DiscordBot.Services);
 
             return Task.CompletedTask;
         }
@@ -493,7 +493,7 @@ namespace DiscordBot.Modules
         {
             ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
 
-            ReactionMessage.ReactionAdded(message, channel, reaction);
+            // ReactionMessage.ReactionAdded(message, channel, reaction);
             // Levels.AddReactionXp(message, channel, reaction);
 
             return Task.CompletedTask;
@@ -504,7 +504,7 @@ namespace DiscordBot.Modules
         {
             ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
 
-            ReactionMessage.ReactionRemoved(message, channel, reaction);
+            // ReactionMessage.ReactionRemoved(message, channel, reaction);
             // Levels.RemoveReactionXp(message, channel, reaction);
 
             return Task.CompletedTask;
