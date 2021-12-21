@@ -1,9 +1,5 @@
 using System;
-using System.ComponentModel.Design;
 using System.Data.SqlTypes;
-using System.Net.Sockets;
-using System.Threading.Channels;
-using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules;
 using MySql.Data.MySqlClient;

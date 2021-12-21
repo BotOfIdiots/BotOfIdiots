@@ -8,12 +8,12 @@ namespace DiscordBot.Modules
 {
     public class Levels : ModuleBase<SocketCommandContext>
     {
-        public static Task AddReactionXp(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel socketMessageChannel, SocketReaction arg3)
+        public static Task AddReactionXp(Cacheable<IUserMessage, ulong> cacheable, Cacheable<IMessageChannel, ulong> cacheable1, SocketReaction arg3)
         {
             throw new NotImplementedException();
         }
         
-        public static Task RemoveReactionXp(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel socketMessageChannel, SocketReaction arg3)
+        public static Task RemoveReactionXp(Cacheable<IUserMessage, ulong> cacheable, Cacheable<IMessageChannel, ulong> cacheable1, SocketReaction arg3)
         {
             throw new NotImplementedException();
         }
