@@ -1,3 +1,4 @@
+using System;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Class;
@@ -10,20 +11,38 @@ namespace DiscordBot.Objects.Embeds
         public ViolationEmbedBuilder(Violation violation, DiscordShardedClient client)
         {
             SetTitle(violation.Type);
-            WithColor(Discord.Color.Red);
-            //TODO Fix IUser is null error in EmbedAuthor constructor
-            // WithAuthor(new EmbedAuthor(Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client)));
-            AddField("User:", "<@!" + violation.User + ">", true);
-            AddField("Date:", violation.Date, true);
-            AddField("Moderator:", "<@!" + violation.Moderator + ">");
-            AddField("Reason:", violation.Reason);
+            IUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client);
+            
+            BuildEmbedBody(violation.User, moderator, violation.Reason);
             AddField("Violation ID:", violation.ViolationId, true);
-            WithCurrentTimestamp();
-            WithFooter("UserID: " + violation.User);
         }
+        
+        public ViolationEmbedBuilder(ulong user, IUser moderator, string reason )
+        {
+            WithTitle("Unbanned");
+            BuildEmbedBody(user, moderator, reason);
+        }
+        
         #endregion
         
         #region Methods
+
+        private void BuildEmbedBody(ulong user, IUser moderator, string reason)
+        {
+            WithColor(Discord.Color.Red);
+            //TODO Fix IUser is null error in EmbedAuthor constructor
+            WithAuthor(new EmbedAuthor(moderator));
+            WithCurrentTimestamp();
+            WithFooter("UserID: " + user);
+            
+            AddField("User:", $"<@{user}>", true);
+            AddField("Date:", DateTime.Now, true);
+            AddField("Moderator:", moderator.Mention);
+            AddField("Reason:", reason);
+            
+            
+        }
+        
         private void SetTitle(int type)
         {
             switch (type)
