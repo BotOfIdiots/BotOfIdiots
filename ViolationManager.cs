@@ -23,18 +23,17 @@ namespace DiscordBot
         /// <param name="violationType"> Violation type. 1 = Ban, 2 = Kick, 3 = mute, 4 = warn </param>
         /// <param name="violator">User that committed the violation</param>
         /// <param name="reason">Reason for the violation</param>
-        /// <param name="context">Command Context</param>
         /// <param name="confidential">Is it a confidential violation? If yes </param>
         /// <returns>Embed</returns>
-        public static Embed NewViolation(SocketGuildUser violator, string reason, ShardedCommandContext context,
+        public static Embed NewViolation(SocketGuildUser violator, SocketGuildUser moderator, string reason, DiscordShardedClient client,
             DatabaseService databaseService,
             int violationType = 0, bool confidential = false)
 
         {
-            Violation newViolation = new Violation(context.Client, databaseService, violator.Guild.Id)
+            Violation newViolation = new Violation(client, databaseService, violator.Guild.Id)
             {
                 User = violator.Id,
-                Moderator = context.User.Id,
+                Moderator = moderator.Id,
                 Confidential = confidential,
                 Type = violationType,
                 Reason = reason,
@@ -43,7 +42,7 @@ namespace DiscordBot
 
             newViolation.Insert();
 
-            return new ViolationEmbedBuilder(newViolation, context.Client).Build();
+            return new ViolationEmbedBuilder(newViolation, client).Build();
         }
 
         #endregion

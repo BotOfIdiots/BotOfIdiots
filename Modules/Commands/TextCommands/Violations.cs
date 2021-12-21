@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Objects;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.Modules.Commands.TextCommands
 {
     [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage =
         "The Bot doesn't have the KickMembers permission")]

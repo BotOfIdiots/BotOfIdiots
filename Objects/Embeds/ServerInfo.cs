@@ -1,5 +1,6 @@
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.Class;
 
 namespace DiscordBot.Objects.Embeds;
 
@@ -14,7 +15,7 @@ public class ServerInfo : EmbedBuilder
         // AddField("Connected Shard", "Shard #" + DiscordBot.ShardedClient.GetShardIdFor(guild), true);
         AddField("Member Count", guild.Users.Count, true);
         AddField("Created At", guild.CreatedAt.ToString("dd-MM-yy HH:mm:ss"));
-        AddField("Roles(" + guild.Roles.Count + ")", Functions.CreateRolesList(guild.Roles));
+        AddField("Roles(" + guild.Roles.Count + ")", Rest.CreateRolesList(guild.Roles));
         WithFooter("GuildID: " + guild.Id);
         WithCurrentTimestamp();
     }

@@ -11,6 +11,7 @@ using DiscordBot.Objects.Embeds.Channel;
 using DiscordBot.Objects.Embeds.Member;
 using DiscordBot.Objects.Embeds.Messages;
 using DiscordBot.Objects.Embeds.Punishments;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Modules
 {
@@ -316,6 +317,11 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
+        
+        public static async Task Ready(DiscordSocketClient arg)
+        {
+            await _serviceProvider.GetRequiredService<DiscordEventHooks>().CommandHandler.RegisterCommandsAsync();
+        }
 
         #endregion
 
@@ -514,5 +520,7 @@ namespace DiscordBot.Modules
         {
             throw new NotImplementedException();
         }
+
+        
     }
 }

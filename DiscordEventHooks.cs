@@ -1,16 +1,33 @@
 ﻿using Discord.WebSocket;
+using DiscordBot.Database;
 using DiscordBot.Modules;
 
 namespace DiscordBot
 {
-    public static class DiscordEventHooks
+    public class DiscordEventHooks
     {
-        public static void HookClientEvents(DiscordShardedClient client)
+        public CommandHandler CommandHandler;
+
+        public DiscordEventHooks(DiscordShardedClient client, DatabaseService databaseService)
         {
-            client.JoinedGuild += EventHandlers.ClientJoinGuildHandler;
+            CommandHandler = new CommandHandler(client, databaseService);
+            
+            ClientEvents(client);
+            MemberEvents(client);
+            MessageEvents(client);
+            BanEvents(client);
+            ChannelEvents(client);
+            CommandEvents(client);
         }
         
-        public static void HookMemberEvents(BaseSocketClient client)
+        
+        public void ClientEvents(DiscordShardedClient client)
+        {
+            client.JoinedGuild += EventHandlers.ClientJoinGuildHandler;
+            client.ShardReady += EventHandlers.Ready;
+        }
+        
+        public void MemberEvents(BaseSocketClient client)
         {
             //Member joined and leave logging hooks
             client.UserJoined += EventHandlers.MemberJoinGuildHandler;
@@ -23,7 +40,7 @@ namespace DiscordBot
             client.UserVoiceStateUpdated += EventHandlers.MemberVoiceStateHandler;
         }
         
-        public static void HookMessageEvents(BaseSocketClient client)
+        public void MessageEvents(BaseSocketClient client)
         {
             //Message logging hooks
             client.MessageDeleted += EventHandlers.MessageDeleteHandler;
@@ -39,20 +56,20 @@ namespace DiscordBot
             client.ReactionRemoved += Levels.RemoveReactionXp;
         }
 
-        public static void HookBanEvents(BaseSocketClient client)
+        public void BanEvents(BaseSocketClient client)
         {
             client.UserUnbanned += EventHandlers.MemberUnbannedHandler;
             client.UserBanned += EventHandlers.MemberBannedHandler;
         }
         
-        public static void HookChannelEvents(DiscordShardedClient client)
+        public void ChannelEvents(DiscordShardedClient client)
         {
             // client.ChannelUpdated += EventHandlers.ChannelUpdateHandler;
             client.ChannelCreated += EventHandlers.ChannelCreatedHandler;
             client.ChannelDestroyed += EventHandlers.ChannelDeleteHandler;
         }
 
-        public static void CommandEvents(DiscordShardedClient client)
+        public void CommandEvents(DiscordShardedClient client)
         {
             client.SlashCommandExecuted += CommandHandler.HandleSlashCommandAsync;
             client.MessageReceived += CommandHandler.HandleCommandAsync;

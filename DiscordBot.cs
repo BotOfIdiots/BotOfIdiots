@@ -51,10 +51,16 @@ namespace DiscordBot
         /// </summary>
         private static DiscordShardedClient _client;
 
-        ///
-        ///
+        /// <summary>
+        /// 
+        /// </summary>
         private static CommandService _commandService;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private static DatabaseService _databaseService;
+        
         /// <summary>
         /// 
         /// </summary>
@@ -85,7 +91,6 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync(string[] args)
         {
-            // WorkingDirectory = args.GetValue(0).ToString();
             WorkingDirectory = Directory.GetCurrentDirectory();
             _loadSettings();
 
@@ -94,16 +99,17 @@ namespace DiscordBot
 
             _client = new DiscordShardedClient(_shardId, _discordSocketConfig);
             _commandService = new CommandService();
+            _databaseService = new DatabaseService(settings.DocumentElement["SQLSettings"].ChildNodes);
 
             Services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
-                .AddSingleton(new DatabaseService(settings.DocumentElement["SQLSettings"].ChildNodes))
+                .AddSingleton(_databaseService)
+                .AddSingleton(new DiscordEventHooks(_client, _databaseService))
                 .BuildServiceProvider();
 
             _client.Log += ClientLog;
-            LoadDiscordEventHandlers();
-
+            
             await RegisterCommandsAsync();
             await _client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
             await _client.StartAsync();
@@ -113,14 +119,6 @@ namespace DiscordBot
         /// <summary>
         /// Register all the Discord Event Hooks
         /// </summary>
-        private void LoadDiscordEventHandlers()
-        {
-            DiscordEventHooks.HookClientEvents(_client);
-            DiscordEventHooks.HookMessageEvents(_client);
-            DiscordEventHooks.HookMemberEvents(_client);
-            DiscordEventHooks.HookChannelEvents(_client);
-            DiscordEventHooks.HookBanEvents(_client);
-        }
 
         /// <summary>
         /// Create the config object based on the config.json file
@@ -177,7 +175,6 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RegisterCommandsAsync()
         {
-            DiscordEventHooks.CommandEvents(_client);
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
         }
 

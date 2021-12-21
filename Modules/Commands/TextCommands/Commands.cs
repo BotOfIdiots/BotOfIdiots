@@ -7,7 +7,7 @@ using DiscordBot.Database;
 using DiscordBot.Objects.Embeds;
 using DiscordBot.Objects.Embeds.Member;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.Modules.Commands.TextCommands
 {
     public class Commands : ModuleBase<ShardedCommandContext>
     {

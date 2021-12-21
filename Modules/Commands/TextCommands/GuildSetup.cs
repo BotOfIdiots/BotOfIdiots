@@ -6,7 +6,7 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using MySql.Data.MySqlClient;
 
-namespace DiscordBot.Modules.Commands
+namespace DiscordBot.Modules.Commands.TextCommands
 {
     [RequireBotPermission(GuildPermission.ManageGuild, ErrorMessage = "The bot needs the ManageGuild ")]
     [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage = "You need the ManageGuild permission to execute this command")]

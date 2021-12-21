@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Modules;
 
-namespace DiscordBot
+namespace DiscordBot.Class
 {
-    public static class Functions
+    public static class Rest
     {
-        public static async Task SendMessageEmbedToUser(SocketGuildUser user, Embed embed, SocketCommandContext context)
+        public static async Task SendMessageEmbedToUser(SocketGuildUser user, Embed embed, DiscordShardedClient client, SocketGuild guild)
         {
             try
             {
@@ -17,18 +18,7 @@ namespace DiscordBot
             }
             catch (Exception)
             {
-                embed = new EmbedBuilder
-                {
-                    Title = "Cannot Send Message To user"
-                }
-                    .WithDescription("Could not send embed with information pertaining to this action, to the user in question")
-                    .WithAuthor(context.Client.CurrentUser)
-                    .WithColor(Color.Red)
-                    .WithCurrentTimestamp()
-                    .Build();
-
-                SocketTextChannel replyChannel = context.Guild.GetTextChannel(context.Channel.Id);
-                await replyChannel.SendMessageAsync(embed: embed);
+                await EventHandlers.LogException(new Exception("Couldn't send message to user"), guild);
             }
         }
 

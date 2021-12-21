@@ -1,6 +1,7 @@
 using System;
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.Class;
 using DiscordBot.Database;
 
 namespace DiscordBot.Objects.Embeds.Member
@@ -37,7 +38,7 @@ namespace DiscordBot.Objects.Embeds.Member
 
             AddField("Created At", _user.CreatedAt.ToString("dd-MM-yy HH:mm:ss"), true);
             AddField("Joined At", _user.JoinedAt?.ToString("dd-MM-yy HH:mm:ss"), true);
-            AddField("Roles", Functions.CreateRolesList(_user.Roles));
+            AddField("Roles", Rest.CreateRolesList(_user.Roles));
 
             WithFooter("UserID: " + _user.Id);
             WithCurrentTimestamp();

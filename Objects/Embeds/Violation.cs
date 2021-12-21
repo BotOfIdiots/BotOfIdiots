@@ -1,5 +1,6 @@
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.Class;
 
 namespace DiscordBot.Objects.Embeds
 {
@@ -10,7 +11,8 @@ namespace DiscordBot.Objects.Embeds
         {
             SetTitle(violation.Type);
             WithColor(Discord.Color.Red);
-            WithAuthor(new EmbedAuthor(Functions.GetUserFromGuild(violation.Moderator, violation.Guild, client)));
+            //TODO Fix IUser is null error in EmbedAuthor constructor
+            // WithAuthor(new EmbedAuthor(Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client)));
             AddField("User:", "<@!" + violation.User + ">", true);
             AddField("Date:", violation.Date, true);
             AddField("Moderator:", "<@!" + violation.Moderator + ">");
