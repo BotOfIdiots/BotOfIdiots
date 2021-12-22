@@ -51,8 +51,8 @@ public static class HandlePunishment
             embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 2);
 
             SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
-            LogViolation(embed, moderator.Guild);
-            target.KickAsync(reason);
+            LogViolation(embed, moderator.Guild).GetAwaiter();
+            target.KickAsync(reason).GetAwaiter();
         }
 
         return embed;
@@ -69,7 +69,7 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Title = "Muted Role not defined"
+                Description = "Muted Role not defined"
             }.Build();
             return embed;
         }
@@ -78,8 +78,10 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Title = "You can't mute that user."
-            }.Build();
+                Description = "You can't mute that user."
+            }
+                .WithColor(Color.Red)
+                .Build();
 
             return embed;
         }
@@ -98,8 +100,8 @@ public static class HandlePunishment
         embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 3);
 
         SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
-        LogViolation(embed, target.Guild);
-        target.AddRoleAsync(mutedRole);
+        LogViolation(embed, target.Guild).GetAwaiter();
+        target.AddRoleAsync(mutedRole).GetAwaiter();
 
         return embed;
     }
@@ -115,7 +117,7 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Title = "Muted Role not defined"
+                Description = "Muted Role not defined"
             }.Build();
             return embed;
         }
@@ -124,8 +126,10 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Title = "You can't unmute that user."
-            }.Build();
+                Description = "You can't unmute that user."
+            }
+                .WithColor(Color.Red)
+                .Build();
             return embed;
         }
 
@@ -141,8 +145,8 @@ public static class HandlePunishment
         embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 4);
 
         SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
-        LogViolation(embed, target.Guild);
-        target.RemoveRoleAsync(mutedRole);
+        LogViolation(embed, target.Guild).GetAwaiter();
+        target.RemoveRoleAsync(mutedRole).GetAwaiter();
 
 
         return embed;
@@ -166,8 +170,8 @@ public static class HandlePunishment
             embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 1);
 
             SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
-            LogViolation(embed, target.Guild);
-            target.BanAsync(1, reason);
+            LogViolation(embed, target.Guild).GetAwaiter();
+            target.BanAsync(1, reason).GetAwaiter();
         }
 
         return embed;
@@ -184,8 +188,8 @@ public static class HandlePunishment
         {
             embed = new ViolationEmbedBuilder(target, moderator, reason).Build();
             
-            guild.RemoveBanAsync(target);
-            LogViolation(embed, moderator.Guild);
+            guild.RemoveBanAsync(target).GetAwaiter();
+            LogViolation(embed, moderator.Guild).GetAwaiter();
             return embed;
         }
         catch (HttpException e)
