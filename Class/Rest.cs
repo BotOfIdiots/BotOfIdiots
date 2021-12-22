@@ -22,9 +22,11 @@ namespace DiscordBot.Class
             }
         }
 
-        public static IUser GetUserFromGuild(ulong user, ulong guild, DiscordShardedClient client)
+        public static SocketGuildUser GetUserFromGuild(ulong user, ulong guild, DiscordShardedClient client)
         {
-            return client.GetGuild(guild).GetUser(user);
+            SocketGuild socketGuild = client.GetGuild(guild);
+            SocketGuildUser guildUser = socketGuild.GetUser(user);
+            return guildUser;
         }
         
         public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)

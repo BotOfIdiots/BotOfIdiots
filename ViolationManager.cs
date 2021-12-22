@@ -19,9 +19,11 @@ namespace DiscordBot
         /// <summary>
         /// Create a New violation insert it into the database and return an embed
         /// </summary>
+        /// <param name="client"></param>
         /// <param name="databaseService"></param>
         /// <param name="violationType"> Violation type. 1 = Ban, 2 = Kick, 3 = mute, 4 = warn </param>
         /// <param name="violator">User that committed the violation</param>
+        /// <param name="moderator"></param>
         /// <param name="reason">Reason for the violation</param>
         /// <param name="confidential">Is it a confidential violation? If yes </param>
         /// <returns>Embed</returns>
@@ -55,6 +57,7 @@ namespace DiscordBot
         /// <param name="userId">id of the user to return the violation count of</param>
         /// <param name="guildId"></param>
         /// <param name="databaseService"></param>
+        /// <param name="client"></param>
         /// <returns>int</returns>
         public static int CountUserViolations(ulong userId, ulong guildId, DatabaseService databaseService,
             DiscordShardedClient client)
@@ -69,9 +72,7 @@ namespace DiscordBot
 
             try
             {
-                databaseService.CheckConnection();
-                using MySqlConnection conn = databaseService.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
+                using MySqlDataReader reader = DbOperations.ExecuteReader(databaseService, query, guild, user);
 
                 while (reader.Read())
                 {
@@ -90,7 +91,10 @@ namespace DiscordBot
         /// <summary>
         /// Create a List of Violations commited by user
         /// </summary>
-        /// <param name="user">The user of which to return the violations</param>
+        /// <param name="userId">The user of which to return the violations</param>
+        /// <param name="guildId"></param>
+        /// <param name="databaseService"></param>
+        /// <param name="client"></param>
         /// <returns>List<Violations></returns>
         public static List<Violation> GetViolations(ulong userId, ulong guildId, DatabaseService databaseService,
             DiscordShardedClient client)
@@ -100,17 +104,19 @@ namespace DiscordBot
             string query =
                 "SELECT CAST(ViolationId as VARCHAR(6)) as ViolationId FROM violations WHERE Guild = @Guild AND User = @User";
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = guildId;
+            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
+            {
+                Value = guildId
+            };
 
-            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64);
-            user.Value = userId;
+            MySqlParameter user = new MySqlParameter("@User", MySqlDbType.UInt64)
+            {
+                Value = userId
+            };
 
             try
             {
-                databaseService.CheckConnection();
-                using MySqlConnection conn = databaseService.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, user);
+                using MySqlDataReader reader = DbOperations.ExecuteReader(databaseService, query, guild, user);
 
                 List<int> violationIds = new List<int>();
 
@@ -141,6 +147,7 @@ namespace DiscordBot
         /// </summary>
         /// <param name="id">Id of violation to return</param>
         /// <param name="context">Context of issued command</param>
+        /// <param name="databaseService"></param>
         /// <returns></returns>
         public static Embed GetViolation(int id, ShardedCommandContext context, DatabaseService databaseService)
         {

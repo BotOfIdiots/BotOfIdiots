@@ -10,7 +10,7 @@ namespace DiscordBot.Database
 {
     public static class DbOperations
     {
-        private static readonly DatabaseService _databaseService = DiscordBot.Services.GetRequiredService<DatabaseService>();
+        private static readonly DatabaseService DatabaseService = DiscordBot.Services.GetRequiredService<DatabaseService>();
         
         #region Database Checks
 
@@ -32,9 +32,7 @@ namespace DiscordBot.Database
 
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
 
-            _databaseService.CheckConnection();
-            using MySqlConnection conn = _databaseService.SqlConnection;
-            MySqlDataReader reader = ExecuteReader(conn, query, guild);
+            using MySqlDataReader reader = ExecuteReader(DatabaseService, query, guild);
 
             while (reader.Read())
             {
@@ -58,9 +56,7 @@ namespace DiscordBot.Database
 
             #endregion
             
-           _databaseService.CheckConnection();
-            using MySqlConnection conn = _databaseService.SqlConnection;
-            MySqlDataReader reader = ExecuteReader(conn, query, guild, channel);
+            using MySqlDataReader reader = ExecuteReader(DatabaseService, query, guild, channel);
 
             while (reader.Read())
             {
@@ -88,7 +84,7 @@ namespace DiscordBot.Database
 
             #endregion
 
-            int result = _databaseService.ExecuteNonQuery(query, guild, snowflake);
+            int result = DatabaseService.ExecuteNonQuery(query, guild, snowflake);
 
             if (result == 1) return true;
             
@@ -108,7 +104,7 @@ namespace DiscordBot.Database
 
             #endregion
 
-            int result = _databaseService.ExecuteNonQuery(query, guild, snowflake);
+            int result = DatabaseService.ExecuteNonQuery(query, guild, snowflake);
 
             if (result == 1) return true;
 
@@ -121,7 +117,7 @@ namespace DiscordBot.Database
 
         public static ulong GetLogChannel(string logType, SocketGuild socketGuild)
         {
-            string query = "SELECT " + logType + " FROM log_channels_settings WHERE Guild = @Guild";
+            string query = $"SELECT {logType} FROM log_channels_settings WHERE Guild = @Guild";
 
             #region SQL Parameters
 
@@ -132,9 +128,8 @@ namespace DiscordBot.Database
 
             try
             {
-                _databaseService.CheckConnection();
-                using MySqlConnection conn = _databaseService.SqlConnection;
-                MySqlDataReader reader = ExecuteReader(conn, query, guild);
+                
+                using MySqlDataReader reader = ExecuteReader(DatabaseService, query, guild);
 
                 while (reader.Read())
                 {
@@ -172,13 +167,14 @@ namespace DiscordBot.Database
 
             try
             {
-                _databaseService.CheckConnection();
-                using MySqlConnection conn = _databaseService.SqlConnection;
-                MySqlDataReader reader = ExecuteReader(conn, query, guild);
+                using MySqlDataReader reader = ExecuteReader(DatabaseService, query, guild);
 
                 while (reader.Read())
                 {
-                    return socketGuild.GetRole(reader.GetUInt64("MutedRole"));
+                    ulong role = reader.GetUInt64("MutedRole");
+
+                    EventHandlers.LogException(new Exception($"Role id: {role}"), socketGuild);
+                    return socketGuild.GetRole(role);
                 }
             }
 
@@ -186,9 +182,8 @@ namespace DiscordBot.Database
 
             catch (MySqlException ex)
             {
-            }
-            catch (SqlNullValueException)
-            {
+                Console.WriteLine(ex.ToString());
+                EventHandlers.LogException(ex, socketGuild);
             }
             catch (Exception ex)
             {
@@ -212,10 +207,11 @@ namespace DiscordBot.Database
             }
         }
 
-        public static MySqlDataReader ExecuteReader(MySqlConnection conn, string query,
+        public static MySqlDataReader ExecuteReader(DatabaseService databaseService, string query,
             params MySqlParameter[] parameters)
         {
-            using (MySqlCommand cmd = conn.CreateCommand())
+            DatabaseService.CheckConnection();
+            using (MySqlCommand cmd = DatabaseService.SqlConnection.CreateCommand())
             {
                 cmd.CommandText = query;
                 cmd.Parameters.AddRange(parameters);

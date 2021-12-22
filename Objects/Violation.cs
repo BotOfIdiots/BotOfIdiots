@@ -82,8 +82,7 @@ namespace DiscordBot.Objects
 
             try
             {
-                _databaseService.CheckConnection();
-                MySqlDataReader reader = DbOperations.ExecuteReader(_databaseService.SqlConnection, query, guild);
+                using MySqlDataReader reader = DbOperations.ExecuteReader(_databaseService, query, guild);
 
                 while (reader.Read())
                 {
@@ -187,9 +186,9 @@ namespace DiscordBot.Objects
 
             try
             {
-                databaseService.CheckConnection();
-                MySqlDataReader reader =
-                    DbOperations.ExecuteReader(databaseService.SqlConnection, query, guild, violation);
+                
+                using MySqlDataReader reader =
+                    DbOperations.ExecuteReader(databaseService, query, guild, violation);
 
                 while (reader.Read())
                 {

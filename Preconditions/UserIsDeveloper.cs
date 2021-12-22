@@ -44,9 +44,8 @@ public class UserIsDeveloper : PreconditionAttribute
         String query = "SELECT Snowflake FROM developers WHERE Snowflake = @UserId;";
 
         MySqlParameter guild = new MySqlParameter("@UserId", MySqlDbType.UInt64) { Value = user.Id };
-
-        DbConnection.CheckConnection();
-        MySqlDataReader reader = DbOperations.ExecuteReader(DbConnection.SqlConnection, query, guild);
+        
+        using MySqlDataReader reader = DbOperations.ExecuteReader(DbConnection, query, guild);
 
         while (reader.Read())
         {

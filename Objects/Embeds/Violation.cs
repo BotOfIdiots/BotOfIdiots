@@ -5,19 +5,21 @@ using DiscordBot.Class;
 
 namespace DiscordBot.Objects.Embeds
 {
-    public class ViolationEmbedBuilder :EmbedBuilder
+    public class ViolationEmbedBuilder : EmbedBuilder
     {
         #region Constructors
         public ViolationEmbedBuilder(Violation violation, DiscordShardedClient client)
         {
             SetTitle(violation.Type);
-            IUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client);
             
+            //TODO Fix this returning as null
+            SocketGuildUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client);
+
             BuildEmbedBody(violation.User, moderator, violation.Reason);
             AddField("Violation ID:", violation.ViolationId, true);
         }
         
-        public ViolationEmbedBuilder(ulong user, IUser moderator, string reason )
+        public ViolationEmbedBuilder(ulong user, SocketGuildUser moderator, string reason )
         {
             WithTitle("Unbanned");
             BuildEmbedBody(user, moderator, reason);
@@ -27,10 +29,9 @@ namespace DiscordBot.Objects.Embeds
         
         #region Methods
 
-        private void BuildEmbedBody(ulong user, IUser moderator, string reason)
+        private void BuildEmbedBody(ulong user, SocketGuildUser moderator, string reason)
         {
             WithColor(Discord.Color.Red);
-            //TODO Fix IUser is null error in EmbedAuthor constructor
             WithAuthor(new EmbedAuthor(moderator));
             WithCurrentTimestamp();
             WithFooter("UserID: " + user);

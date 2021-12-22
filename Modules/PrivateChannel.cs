@@ -35,9 +35,7 @@ namespace DiscordBot.Modules
 
             try
             {
-                databaseService.CheckConnection();
-                using MySqlConnection conn = databaseService.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild, channel);
+                MySqlDataReader reader = DbOperations.ExecuteReader(databaseService, query, guild, channel);
 
                 while (reader.Read())
                 {
@@ -147,10 +145,7 @@ namespace DiscordBot.Modules
 
             try
             {
-                databaseService.CheckConnection();
-                using MySqlConnection conn = databaseService.SqlConnection;
-                MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, category, guild);
-
+                using MySqlDataReader reader = DbOperations.ExecuteReader(databaseService, query, category, guild);
                 while (reader.Read())
                 {
                     if (reader.GetUInt64("CategoryId") == categoryChannel)
@@ -183,9 +178,7 @@ namespace DiscordBot.Modules
             
             #endregion
             
-            _databaseService.CheckConnection();
-            using MySqlConnection conn = _databaseService.SqlConnection;
-            MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+            using MySqlDataReader reader = DbOperations.ExecuteReader(_databaseService, query, guild);
 
             List<ulong> snowflakes = new List<ulong>(2);
 
