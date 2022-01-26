@@ -58,21 +58,10 @@ public static class HandlePunishment
         return embed;
     }
 
-    public static Embed Mute(DiscordShardedClient client, DatabaseService databaseService, SocketGuildUser moderator,
-        SocketGuildUser target, string reason)
+    public static Embed Mute(SocketGuildUser moderator,
+        SocketGuildUser target, string length, string reason)
     {
         Embed embed;
-
-        SocketRole mutedRole = DbOperations.GetMutedRole(target.Guild);
-
-        if (mutedRole == null)
-        {
-            embed = new EmbedBuilder
-            {
-                Description = "Muted Role not defined"
-            }.Build();
-            return embed;
-        }
 
         if (target == moderator)
         {
@@ -86,7 +75,7 @@ public static class HandlePunishment
             return embed;
         }
 
-        if (target.Roles.Contains(mutedRole))
+        if (target.TimedOutUntil > DateTimeOffset.Now)
         {
             embed = new EmbedBuilder
             {
@@ -96,31 +85,44 @@ public static class HandlePunishment
             return embed;
         }
 
+        TimeSpan timeOutLength;
 
-        embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 3);
-
-        SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
-        LogViolation(embed, target.Guild).GetAwaiter();
-        target.AddRoleAsync(mutedRole).GetAwaiter();
-
+        string timeUnit = "";
+        string duration = "";
+        
+        switch (timeUnit)
+        {
+            case "m":
+                timeOutLength = TimeSpan.FromMinutes(Convert.ToDouble(duration));
+                break;
+            case "h":
+                timeOutLength = TimeSpan.FromHours(Convert.ToDouble(duration));
+                break;
+            default:
+                timeOutLength = TimeSpan.FromMinutes(5);
+                break;
+        }
+        
+        
+        try
+        {
+            target.SetTimeOutAsync(timeOutLength);
+            embed = ViolationManager.NewViolation(target, moderator, reason, Client, DatabaseService, 3);
+            SendMessageEmbedToUser(target, embed, Client, target.Guild).GetAwaiter();
+            LogViolation(embed, target.Guild).GetAwaiter();
+        }
+        catch (Exception exception)
+        {
+            embed = new EmbedBuilder().WithDescription("Couldn't mute user").Build();
+        }
+        
         return embed;
     }
 
-    public static Embed Unmute(DiscordShardedClient client, DatabaseService databaseService, SocketGuildUser moderator,
+    public static Embed Unmute(IDiscordClient client, DatabaseService databaseService, SocketGuildUser moderator,
         SocketGuildUser target, string reason)
     {
         Embed embed;
-
-        SocketRole mutedRole = DbOperations.GetMutedRole(target.Guild);
-
-        if (mutedRole == null)
-        {
-            embed = new EmbedBuilder
-            {
-                Description = "Muted Role not defined"
-            }.Build();
-            return embed;
-        }
 
         if (target == moderator)
         {
@@ -133,7 +135,7 @@ public static class HandlePunishment
             return embed;
         }
 
-        if (!target.Roles.Contains(mutedRole))
+        if (target.TimedOutUntil <= DateTimeOffset.Now)
         {
             embed = new EmbedBuilder
             {
@@ -142,11 +144,11 @@ public static class HandlePunishment
             return embed;
         }
 
-        embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService, 4);
-
-        SendMessageEmbedToUser(target, embed, client, target.Guild).GetAwaiter();
+        target.RemoveTimeOutAsync();
+        embed = ViolationManager.NewViolation(target, moderator, reason, Client, DatabaseService, 4);
+        SendMessageEmbedToUser(target, embed, Client, target.Guild).GetAwaiter();
         LogViolation(embed, target.Guild).GetAwaiter();
-        target.RemoveRoleAsync(mutedRole).GetAwaiter();
+        
 
 
         return embed;
