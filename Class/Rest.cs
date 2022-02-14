@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Modules;
 
@@ -24,9 +26,7 @@ namespace DiscordBot.Class
 
         public static SocketGuildUser GetUserFromGuild(ulong user, ulong guild, DiscordShardedClient client)
         {
-            SocketGuild socketGuild = client.GetGuild(guild);
-            SocketGuildUser guildUser = socketGuild.GetUser(user);
-            return guildUser;
+            return client.GetGuild(guild).GetUser(user);
         }
         
         public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)

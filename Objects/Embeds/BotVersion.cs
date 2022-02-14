@@ -1,11 +1,11 @@
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 
 namespace DiscordBot.Objects.Embeds
 {
     public class BotVersion : EmbedBuilder
     {
-        public BotVersion(ShardedCommandContext context)
+        public BotVersion(ShardedInteractionContext context)
         {
             Title = "Version: " + DiscordBot.Version();
             WithAuthor(new EmbedAuthor(context.Client.CurrentUser));

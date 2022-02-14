@@ -1,4 +1,5 @@
 ﻿using System;
+using Discord;
 using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules;
@@ -23,13 +24,13 @@ namespace DiscordBot.Objects
         public DateTime Date { get; set; }
         public DateTime Expires { get; set; }
         private readonly DatabaseService _databaseService;
-        private readonly DiscordShardedClient _client;
+        private readonly IDiscordClient _client;
 
         #endregion
 
         #region Constructors
 
-        public Violation(DiscordShardedClient client, DatabaseService databaseService, ulong guild)
+        public Violation(IDiscordClient client, DatabaseService databaseService, ulong guild)
         {
             _client = client;
             _databaseService = databaseService;
@@ -98,7 +99,7 @@ namespace DiscordBot.Objects
             catch (MySqlException ex)
             {
                 // if (ex.Message.Contains("Data is Null")) return 0;
-                EventHandlers.LogException(ex, _client.GetGuild(Guild));
+                // EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion
@@ -164,7 +165,7 @@ namespace DiscordBot.Objects
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, _client.GetGuild(Guild));
+                // EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion
@@ -247,7 +248,7 @@ namespace DiscordBot.Objects
 
             catch (Exception ex)
             {
-                EventHandlers.LogException(ex, _client.GetGuild(Guild));
+                // EventHandlers.LogException(ex, _client.GetGuild(Guild));
             }
 
             #endregion

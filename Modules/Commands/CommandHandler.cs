@@ -1,150 +1,91 @@
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.Net;
 using Discord.WebSocket;
-using DiscordBot.Class;
-using DiscordBot.Database;
-using DiscordBot.Modules.Commands.SlashCommands;
-using Microsoft.Extensions.DependencyInjection;
-using static DiscordBot.Class.HandlePunishment;
-using static DiscordBot.Class.PermissionChecks;
 
-namespace DiscordBot.Modules;
+namespace DiscordBot.Modules.Commands;
 
 public class CommandHandler
 {
-    private DiscordShardedClient _shardedClient;
-    private DatabaseService _databaseService;
+    
+    private readonly InteractionService _commands;
+    private readonly DiscordShardedClient _client;
+    private readonly IServiceProvider _services;
 
-    public CommandHandler(DiscordShardedClient client, DatabaseService databaseService)
+    public CommandHandler(InteractionService commands, DiscordShardedClient client, IServiceProvider services)
     {
-        _shardedClient = client;
-        _databaseService = databaseService;
+        _commands = commands;
+        _client = client;
+        _services = services;
     }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="arg"></param>
-    /// <returns></returns>
-    public async Task HandleCommandAsync(SocketMessage arg)
-    {
-        CommandService command = DiscordBot.Services.GetRequiredService<CommandService>();
-
-
-        var message = arg as SocketUserMessage;
-        ShardedCommandContext context =
-            new ShardedCommandContext(_shardedClient, message);
-        try
-        {
-            if (message.Author.IsBot) return;
-            
-            int argPos = 0;
-            if (message.HasStringPrefix("$", ref argPos))
-            {
-                var result = await command.ExecuteAsync(context, argPos, DiscordBot.Services);
-
-                if (!result.IsSuccess)
-                {
-                    Embed exceptionEmbed = new EmbedBuilder()
-                        .WithColor(Color.Red)
-                        .WithDescription(result.ErrorReason)
-                        .Build();
-
-                    await context.Channel.SendMessageAsync(embed: exceptionEmbed);
-                }
-
-                if (result.IsSuccess)
-                {
-                    await EventHandlers.LogExecutedCommand(context, message);
-                }
-            }
-        }
-        catch (NullReferenceException e)
-        {
-            await EventHandlers.LogException(e, context.Guild);
-        }
-        
-
-        
-    }
-
+    
     public async Task RegisterCommandsAsync()
     {
         try
         {
-            await _shardedClient.Rest.BulkOverwriteGlobalCommands(CommandCollection());
+#if DEBUG
+            await _commands.RegisterCommandsToGuildAsync(317226837841281024);
+            await _client.Rest.DeleteAllGlobalCommandsAsync();
+#endif
+#if !DEBUG
+            await _commands.RegisterCommandsGloballyAsync();
+#endif
         }
         catch (HttpException ex)
         {
             Console.WriteLine(ex);
         }
-
-        await Task.CompletedTask;
     }
-
-    private ApplicationCommandProperties[] CommandCollection()
+    
+    public async Task Initialize()
     {
-        ApplicationCommandProperties[] commandCollection =
+        try
         {
-            new WarnCommand().Build(),
-            new MuteCommand().Build()
-        };
-
-        return commandCollection;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="command">The slash command to be executed</param>
-    public async Task HandleSlashCommandAsync(SocketSlashCommand command)
-    {
-        string commandName = command.Data.Name;
-
-        switch (commandName)
+            await _commands.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
+            _client.InteractionCreated += InteractionCreated;
+            _client.ShardReady += Ready;
+            _commands.SlashCommandExecuted += _commands_SlashCommandExecuted;
+            _commands.AutocompleteHandlerExecuted += _commands_AutocompleteHandlerExecuted;
+        }
+        catch(Exception ex)
         {
-            case "warn":
-                await HandleWarnCommand(command);
-                break;
-            case "kick":
-                break;
-            case "mute":
-                await HandleMuteCommand(command);
-                break;
-            case "ban":
-                break;
-            case "unban":
-                break;
+            Console.WriteLine(ex.ToString());
         }
     }
 
-
-    async Task HandleWarnCommand(SocketSlashCommand command)
+    private async Task InteractionCreated(SocketInteraction interaction)
     {
-        if (RequireGuildPermission(GuildPermission.KickMembers, command))
+        try
         {
-            SocketGuildUser moderator = (SocketGuildUser)command.User;
-            SocketSlashCommandData data = command.Data;
-            var (user, reason) = data.Options;
-
-            await command.RespondAsync(embed: Warn(_shardedClient, _databaseService, moderator, (SocketGuildUser)user,
-                (String)reason));
+            var ctx = new ShardedInteractionContext(_client, interaction);
+            var result = await _commands.ExecuteCommandAsync(ctx, _services);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
         }
     }
-
-    async Task HandleMuteCommand(SocketSlashCommand command)
+    
+    
+    private async Task Ready(DiscordSocketClient arg)
     {
-        if (RequireGuildPermission(GuildPermission.KickMembers, command))
-        {
-            SocketGuildUser moderator = (SocketGuildUser)command.User;
-            SocketSlashCommandData data = command.Data;
-            var (user, reason) = data.Options;
-
-            await command.RespondAsync(embed: Mute(_shardedClient, _databaseService, moderator, (SocketGuildUser)user,
-                (String)reason));
-        }
+        await RegisterCommandsAsync();
+        _client.ShardReady -= Ready;
     }
+
+
+    private Task _commands_SlashCommandExecuted(SlashCommandInfo arg1, IInteractionContext arg2, IResult arg3)
+    {
+        return Task.CompletedTask;
+    }
+    
+    private Task _commands_AutocompleteHandlerExecuted(IAutocompleteHandler arg1, IInteractionContext arg2, IResult arg3)
+    {
+        return Task.CompletedTask;
+    }
+
+    
 }

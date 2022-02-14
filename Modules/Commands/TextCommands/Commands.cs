@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Objects.Embeds;
@@ -9,10 +9,9 @@ using DiscordBot.Objects.Embeds.Member;
 
 namespace DiscordBot.Modules.Commands.TextCommands
 {
-    public class Commands : ModuleBase<ShardedCommandContext>
+    public class Commands : InteractionModuleBase<ShardedInteractionContext>
     {
-        public DatabaseService DatabaseService { get; set;}
-        public CommandService CommandService { get; set; }
+        public DatabaseService DatabaseService { get; set; }
 
         #region User Commands
 
@@ -20,14 +19,14 @@ namespace DiscordBot.Modules.Commands.TextCommands
         /// Replies with pong
         /// </summary>
         /// <returns></returns>
-        [Command("ping")]
-        [RequireUserPermission(GuildPermission.Administrator)]
-        [Summary("$ping - Responds with Pong")]
+        [SlashCommand("ping", "Check the bot status")]
         public async Task Ping()
         {
+            await DeferAsync();
+
             try
             {
-                await ReplyAsync("Pong");
+                await FollowupAsync("Pong");
             }
             catch (Exception e)
             {
@@ -35,64 +34,28 @@ namespace DiscordBot.Modules.Commands.TextCommands
             }
         }
 
-        [Command("help")]
-        [Summary("$help - returns a list of available commands")]
-        public async Task Help()
-        {
-            EmbedBuilder embedBuilder = new EmbedBuilder
-            {
-                Title = "Bot Commands",
-                Color = Color.Teal
-            };
-            foreach (CommandInfo command in CommandService.Commands)
-            {
-                string summary;
-                switch (command.Summary)
-                {
-                    case null:
-                        summary = "Command doesn't have a description";
-                        break;
-                    default:
-                        summary = command.Summary;
-                        break;
-                }
-
-                embedBuilder.AddField(command.Name, summary);
-            }
-
-            Embed helpEmbed = embedBuilder.Build();
-
-            await ReplyAsync(embed: helpEmbed);
-        }
-
         #endregion
 
         #region Moderation Commands
 
         /// <summary>
-        /// Get the account information of a user
+        /// Command for getting the account information for a user
         /// </summary>
         /// <param name="user">user to return userinfo of</param>
         /// <returns></returns>
-        [Command("userinfo")]
-        [Summary("$userinfo {user/snowflake} - Shows userinfo")]
+        [SlashCommand("userinfo", "Check information on the specified user")]
         public async Task UserInfo(SocketGuildUser user = null)
         {
             Embed embed;
             try
             {
-                user ??= Context.Guild.GetUser(Context.User.Id);
+                user ??= (SocketGuildUser)Context.User;
 
-                if (user.GuildPermissions.KickMembers)
-                {
-                    embed = new UserInfo(user, Context.Client, DatabaseService, true).Build();
-                }
-                else
-                {
-                    embed = new UserInfo(user, Context.Client, DatabaseService).Build();
-                }
-                
-                await ReplyAsync(embed: embed);
+                embed = user.GuildPermissions.ModerateMembers
+                    ? new UserInfo(user, Context.Client, DatabaseService, true).Build()
+                    : new UserInfo(user, Context.Client, DatabaseService).Build();
+
+                await RespondAsync(embed: embed);
             }
             catch (NullReferenceException)
             {
@@ -102,22 +65,19 @@ namespace DiscordBot.Modules.Commands.TextCommands
                     }
                     .AddField("Example", "$userinfo [username/snowflake]")
                     .Build();
-                await ReplyAsync(embed: embed);
+                await RespondAsync(embed: embed);
             }
             catch (Exception e)
             {
                 await EventHandlers.LogException(e, Context.Guild);
             }
         }
-
         
         /// <summary>
-        /// 
+        /// Command for purging the specified amount of messages
         /// </summary>
         /// <param name="amount"></param>
-        [Command("purge")]
-        [Summary(
-            "$purge <amount> - removes the amount of messages specified. (You don't have to count the command message as it is included by default")]
+        [SlashCommand("purge", "Delete the specified amount of messages")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task Purge(int amount)
         {
@@ -128,25 +88,6 @@ namespace DiscordBot.Modules.Commands.TextCommands
             await Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Returns User Snowflake
-        /// </summary>
-        /// <param name="user">User from which to get Snowflake</param>
-        /// <returns></returns>
-        [Command("snowflake")]
-        [Summary("$snowflake <user/snowflake> - returns the snowflake of the user")]
-        [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task Snowflake(SocketGuildUser user)
-        {
-            Embed embed = new EmbedBuilder
-                {
-                    Title = "Snowflake for user " + user.Username
-                }.AddField("snowflake", user.Id)
-                .Build();
-
-            await ReplyAsync(embed: embed);
-        }
-
         #endregion
 
         #region Administration Commands
@@ -155,19 +96,15 @@ namespace DiscordBot.Modules.Commands.TextCommands
         /// Return the current version of the bot
         /// </summary>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
-        "You don't have permission to use this command")]
-
-        [Command("version")]
-        [Summary("$version - returns the current bot version")]
-        // Return the current version of the bot
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [SlashCommand("version", "Returns the version of the bot")]
         public async Task Version()
         {
             try
             {
                 Embed embed = new BotVersion(Context).Build();
 
-                await ReplyAsync(embed: embed);
+                await RespondAsync(embed: embed);
             }
             catch (Exception e)
             {
@@ -175,33 +112,37 @@ namespace DiscordBot.Modules.Commands.TextCommands
             }
         }
 
-        [RequireUserPermission(GuildPermission.Administrator,
-            ErrorMessage = "You don't have permission to use this command")]
-        [Command("GuildID")]
-        public async Task GuildId()
-        {
-            await ReplyAsync(Context.Guild.ToString());
-        }
-
-        [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage =
-            "You don't have permission to use this command")]
-        [Command("setupbot")]
+        /// <summary>
+        /// Command for initializing the bot if it was not done autmatically
+        /// </summary>
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [SlashCommand("init-bot", "Initializes the basic bot settings for this guild")]
         public async Task SetupBot()
         {
-            JoinedGuild.AddGuild(Context.Guild, DiscordBot.Services);
-            JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id, DiscordBot.Services);
-            JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id, DiscordBot.Services);
-            JoinedGuild.GenerateDefaultViolation(Context.Guild, DiscordBot.Services);
-
-            await Task.CompletedTask;
+            try
+            {
+                JoinedGuild.AddGuild(Context.Guild, DiscordBot.Services);
+                JoinedGuild.DownloadMembers(Context.Guild.Users, Context.Guild.Id, DiscordBot.Services);
+                JoinedGuild.SetGuildOwner(Context.Guild.OwnerId, Context.Guild.Id, DiscordBot.Services);
+                JoinedGuild.GenerateDefaultViolation(Context.Guild, DiscordBot.Services);
+                await RespondAsync("Succesfully initialized the bot");
+            }
+            catch (Exception ex)
+            {
+                await RespondAsync("Failed to initialize bot");
+            }
         }
+
         #endregion
 
-        [Command("serverinfo")]
+        /// <summary>
+        /// Comand for returing basic information on the server
+        /// </summary>
+        [SlashCommand("server-info", "Returns a basic set of information off the guild")]
         public async Task ServerInfo()
         {
             Embed embed = new ServerInfo(Context.Guild).Build();
-            await ReplyAsync(embed: embed);
+            await RespondAsync(embed: embed);
         }
     }
 }

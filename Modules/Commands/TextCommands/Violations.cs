@@ -2,33 +2,26 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Objects;
 
 namespace DiscordBot.Modules.Commands.TextCommands
 {
-    [RequireBotPermission(GuildPermission.KickMembers, ErrorMessage =
-        "The Bot doesn't have the KickMembers permission")]
-    [RequireUserPermission(GuildPermission.KickMembers, ErrorMessage = "You don't have permission to use this command")]
-    [Group("violation")]
-    [Summary("Everything to do with violations")]
-    public class Violations : ModuleBase<ShardedCommandContext>
+    [RequireBotPermission(GuildPermission.KickMembers)]
+    [RequireUserPermission(GuildPermission.KickMembers)]
+    [Group("violation", "Command for managing violations")]
+    public class Violations : InteractionModuleBase<ShardedInteractionContext>
     {
-        #region Services
-
         public DatabaseService DatabaseService { get; set; }
-
-        #endregion
-
+        
         /// <summary>
         /// Get a specific violation
         /// </summary>
         /// <param name="violationId"></param>
         /// <returns></returns>
-        [Command]
-        [Summary("$violation <violationID> - Returns the violation")]
+        [SlashCommand("get", "Returns the specified violation")]
         public async Task Violation(int violationId)
         {
             try
@@ -48,8 +41,7 @@ namespace DiscordBot.Modules.Commands.TextCommands
         /// </summary>
         /// <param name="guildUser"></param>
         /// <returns></returns>
-        [Command("list")]
-        [Summary("$violation list <user/snowflake> - Returns a list of violations")]
+        [SlashCommand("list", "Return the list of violations for the specified user")]
         public async Task List(SocketGuildUser guildUser)
         {
             try
@@ -100,11 +92,14 @@ namespace DiscordBot.Modules.Commands.TextCommands
             }
         }
 
-        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage =
-            "You don't have persmision to use this command")]
-        [Command("remove")]
-        [Summary("$violation remove <violationID> - Removes a violation")]
-        public async Task Remove(int violationId, [Remainder] String reason = "No reason specified")
+        /// <summary>
+        /// Remove a specific violation
+        /// </summary>
+        /// <param name="violationId"></param>
+        /// <param name="reason"></param>
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [SlashCommand("remove", "Remove the specified violation")]
+        public async Task Remove(int violationId, String reason = "No reason specified")
         {
             try
             {

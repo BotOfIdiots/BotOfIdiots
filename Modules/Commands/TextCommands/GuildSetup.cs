@@ -1,257 +1,364 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.Objects.Embeds.Config;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules.Commands.TextCommands
 {
-    [RequireBotPermission(GuildPermission.ManageGuild, ErrorMessage = "The bot needs the ManageGuild ")]
-    [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage = "You need the ManageGuild permission to execute this command")]
-    [Group("set")]
-    public class Set : ModuleBase<SocketCommandContext>
+    [RequireBotPermission(GuildPermission.ManageGuild)]
+    [RequireUserPermission(GuildPermission.ManageGuild)]
+    [Group("settings", "Command for changing various settings for the server")]
+    public class Settings : InteractionModuleBase<ShardedInteractionContext>
     {
-        #region Services
-
         public DatabaseService DatabaseService { get; set; }
 
-        #endregion
-        
-        #region Set Moderation Roles
-        
-        [Command("joinrole")]
-        [Summary("$set joinrole <role/snowflake> - Set the join role")]
-        public async Task JoinRole(IRole role)
+        /// <summary>
+        /// Manage the various roles for the specified server
+        /// </summary>
+        [Group("roles", "Commands for changing various roles in the server")]
+        class Roles : Settings
         {
-            string query = "UPDATE guild_configurations  SET JoinRole = @Role WHERE Guild = @Guild";
-
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = role.Guild.Id;
-
-            MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
-            joinRole.Value = role.Id;
-
-            int succes = DatabaseService.ExecuteNonQuery(query, guild, joinRole);
-
-            if (succes == 1)
+            /// <summary>
+            /// 
+            /// </summary>
+            [Group("join", "Manage the join role for the server")]
+            class Join : Roles
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Join role succesfully set to: " + role.Mention)
-                    .Build();
+                /// <summary>
+                /// 
+                /// </summary>
+                /// <param name="role"></param>
+                [SlashCommand("set", "Set the role to be applied when a user joins the server")]
+                public async Task set(IRole role)
+                {
+                    string query = "UPDATE guild_configurations  SET JoinRole = @Role WHERE Guild = @Guild";
 
-                await ReplyAsync(embed: reactionEmbed);
+                    MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+                    guild.Value = role.Guild.Id;
+
+                    MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
+                    joinRole.Value = role.Id;
+
+                    int succes = DatabaseService.ExecuteNonQuery(query, guild, joinRole);
+
+                    Embed reactionEmbed = (succes == 1)
+                        ? new EmbedBuilder
+                            {
+                                Color = Color.Green
+                            }
+                            .WithDescription("Join role successfully set to: " + role.Mention)
+                            .Build()
+                        : new EmbedBuilder
+                            {
+                                Color = Color.Red
+                            }
+                            .WithDescription("Could not set join role to: " + role.Mention)
+                            .Build();
+
+                    await RespondAsync(embed: reactionEmbed);
+                }
             }
 
-            if (succes == -1)
+            /// <summary>
+            /// 
+            /// </summary>
+            [Group("moderation", "Manage the moderation role for the server")]
+            class ModerationRole : Roles
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Red
-                    }
-                    .WithDescription("Could not set join role to: " + role.Mention)
-                    .Build();
+                [SlashCommand("set", "Set the role that's use for moderation in the server")]
+                public async Task set(IRole role)
+                {
+                    string query = "UPDATE guild_configurations  SET ModerationRole = @Role WHERE Guild = @Guild";
 
-                await ReplyAsync(embed: reactionEmbed);
-            }
-        }
-        
-        [Command("muterole")]
-        [Summary("$set muterole <role/snowflake> - Set the mute role")]
-        public async Task MuteRole(IRole role)
-        {
-            string query = "UPDATE guild_configurations  SET MutedRole = @Role WHERE Guild = @Guild";
+                    MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+                    guild.Value = role.Guild.Id;
 
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = role.Guild.Id;
+                    MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
+                    joinRole.Value = role.Id;
 
-            MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
-            joinRole.Value = role.Id;
+                    int succes = DatabaseService.ExecuteNonQuery(query, guild, joinRole);
 
-            int succes = DatabaseService.ExecuteNonQuery(query, guild, joinRole);
+                    Embed reactionEmbed = (succes == 1)
+                        ? new EmbedBuilder
+                            {
+                                Color = Color.Green
+                            }
+                            .WithDescription("Moderation role succesfully set to: " + role.Mention)
+                            .Build()
+                        : new EmbedBuilder
+                            {
+                                Color = Color.Red
+                            }
+                            .WithDescription("Could not set moderation role to: " + role.Mention)
+                            .Build();
 
-            if (succes == 1)
-            {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Mute role succesfully set to: " + role.Mention)
-                    .Build();
-
-                await ReplyAsync(embed: reactionEmbed);
-            }
-
-            if (succes == -1)
-            {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Red
-                    }
-                    .WithDescription("Could not set mute role to: " + role.Mention)
-                    .Build();
-
-                await ReplyAsync(embed: reactionEmbed);
-            }
-        }
-        
-        [Command("moderationrole")]
-        [Summary("$set moderationrole <role/snowflake> - Set the moderation role")]
-        public async Task ModerationRole(IRole role)
-        {
-            string query = "UPDATE guild_configurations  SET ModerationRole = @Role WHERE Guild = @Guild";
-
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = role.Guild.Id;
-
-            MySqlParameter joinRole = new MySqlParameter("@Role", MySqlDbType.UInt64);
-            joinRole.Value = role.Id;
-
-            int succes = DatabaseService.ExecuteNonQuery(query, guild, joinRole);
-
-            if (succes == 1)
-            {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Moderation role succesfully set to: " + role.Mention)
-                    .Build();
-
-                await ReplyAsync(embed: reactionEmbed);
-            }
-
-            if (succes == -1)
-            {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Red
-                    }
-                    .WithDescription("Could not set moderation role to: " + role.Mention)
-                    .Build();
-
-                await ReplyAsync(embed: reactionEmbed);
+                    await RespondAsync(embed: reactionEmbed);
+                }
             }
         }
 
-        #endregion
-        
-        #region Setup Logging
-        [Command("logging")]
-        public async Task Logging(SocketTextChannel logsChannel, SocketTextChannel exceptionsChannel)
+        /// <summary>
+        /// Manage the logging module
+        /// </summary>
+        [Group("logging", "Manage the logging module")]
+        class Logging : Settings
         {
-            string query = "INSERT INTO log_channels_settings (Guild, Logs, Exceptions) VALUE (@Guild, @Logs, @Exceptions)";
-
-            #region SQL Parameters
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = logsChannel.Guild.Id;
-            
-            MySqlParameter logs = new MySqlParameter("@Logs", MySqlDbType.UInt64);
-            logs.Value = logsChannel.Id;
-            
-            MySqlParameter exceptions = new MySqlParameter("@Exceptions", MySqlDbType.UInt64);
-            exceptions.Value = exceptionsChannel.Id;
-            #endregion
-            
-            int succes = DatabaseService.ExecuteNonQuery(query, guild, logs, exceptions);
-            
-            if (succes == 1)
+            public async Task enable(SocketTextChannel logsChannel, SocketTextChannel exceptionsChannel)
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Succesfully enabled logging")
-                    .Build();
+                string query =
+                    "INSERT INTO log_channels_settings (Guild, Logs, Exceptions) VALUE (@Guild, @Logs, @Exceptions)";
 
-                await ReplyAsync(embed: reactionEmbed);
+                #region SQL Parameters
+
+                MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+                guild.Value = logsChannel.Guild.Id;
+
+                MySqlParameter logs = new MySqlParameter("@Logs", MySqlDbType.UInt64);
+                logs.Value = logsChannel.Id;
+
+                MySqlParameter exceptions = new MySqlParameter("@Exceptions", MySqlDbType.UInt64);
+                exceptions.Value = exceptionsChannel.Id;
+
+                #endregion
+
+                int succes = DatabaseService.ExecuteNonQuery(query, guild, logs, exceptions);
+
+                if (succes == 1)
+                {
+                    Embed reactionEmbed = new EmbedBuilder
+                        {
+                            Color = Color.Green
+                        }
+                        .WithDescription("Succesfully enabled logging")
+                        .Build();
+
+                    await ReplyAsync(embed: reactionEmbed);
+                }
+
+                if (succes == -1)
+                {
+                    Embed reactionEmbed = new EmbedBuilder
+                        {
+                            Color = Color.Red
+                        }
+                        .WithDescription("Could not enable logging")
+                        .Build();
+
+                    await ReplyAsync(embed: reactionEmbed);
+                }
             }
 
-            if (succes == -1)
+            [SlashCommand("log-channel", "set the logchannels for the guild")]
+            public async Task set(Enum logType, SocketTextChannel logChannel)
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Red
-                    }
-                    .WithDescription("Could not enable logging")
-                    .Build();
+                string query = "UPDATE log_channels_settings SET " + logType + " = @logs WHERE Guild = @Guild";
 
-                await ReplyAsync(embed: reactionEmbed);
+                MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
+                guild.Value = logChannel.Guild.Id;
+
+                MySqlParameter channel = new MySqlParameter("@Logs", MySqlDbType.UInt64);
+                channel.Value = logChannel.Id;
+
+                int succes = DatabaseService.ExecuteNonQuery(query, channel, guild);
+
+                if (succes == 1)
+                {
+                    Embed reactionEmbed = new EmbedBuilder
+                        {
+                            Color = Color.Green
+                        }
+                        .WithDescription("Succesfully set log channel")
+                        .Build();
+
+                    await ReplyAsync(embed: reactionEmbed);
+                }
+
+                if (succes == -1)
+                {
+                    Embed reactionEmbed = new EmbedBuilder
+                        {
+                            Color = Color.Red
+                        }
+                        .WithDescription("Could not set log channel")
+                        .Build();
+
+                    await ReplyAsync(embed: reactionEmbed);
+                }
             }
         }
-        
-        [Command("logchannel")]
-        public async Task LogChannel(string logType, SocketTextChannel logChannel)
+
+        /// <summary>
+        /// Manage the private channel module
+        /// </summary>
+        [Group("private-channel", "Manage the private channel module")]
+        class PrivateChannel : Settings
         {
-            string query = "UPDATE log_channels_settings SET " + logType + " = @logs WHERE Guild = @Guild";
-
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64);
-            guild.Value = logChannel.Guild.Id;
-            
-            MySqlParameter channel = new MySqlParameter("@Logs", MySqlDbType.UInt64);
-            channel.Value = logChannel.Id;
-
-            int succes = DatabaseService.ExecuteNonQuery(query, channel, guild);
-            
-            if (succes == 1)
+            /// <summary>
+            /// Enable the Private Channel module for this server
+            /// </summary>
+            /// <param name="categorySnowflake"></param>
+            /// <param name="voiceChannelSnowflake"></param>
+            public async Task Enable(ulong categorySnowflake, ulong voiceChannelSnowflake)
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Succesfully set log channel")
-                    .Build();
+                String query = "INSERT INTO private_channels_setups VALUE (@Guild, @Category, @Channel);";
 
-                await ReplyAsync(embed: reactionEmbed);
+                #region SQL Parameters
+
+                MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
+                MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64)
+                    { Value = categorySnowflake };
+                MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64)
+                    { Value = voiceChannelSnowflake };
+
+                #endregion
+
+                int succes = DatabaseService.ExecuteNonQuery(query, channel, guild, category);
+
+                if (succes == 1)
+                {
+                    Embed reactionEmbed = new EmbedBuilder
+                        {
+                            Color = Color.Green
+                        }
+                        .WithDescription("Successfully enabled Private Channels")
+                        .Build();
+
+                    await RespondAsync(embed: reactionEmbed);
+                }
             }
 
-            if (succes == -1)
+            /// <summary>
+            /// Show the current settings for the private channel module
+            /// </summary>
+            [SlashCommand("list", "Show the current settings for the private channel module")]
+            public async Task List()
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Red
-                    }
-                    .WithDescription("Could not set log channel")
-                    .Build();
+                string query = "SELECT CategoryId, CreateChannelId FROM private_channels_setups WHERE Guild = @Guild ";
 
-                await ReplyAsync(embed: reactionEmbed);
+                #region SQL Parameters
+
+                MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
+
+                #endregion
+
+                using MySqlDataReader reader = DbOperations.ExecuteReader(DatabaseService, query, guild);
+
+                List<ulong> snowflakes = new List<ulong>(2);
+
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        snowflakes[i] = reader.GetUInt64(i);
+                    }
+                }
+
+                await ReplyAsync("Category: <#" + snowflakes[0] + ">. Channel: <#" + snowflakes[2] + ">.");
+
+                await Task.CompletedTask;
             }
 
+            /// <summary>
+            /// Change the different variable for the private channel module
+            /// </summary>
+            [Group("set", "Set the different settings for the private channel module")]
+            class Set : PrivateChannel
+            {
+                /// <summary>
+                /// Set the channel for the private channel module to check for the creation of a new channel
+                /// </summary>
+                /// <param name="voiceChannel"></param>
+                [SlashCommand("channel", "Set the creation Channel")]
+                public async Task Channel(SocketVoiceChannel voiceChannel)
+                {
+                    string query = "UPDATE private_channels_setups SET CreateChannelId = @Channel WHERE Guild = @Guild";
+
+                    #region SQL Parameters
+
+                    MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
+                        { Value = voiceChannel.Guild.Id };
+
+                    MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64)
+                        { Value = voiceChannel.Id };
+
+                    #endregion
+
+                    DatabaseService.ExecuteNonQuery(query, guild, channel);
+
+                    await Task.CompletedTask;
+                }
+
+                /// <summary>
+                /// Set the category for the private channel module to check
+                /// </summary>
+                /// <param name="categoryChannel"></param>
+                [SlashCommand("category", "Set the category to check")]
+                public async Task Category(SocketCategoryChannel categoryChannel)
+                {
+                    string query = "UPDATE private_channels_setups SET CreateChannelId = @Channel WHERE Guild = @Guild";
+
+                    #region SQL Parameters
+
+                    MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64)
+                        { Value = categoryChannel.Guild.Id };
+
+                    MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64)
+                        { Value = categoryChannel.Id };
+
+                    #endregion
+
+                    DatabaseService.ExecuteNonQuery(query, guild, category);
+
+                    await Task.CompletedTask;
+                }
+            }
+
+            /// <summary>
+            /// Disable the private channel module
+            /// </summary>
+            [SlashCommand("disable", "Disable the private channel module")]
+            public async Task Disable()
+            {
+                await RespondAsync();
+            }
         }
-        #endregion
 
-        #region Private Channels
-
-        [Command("privatechannel")]
-        public async Task PrivateChannel(ulong categorySnowflake, ulong voiceChannelSnowflake)
+        /// <summary>
+        /// Manage the reaction message module
+        /// </summary>
+        [Group("reaction-message", "Manage the reaction message module")]
+        class ReactionMessages : Settings
         {
-            String query = "INSERT INTO private_channels_setups VALUE (@Guild, @Category, @Channel);";
-
-            #region SQL Parameters
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
-            MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64) { Value = categorySnowflake };
-            MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64)
-                { Value = voiceChannelSnowflake };
-            #endregion
-
-            int succes = DatabaseService.ExecuteNonQuery(query, channel, guild, category);
-
-            if (succes == 1)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="message"></param>
+            [SlashCommand("add", "add a reaction message")]
+            public async Task Set(SocketMessage message)
             {
-                Embed reactionEmbed = new EmbedBuilder
-                    {
-                        Color = Color.Green
-                    }
-                    .WithDescription("Succesfully enabled Private Channels")
-                    .Build();
+                if (DbOperations.InsertReactionMessage(message.Id, Context.Guild))
+                {
+                    Embed reactionMessageConfig = new ReactionMessageConfig(message).Build();
+                    await ReplyAsync(embed: reactionMessageConfig);
+                }
+                await Task.CompletedTask;
+            }
 
-                await ReplyAsync(embed: reactionEmbed);
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="message"></param>
+            /// <exception cref="NotImplementedException"></exception>
+            [SlashCommand("remove", "remove a reaction message")]
+            public async Task Remove(SocketMessage message)
+            {
+                throw new NotImplementedException();
             }
         }
-        #endregion
     }
 }

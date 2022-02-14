@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Database;
@@ -11,15 +9,9 @@ using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Modules
 {
-    [RequireUserPermission(GuildPermission.ManageChannels)]
-    [RequireBotPermission(GuildPermission.ManageChannels)]
-    [Group("privatechannels")]
-    public class PrivateChannel : ModuleBase<ShardedCommandContext>
+    public class PrivateChannel
     {
-        private DatabaseService _databaseService { get; set; }
-        
-        
-        
+
         private static bool CheckChannel(SocketVoiceChannel voiceChannel, SocketGuild socketGuild, DatabaseService databaseService)
         {
             string query =
@@ -163,62 +155,6 @@ namespace DiscordBot.Modules
             return false;
         }
 
-        #endregion
-        
-        #region Commands
-        
-        [Command("list")]
-        public async Task ListPrivateChannels()
-        {
-            string query = "SELECT CategoryId, CreateChannelId FROM private_channels_setups WHERE Guild = @Guild ";
-            
-            #region SQL Parameters
-
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = Context.Guild.Id };
-            
-            #endregion
-            
-            using MySqlDataReader reader = DbOperations.ExecuteReader(_databaseService, query, guild);
-
-            List<ulong> snowflakes = new List<ulong>(2);
-
-            while (reader.Read())
-            {
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    snowflakes[i] = reader.GetUInt64(i);
-                }
-            }
-
-            await ReplyAsync("Category: <#" + snowflakes[0] + ">. Channel: <#" + snowflakes[2] + ">.");
-            
-            await Task.CompletedTask;
-        }
-
-        [Command("set")]
-        public async Task SetPrivateChannels(SocketCategoryChannel categoryChannel, SocketVoiceChannel voiceChannel)
-        {
-            string query = " INSERT INTO private_channels_setups VALUES (@Guild, @Category, @Channel)";
-            
-            #region SQL Parameters
-            MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = categoryChannel.Guild.Id };
-            MySqlParameter category = new MySqlParameter("@Category", MySqlDbType.UInt64) { Value = categoryChannel.Id };
-            MySqlParameter channel = new MySqlParameter("@Channel", MySqlDbType.UInt64) { Value = voiceChannel.Id };
-            #endregion
-
-            _databaseService.CheckConnection();
-            using MySqlConnection conn = _databaseService.SqlConnection;
-            _databaseService.ExecuteNonQuery(query, guild, category, channel);
-
-            await Task.CompletedTask;
-        }
-
-        [Command("remove")]
-        public async Task RemovePrivateChannels()
-        {
-            await Task.CompletedTask;
-        }
-        
         #endregion
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Class;
 
@@ -11,8 +12,6 @@ namespace DiscordBot.Objects.Embeds
         public ViolationEmbedBuilder(Violation violation, DiscordShardedClient client)
         {
             SetTitle(violation.Type);
-            
-            //TODO Fix this returning as null
             SocketGuildUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client);
 
             BuildEmbedBody(violation.User, moderator, violation.Reason);

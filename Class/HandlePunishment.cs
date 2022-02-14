@@ -13,7 +13,10 @@ namespace DiscordBot.Class;
 
 public static class HandlePunishment
 {
-    public static Embed Warn(DiscordShardedClient client, DatabaseService databaseService, SocketGuildUser moderator,
+    public static DatabaseService DatabaseService { get; set; }
+    public static DiscordShardedClient Client { get; set; }
+    
+    public static Embed Warn(IDiscordClient client, DatabaseService databaseService, SocketGuildUser moderator,
         SocketGuildUser target, string reason)
     {
         Embed embed;
@@ -26,9 +29,9 @@ public static class HandlePunishment
         }
         else
         {
-            embed = ViolationManager.NewViolation(target, moderator, reason, client, databaseService);
+            embed = ViolationManager.NewViolation(target, moderator, reason, Client, DatabaseService);
 
-            SendMessageEmbedToUser(target, embed, client, moderator.Guild).GetAwaiter();
+            SendMessageEmbedToUser(target, embed, Client, moderator.Guild).GetAwaiter();
             LogViolation(embed, moderator.Guild);
         }
 

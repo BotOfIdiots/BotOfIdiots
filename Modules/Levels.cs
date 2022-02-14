@@ -6,7 +6,7 @@ using Discord.WebSocket;
 
 namespace DiscordBot.Modules
 {
-    public class Levels : ModuleBase<SocketCommandContext>
+    public class Levels
     {
         public static Task AddReactionXp(Cacheable<IUserMessage, ulong> cacheable, Cacheable<IMessageChannel, ulong> cacheable1, SocketReaction arg3)
         {

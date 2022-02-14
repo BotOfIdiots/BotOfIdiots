@@ -196,7 +196,7 @@ namespace DiscordBot.Modules
                     return Task.CompletedTask;
                 }
 
-                throw new Exception("Unhandled MemberJoinHandler state");
+                throw new Exception("Unhandled MemberLeaveHandler state");
             }
             catch (Exception e)
             {
@@ -515,12 +515,5 @@ namespace DiscordBot.Modules
 
             return Task.CompletedTask;
         }
-
-        public static Task PresenceUpdatedHandler(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
-        {
-            throw new NotImplementedException();
-        }
-
-        
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules;
+using DiscordBot.Modules.Commands;
 
 namespace DiscordBot
 {
@@ -10,8 +11,6 @@ namespace DiscordBot
 
         public DiscordEventHooks(DiscordShardedClient client, DatabaseService databaseService)
         {
-            CommandHandler = new CommandHandler(client, databaseService);
-            
             ClientEvents(client);
             MemberEvents(client);
             MessageEvents(client);
@@ -71,8 +70,7 @@ namespace DiscordBot
 
         public void CommandEvents(DiscordShardedClient client)
         {
-            client.SlashCommandExecuted += CommandHandler.HandleSlashCommandAsync;
-            client.MessageReceived += CommandHandler.HandleCommandAsync;
+            // client.SlashCommandExecuted += CommandHandler.HandleSlashCommandAsync;
         }
     }
 }

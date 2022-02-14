@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules;
@@ -27,7 +28,7 @@ namespace DiscordBot
         /// <param name="reason">Reason for the violation</param>
         /// <param name="confidential">Is it a confidential violation? If yes </param>
         /// <returns>Embed</returns>
-        public static Embed NewViolation(SocketGuildUser violator, SocketGuildUser moderator, string reason, DiscordShardedClient client,
+        public static Embed NewViolation(IGuildUser violator, IGuildUser moderator, string reason, DiscordShardedClient client,
             DatabaseService databaseService,
             int violationType = 0, bool confidential = false)
 
@@ -149,7 +150,7 @@ namespace DiscordBot
         /// <param name="context">Context of issued command</param>
         /// <param name="databaseService"></param>
         /// <returns></returns>
-        public static Embed GetViolation(int id, ShardedCommandContext context, DatabaseService databaseService)
+        public static Embed GetViolation(int id, ShardedInteractionContext context, DatabaseService databaseService)
         {
             Violation violation = Violation.Select(context.Guild.Id, id, databaseService, context.Client);
 
