@@ -3,6 +3,7 @@ using System.Data.SqlTypes;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules;
+using DiscordBot.Modules.Event;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 
@@ -141,6 +142,7 @@ namespace DiscordBot.Database
 
             catch (MySqlException ex)
             {
+                Console.WriteLine(ex);
             }
             catch (SqlNullValueException)
             {

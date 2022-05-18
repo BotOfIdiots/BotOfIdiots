@@ -9,14 +9,12 @@ namespace DiscordBot.Preconditions;
 
 public class UserIsDeveloper : PreconditionAttribute
 {
-    private readonly ulong _controleGuild;
     private string _errorMessage;
 
     public DatabaseService DbConnection { set; get; }
 
     public UserIsDeveloper( string errorMessage = null)
     {
-        _controleGuild = DiscordBot.ControleGuild;
         if (errorMessage != null)
         {
             _errorMessage = errorMessage;
@@ -28,7 +26,7 @@ public class UserIsDeveloper : PreconditionAttribute
     {
         if (context.Guild == null) return Task.FromResult(PreconditionResult.FromError("Unknown command."));
 
-        if (context.Guild.Id == _controleGuild)
+        if (context.Guild.Id == DiscordBot.ControleGuild)
         {
             if (context.User.Id == 140789549092569088 || CheckUser(context.User))
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -8,7 +9,9 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
-using DiscordBot.Modules.Commands;
+using DiscordBot.Modules;
+using DiscordBot.Modules.Base;
+using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -50,42 +53,41 @@ namespace DiscordBot
 
             var config = services.GetRequiredService<XmlDocument>();
             var client = services.GetRequiredService<DiscordShardedClient>();
-            var commands = services.GetRequiredService<InteractionService>();
-            var handler = services.GetRequiredService<CommandHandler>();
-
-#pragma warning disable CS4014
-            handler.Initialize();
-#pragma warning restore CS4014
+            var moduleManager = services.GetRequiredService<ModuleManager>();
 
             await client.LoginAsync(TokenType.Bot, config.SelectSingleNode("config/BotToken").InnerText);
-
+            await moduleManager.Initialize();
+            
             client.Log += ClientLog;
-            commands.Log += (msg) =>
-            {
-                Console.WriteLine(msg.ToString());
-                return Task.CompletedTask;
-            };
 
             await client.StartAsync();
             await Task.Delay(Timeout.Infinite);
         }
 
-        private ServiceProvider ConfigureServices()
+        private XmlDocument LoadSettings()
         {
             XmlDocument settings = new XmlDocument();
             settings.Load(WorkingDirectory + "/config.xml");
+
+            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].Value);
+            
+            return settings;
+        }
+
+        private ServiceProvider ConfigureServices()
+        {
+            XmlDocument settings = LoadSettings();
 
             var DiscordSettings = settings.DocumentElement["DiscordSocketConfig"].ChildNodes;
             
             var discordSocketConfig =
                 BuildDiscordSocketConfig(DiscordSettings);
-            int[] shardId = { Convert.ToInt32(Convert.ToInt32(DiscordSettings[2].InnerText)) };
+            int[] shardId = { Convert.ToInt32(DiscordSettings[2].InnerText) };
 
             Services = new ServiceCollection()
                 .AddSingleton<XmlDocument>(settings)
                 .AddSingleton<DiscordShardedClient>(new DiscordShardedClient(shardId, discordSocketConfig))
-                .AddSingleton<InteractionService>()
-                .AddSingleton<CommandHandler>()
+                .AddSingleton<ModuleManager>()
                 .AddSingleton<DatabaseService>()
                 .BuildServiceProvider();
 
