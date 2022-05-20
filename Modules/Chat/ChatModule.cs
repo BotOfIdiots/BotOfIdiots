@@ -2,13 +2,13 @@ using System;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using DiscordBot.Modules.Base;
-using DiscordBot.Modules.Logging.Commands;
+using DiscordBot.Modules.Chat.Commands;
 
-namespace DiscordBot.Modules.Logging;
+namespace DiscordBot.Modules.Chat;
 
-public class LoggingModule: BaseModule
+public class ChatModule : BaseModule
 {
-    public LoggingModule(DiscordShardedClient client, IServiceProvider services) : base(client, services)
+    public ChatModule(DiscordShardedClient client, IServiceProvider service) : base(client, service)
     {
         Initialize().GetAwaiter();
     }
@@ -18,5 +18,4 @@ public class LoggingModule: BaseModule
         await InteractionService.AddModuleAsync(typeof(Settings), Service);
         CommandHandler = new CommandHandler(InteractionService, Client, Service);
     }
-    
 }

@@ -11,6 +11,7 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules;
 using DiscordBot.Modules.Base;
+using DiscordBot.Modules.Event;
 using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

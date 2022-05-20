@@ -1,15 +1,13 @@
-﻿using Discord.WebSocket;
-using DiscordBot.Database;
-using DiscordBot.Modules.Base;
+﻿using System;
+using Discord.WebSocket;
 using DiscordBot.Modules.Chat;
 
 namespace DiscordBot.Modules.Event
 {
     public class DiscordEventHooks
     {
-        public CommandHandler CommandHandler;
 
-        public DiscordEventHooks(DiscordShardedClient client, DatabaseService databaseService)
+        public DiscordEventHooks(DiscordShardedClient client)
         {
             ClientEvents(client);
             MemberEvents(client);
@@ -17,15 +15,14 @@ namespace DiscordBot.Modules.Event
             BanEvents(client);
             ChannelEvents(client);
         }
-        
-        
-        public void ClientEvents(DiscordShardedClient client)
+
+
+        private void ClientEvents(DiscordShardedClient client)
         {
             client.JoinedGuild += EventHandlers.ClientJoinGuildHandler;
-            client.ShardReady += EventHandlers.Ready;
         }
-        
-        public void MemberEvents(BaseSocketClient client)
+
+        private void MemberEvents(BaseSocketClient client)
         {
             //Member joined and leave logging hooks
             client.UserJoined += EventHandlers.MemberJoinGuildHandler;
@@ -37,8 +34,8 @@ namespace DiscordBot.Modules.Event
             //Voicestate logging hook
             client.UserVoiceStateUpdated += EventHandlers.MemberVoiceStateHandler;
         }
-        
-        public void MessageEvents(BaseSocketClient client)
+
+        private void MessageEvents(BaseSocketClient client)
         {
             //Message logging hooks
             client.MessageDeleted += EventHandlers.MessageDeleteHandler;
@@ -50,17 +47,17 @@ namespace DiscordBot.Modules.Event
             client.ReactionRemoved += EventHandlers.ReactionRemovedHandler;
             
             //Level system hooks
-            client.ReactionAdded += Levels.AddReactionXp;
-            client.ReactionRemoved += Levels.RemoveReactionXp;
+            // client.ReactionAdded += Levels.AddReactionXp;
+            // client.ReactionRemoved += Levels.RemoveReactionXp;
         }
 
-        public void BanEvents(BaseSocketClient client)
+        private void BanEvents(BaseSocketClient client)
         {
             client.UserUnbanned += EventHandlers.MemberUnbannedHandler;
             client.UserBanned += EventHandlers.MemberBannedHandler;
         }
-        
-        public void ChannelEvents(DiscordShardedClient client)
+
+        private void ChannelEvents(DiscordShardedClient client)
         {
             // client.ChannelUpdated += EventHandlers.ChannelUpdateHandler;
             client.ChannelCreated += EventHandlers.ChannelCreatedHandler;

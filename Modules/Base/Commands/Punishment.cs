@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using DiscordBot.Database;
 using DiscordBot.Modules.Base.Class;
 using DiscordBot.Modules.Event;
+using Google.Protobuf.WellKnownTypes;
 
 namespace DiscordBot.Modules.Base.Commands
 {
@@ -28,13 +29,13 @@ namespace DiscordBot.Modules.Base.Commands
         /// <param name="user">User to warn</param>
         /// <param name="reason" default="No reason specified">Reason for the warn</param>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.ModerateMembers)]
         [SlashCommand("warn", "Warns the specified user")]
         public async Task Warn(SocketGuildUser user, string reason)
         {
+            await DeferAsync();
             try
             {
-                await RespondAsync(embed: HandlePunishment.Warn(Context.Client, DatabaseService,
+                await FollowupAsync(embed: HandlePunishment.Warn(Context.Client, DatabaseService,
                     (SocketGuildUser)Context.User, user, reason));
             }
             catch (Exception e)
@@ -46,7 +47,6 @@ namespace DiscordBot.Modules.Base.Commands
         /// <summary>
         /// Contains all commands related to timing out users
         /// </summary>
-        [RequireUserPermission(GuildPermission.ModerateMembers)]
         [Group("time-out", "Time out the specified user")]
         class TimeOut : InteractionModuleBase<ShardedInteractionContext>
         {
@@ -61,9 +61,10 @@ namespace DiscordBot.Modules.Base.Commands
             [SlashCommand("set", "Time-out the specified member")]
             public async Task Set(SocketGuildUser user, string length, string reason)
             {
+                await DeferAsync();
                 try
                 {
-                    await RespondAsync(embed: HandlePunishment.Mute((SocketGuildUser)Context.User, user, length, reason));
+                    await FollowupAsync(embed: HandlePunishment.Mute((SocketGuildUser)Context.User, user, length, reason));
                 }
                 catch (Exception e)
                 {
@@ -80,9 +81,10 @@ namespace DiscordBot.Modules.Base.Commands
             [SlashCommand("remove", "Remove the time-out from specified User")]
             public async Task Remove(SocketGuildUser user, string reason = "No reason specified.")
             {
+                await DeferAsync();
                 try
                 {
-                    await RespondAsync(embed: HandlePunishment.Unmute(Context.Client, DatabaseService,
+                    await FollowupAsync(embed: HandlePunishment.Unmute(Context.Client, DatabaseService,
                         (SocketGuildUser)Context.User, user, reason));
                 }
                 catch (Exception e)
@@ -98,13 +100,13 @@ namespace DiscordBot.Modules.Base.Commands
         /// <param name="user">User to kick</param>
         /// <param name="reason" default="No reason specified">Reason for the kick</param>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.KickMembers)]
         [SlashCommand("kick", "Kick the specified user from the guild")]
         public async Task Kick(SocketGuildUser user, string reason)
         {
+            await DeferAsync();
             try
             {
-                await RespondAsync(embed: HandlePunishment.Kick(Context.Client, DatabaseService,
+                await FollowupAsync(embed: HandlePunishment.Kick(Context.Client, DatabaseService,
                     (SocketGuildUser)Context.User, user, reason));
             }
             catch (Exception e)
@@ -119,13 +121,13 @@ namespace DiscordBot.Modules.Base.Commands
         /// <param name="user">user to ban</param>
         /// <param name="reason" default="No reason specified"></param>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.BanMembers)]
         [SlashCommand("ban", "Ban the specified user from the guild")]
         public async Task Ban(SocketGuildUser user, string reason)
         {
+            await DeferAsync();
             try
             {
-                await RespondAsync(embed: HandlePunishment.Ban(Context.Client, DatabaseService,
+                await FollowupAsync(embed: HandlePunishment.Ban(Context.Client, DatabaseService,
                     (SocketGuildUser)Context.User, user, reason));
             }
             catch (Exception e)
@@ -140,13 +142,13 @@ namespace DiscordBot.Modules.Base.Commands
         /// <param name="userId">the user to unban</param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        [RequireUserPermission(GuildPermission.BanMembers)]
         [SlashCommand("unban", "Unban the specified user")]
         public async Task Unban(ulong userId, string reason = "No reason specified.")
         {
+            await DeferAsync();
             try
             {
-                await RespondAsync(embed: HandlePunishment.Unban(Context.Client, DatabaseService,
+                await FollowupAsync(embed: HandlePunishment.Unban(Context.Client, DatabaseService,
                     (SocketGuildUser)Context.User, userId, reason, Context.Guild));
             }
             catch (Exception e)

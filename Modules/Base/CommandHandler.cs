@@ -28,6 +28,10 @@ public class CommandHandler
         {
 #if DEBUG
             await _commands.RegisterCommandsToGuildAsync(317226837841281024);
+            foreach (var command in _commands.SlashCommands)
+            {
+                Console.WriteLine(command.Name + ": " + command.Description);   
+            }
 #else
             await _commands.RegisterCommandsGloballyAsync();
 #endif
@@ -43,6 +47,10 @@ public class CommandHandler
         try
         {
             await _commands.RegisterCommandsToGuildAsync(guildId);
+            foreach (var command in _commands.SlashCommands)
+            {
+                Console.WriteLine(command.Name + ": " + command.Description);   
+            }
         }
         catch (HttpException ex)
         {

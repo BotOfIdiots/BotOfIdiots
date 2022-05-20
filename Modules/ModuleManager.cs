@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using DiscordBot.Modules.Base;
+using DiscordBot.Modules.Chat;
+using DiscordBot.Modules.Event;
 using DiscordBot.Modules.Logging;
 
 namespace DiscordBot.Modules;
@@ -22,10 +22,10 @@ public class ModuleManager
         _client = client;
         _services = services;
         
-        _modules = new List<BaseModule>();
+        // _modules = new List<BaseModule>();
         _baseModule = new BaseModule(_client, _services);
         
-        BuildModuleList();
+        // BuildModuleList();
     }
 
     public async Task Initialize()
@@ -36,21 +36,22 @@ public class ModuleManager
 
     private async Task Ready(DiscordSocketClient client)
     {
+        new DiscordEventHooks(_client);
         _baseModule.Initialize().GetAwaiter();
-#if DEBUG
-        await EnableAllModules(317226837841281024);
-        await Task.CompletedTask;
-#else
-        await EnableAllModules(DiscordBot.ControleGuild);
-        
-        foreach (var guild in GetGuildList())
-        {
-            foreach (var module in GetEnabledModules())
-            {
-                await EnableModule(guild, Type.GetType("Modules." + module));
-            }
-        }
-#endif
+// #if DEBUG
+//         await EnableAllModules(317226837841281024);
+//         await Task.CompletedTask;
+// #else
+//         await EnableAllModules(DiscordBot.ControleGuild);
+//         
+//         foreach (var guild in GetGuildList())
+//         {
+//             foreach (var module in GetEnabledModules())
+//             {
+//                 await EnableModule(guild, Type.GetType("Modules." + module));
+//             }
+//         }
+// #endif
 
         _client.ShardReady -= Ready;
     }
@@ -69,9 +70,8 @@ public class ModuleManager
     private void BuildModuleList()
     {
         //TODO: Automatically Discover all available modules
-        
         _modules.Add(new LoggingModule(_client, _services));
-        _modules.Last().Initialize().GetAwaiter();
+        _modules.Add(new ChatModule(_client, _services));
     }
 
     private async Task EnableAllModules(ulong guildId)

@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Text.RegularExpressions;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -70,7 +71,7 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Description = "You can't mute that user."
+                Description = "You can't Time-out that user."
             }
                 .WithColor(Color.Red)
                 .Build();
@@ -82,7 +83,7 @@ public static class HandlePunishment
         {
             embed = new EmbedBuilder
             {
-                Title = "User is already muted"
+                Title = "User is already timed-out"
             }.Build();
 
             return embed;
@@ -90,23 +91,22 @@ public static class HandlePunishment
 
         TimeSpan timeOutLength;
 
-        string timeUnit = "";
-        string duration = "";
+        string timeUnit = length.Substring(length.Length - 1);
+        Double duration = Convert.ToDouble(Regex.Match(length, @"\d+").Value);
         
         switch (timeUnit)
         {
             case "m":
-                timeOutLength = TimeSpan.FromMinutes(Convert.ToDouble(duration));
+                timeOutLength = TimeSpan.FromMinutes(duration);
                 break;
             case "h":
-                timeOutLength = TimeSpan.FromHours(Convert.ToDouble(duration));
+                timeOutLength = TimeSpan.FromHours(duration);
                 break;
             default:
                 timeOutLength = TimeSpan.FromMinutes(5);
                 break;
         }
-        
-        
+
         try
         {
             target.SetTimeOutAsync(timeOutLength);
@@ -152,8 +152,6 @@ public static class HandlePunishment
         SendMessageEmbedToUser(target, embed, Client, target.Guild).GetAwaiter();
         LogViolation(embed, target.Guild).GetAwaiter();
         
-
-
         return embed;
     }
 

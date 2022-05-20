@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Modules.Event;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Modules.Base.Class
 {
@@ -21,9 +22,9 @@ namespace DiscordBot.Modules.Base.Class
             }
         }
 
-        public static SocketGuildUser GetUserFromGuild(ulong user, ulong guild, DiscordShardedClient client)
+        public static SocketGuildUser GetUserFromGuild(ulong user, ulong guild)
         {
-            return client.GetGuild(guild).GetUser(user);
+            return DiscordBot.Services.GetRequiredService<DiscordShardedClient>().GetGuild(guild).GetUser(user);
         }
         
         public static String CreateRolesList(IReadOnlyCollection<SocketRole> roleCollection)

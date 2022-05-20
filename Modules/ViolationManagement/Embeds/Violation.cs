@@ -13,7 +13,7 @@ namespace DiscordBot.Modules.ViolationManagement.Embeds
         public ViolationEmbedBuilder(Violation violation, DiscordShardedClient client)
         {
             SetTitle(violation.Type);
-            SocketGuildUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild, client);
+            SocketGuildUser moderator = Rest.GetUserFromGuild(violation.Moderator, violation.Guild);
 
             BuildEmbedBody(violation.User, moderator, violation.Reason);
             AddField("Violation ID:", violation.ViolationId, true);

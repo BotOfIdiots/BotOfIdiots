@@ -6,6 +6,9 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.Modules.Chat;
+using DiscordBot.Modules.Chat.Class;
+using DiscordBot.Modules.Chat.EventHandlers;
 using DiscordBot.Modules.DynamicChannels;
 using DiscordBot.Modules.Logging;
 using DiscordBot.Modules.Logging.Embeds;
@@ -118,6 +121,7 @@ namespace DiscordBot.Modules.Event
         public static Task MessageUpdateHandler(Cacheable<IMessage, ulong> cachedMessage, SocketMessage message,
             ISocketMessageChannel channel)
         {
+            if (cachedMessage.Value.Interaction != null) return Task.CompletedTask;
             if (DbOperations.CheckLogExemption(channel as SocketGuildChannel)) return Task.CompletedTask;
 
             try
@@ -320,11 +324,6 @@ namespace DiscordBot.Modules.Event
             return Task.CompletedTask;
         }
         
-        public static async Task Ready(DiscordSocketClient arg)
-        {
-            await _serviceProvider.GetRequiredService<DiscordEventHooks>().CommandHandler.RegisterCommandsAsync();
-        }
-
         #endregion
 
         #region Member Ban event Hanlders
@@ -501,7 +500,7 @@ namespace DiscordBot.Modules.Event
         {
             ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
 
-            // ReactionMessage.ReactionAdded(message, channel, reaction);
+            ReactionMessageEvents.ReactionAdded(message, channel, reaction);
             // Levels.AddReactionXp(message, channel, reaction);
 
             return Task.CompletedTask;
@@ -512,7 +511,7 @@ namespace DiscordBot.Modules.Event
         {
             ISocketMessageChannel channel = cachedChannel.Value as ISocketMessageChannel;
 
-            // ReactionMessage.ReactionRemoved(message, channel, reaction);
+            ReactionMessageEvents.ReactionRemoved(message, channel, reaction);
             // Levels.RemoveReactionXp(message, channel, reaction);
 
             return Task.CompletedTask;

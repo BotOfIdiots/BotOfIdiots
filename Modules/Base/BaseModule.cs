@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -24,8 +25,11 @@ public class BaseModule
     
     public async Task Initialize()
     {
+        // await InteractionService.AddModulesAsync(Assembly.GetExecutingAssembly(), Service);
         await InteractionService.AddModuleAsync(typeof(Commands.Commands), Service);
         await InteractionService.AddModuleAsync(typeof(Punishment), Service);
+        await InteractionService.AddModuleAsync(typeof(Chat.Commands.Settings), Service);
+        await InteractionService.AddModuleAsync(typeof(Logging.Commands.Settings), Service);
         
         CommandHandler = new CommandHandler(InteractionService, Client, Service);
         await CommandHandler.RegisterCommandsAsync();
