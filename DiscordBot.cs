@@ -73,7 +73,7 @@ namespace DiscordBot
             switch ((int)Environment.OSVersion.Platform)
             {
                 case 4:
-                    settings.Load(WorkingDirectory + "../config/config.xml");
+                    settings.Load("../config/config.xml");
                     break;
                 case 2:
                     settings.Load(WorkingDirectory + "/config.xml");
