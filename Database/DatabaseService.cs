@@ -14,14 +14,14 @@ namespace DiscordBot.Database
 
         #region Constructors
 
-        public DatabaseService(XmlNodeList settings)
+        public DatabaseService(XmlDocument settings)
         {
             MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
             builder.SslMode = MySqlSslMode.None;
             builder.CharacterSet = "utf8mb4";
             builder.AllowUserVariables = true;
 
-            foreach (XmlNode node in settings)
+            foreach (XmlNode node in settings.DocumentElement["SQLSettings"].ChildNodes)
             {
                 switch (node.Name)
                 {

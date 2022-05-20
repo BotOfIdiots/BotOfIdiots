@@ -1,12 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Database;
+using DiscordBot.Modules;
+using DiscordBot.Modules.Base;
+using DiscordBot.Modules.Event;
+using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,56 +21,12 @@ namespace DiscordBot
     internal class DiscordBot
     {
         #region Fields
-
-        /// <summary>
-        /// 
-        /// </summary>
+        
         private static readonly string _version = "0.0.7";
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private static int[] _shardId;
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private static DiscordSocketConfig _discordSocketConfig;
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private static IConfiguration _config;
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private XmlDocument settings = new XmlDocument();
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IServiceProvider Services;
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private static DiscordShardedClient _client;
-
-        ///
-        ///
-        private static CommandService _commandService;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static string WorkingDirectory;
-        
-        /// <summary>
-        /// 
-        /// </summary>
+        public static ServiceProvider Services;
+        public static string WorkingDirectory = Directory.GetCurrentDirectory();
         public static ulong ControleGuild;
-        
+
         #endregion
 
         #region Main Method
@@ -73,7 +35,10 @@ namespace DiscordBot
         /// 
         /// </summary>
         /// <param name="args"></param>
-        public static void Main(string[] args) => new DiscordBot().RunBotAsync(args).GetAwaiter().GetResult();
+        public static void Main(string[] args)
+        {
+            new DiscordBot().RunBotAsync(args).GetAwaiter().GetResult();
+        } 
 
         #endregion
 
@@ -85,75 +50,71 @@ namespace DiscordBot
         /// <returns></returns>
         public async Task RunBotAsync(string[] args)
         {
-            // WorkingDirectory = args.GetValue(0).ToString();
-            WorkingDirectory = Directory.GetCurrentDirectory();
-            _loadSettings();
+            using var services = ConfigureServices();
 
-            BuildDiscordSocketConfig(settings.DocumentElement["DiscordSocketConfig"].ChildNodes);
-            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].InnerText);
+            var config = services.GetRequiredService<XmlDocument>();
+            var client = services.GetRequiredService<DiscordShardedClient>();
+            var moduleManager = services.GetRequiredService<ModuleManager>();
 
-            _client = new DiscordShardedClient(_shardId, _discordSocketConfig);
-            _commandService = new CommandService();
+            await client.LoginAsync(TokenType.Bot, config.SelectSingleNode("config/BotToken").InnerText);
+            await moduleManager.Initialize();
+            
+            client.Log += ClientLog;
+
+            await client.StartAsync();
+            await Task.Delay(Timeout.Infinite);
+        }
+
+        private XmlDocument LoadSettings()
+        {
+            XmlDocument settings = new XmlDocument();
+            settings.Load(WorkingDirectory + "/config.xml");
+
+            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].Value);
+            
+            return settings;
+        }
+
+        private ServiceProvider ConfigureServices()
+        {
+            XmlDocument settings = LoadSettings();
+
+            var DiscordSettings = settings.DocumentElement["DiscordSocketConfig"].ChildNodes;
+            
+            var discordSocketConfig =
+                BuildDiscordSocketConfig(DiscordSettings);
+            int[] shardId = { Convert.ToInt32(DiscordSettings[2].InnerText) };
 
             Services = new ServiceCollection()
-                .AddSingleton(_client)
-                .AddSingleton(_commandService)
-                .AddSingleton(new DatabaseService(settings.DocumentElement["SQLSettings"].ChildNodes))
+                .AddSingleton<XmlDocument>(settings)
+                .AddSingleton<DiscordShardedClient>(new DiscordShardedClient(shardId, discordSocketConfig))
+                .AddSingleton<ModuleManager>()
+                .AddSingleton<DatabaseService>()
                 .BuildServiceProvider();
 
-            _client.Log += ClientLog;
-            LoadDiscordEventHandlers();
-
-            await RegisterCommandsAsync();
-            await _client.LoginAsync(TokenType.Bot, settings.SelectSingleNode("config/BotToken").InnerText);
-            await _client.StartAsync();
-            await Task.Delay(-1);
+            return Services;
         }
-
-        /// <summary>
-        /// Register all the Discord Event Hooks
-        /// </summary>
-        private void LoadDiscordEventHandlers()
+        
+        private DiscordSocketConfig BuildDiscordSocketConfig(XmlNodeList settings)
         {
-            DiscordEventHooks.HookClientEvents(_client);
-            DiscordEventHooks.HookMessageEvents(_client);
-            DiscordEventHooks.HookMemberEvents(_client);
-            DiscordEventHooks.HookChannelEvents(_client);
-            DiscordEventHooks.HookBanEvents(_client);
-        }
-
-        /// <summary>
-        /// Create the config object based on the config.json file
-        /// </summary>
-        private void _loadSettings()
-        {
-            settings.Load(WorkingDirectory + "/config.xml");
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(WorkingDirectory)
-                .AddJsonFile(path: "config.json");
-            _config = builder.Build();
-            _config = _config.GetSection("DiscordBot");
-        }
-
-        private void BuildDiscordSocketConfig(XmlNodeList settings)
-        {
-            _discordSocketConfig = new DiscordSocketConfig();
+            DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig();
+            discordSocketConfig.AlwaysDownloadUsers = true;
+            discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged;
 
             foreach (XmlNode node in settings)
             {
                 switch (node.Name)
                 {
                     case "MessageCacheSize":
-                        _discordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
+                        discordSocketConfig.MessageCacheSize = Convert.ToInt32(node.InnerText);
                         break;
                     case "TotalShards":
-                        _discordSocketConfig.TotalShards = Convert.ToInt32((node.InnerText));
-                        break;
-                    case "ShardId":
-                        _shardId = new int[] { Convert.ToInt32(node.InnerText) };
+                        discordSocketConfig.TotalShards = Convert.ToInt32((node.InnerText));
                         break;
                 }
             }
+
+            return discordSocketConfig;
         }
 
         #endregion
@@ -175,23 +136,11 @@ namespace DiscordBot
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task RegisterCommandsAsync()
-        {
-            DiscordEventHooks.CommandEvents(_client);
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public static string Version()
         {
             return _version;
         }
 
-        
-        
         #endregion
     }
 }

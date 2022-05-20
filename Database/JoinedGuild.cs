@@ -42,10 +42,8 @@ namespace DiscordBot.Database
             string query = "SELECT Guild FROM guild_configurations WHERE Guild = @Guild";
             
             MySqlParameter guild = new MySqlParameter("@Guild", MySqlDbType.UInt64) { Value = socketGuild.Id };
-
-           databaseService.CheckConnection();
-            MySqlConnection conn = databaseService.SqlConnection;
-            MySqlDataReader reader = DbOperations.ExecuteReader(conn, query, guild);
+            
+            using MySqlDataReader reader = DbOperations.ExecuteReader(databaseService, query, guild);
 
             while (reader.Read())
             {
