@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -21,7 +22,7 @@ namespace DiscordBot
     internal class DiscordBot
     {
         #region Fields
-        
+
         private static readonly string _version = "0.0.7";
         public static ServiceProvider Services;
         public static string WorkingDirectory = Directory.GetCurrentDirectory();
@@ -38,7 +39,7 @@ namespace DiscordBot
         public static void Main(string[] args)
         {
             new DiscordBot().RunBotAsync(args).GetAwaiter().GetResult();
-        } 
+        }
 
         #endregion
 
@@ -58,7 +59,7 @@ namespace DiscordBot
 
             await client.LoginAsync(TokenType.Bot, config.SelectSingleNode("config/BotToken").InnerText);
             await moduleManager.Initialize();
-            
+
             client.Log += ClientLog;
 
             await client.StartAsync();
@@ -68,10 +69,19 @@ namespace DiscordBot
         private XmlDocument LoadSettings()
         {
             XmlDocument settings = new XmlDocument();
-            settings.Load(WorkingDirectory + "/config.xml");
-
-            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].Value);
             
+            switch ((int)Environment.OSVersion.Platform)
+            {
+                case 4:
+                    settings.Load(WorkingDirectory + "../config/config.xml");
+                    break;
+                case 2:
+                    settings.Load(WorkingDirectory + "/config.xml");
+                    break;
+            }
+            
+            ControleGuild = Convert.ToUInt64(settings.DocumentElement["ControleGuild"].Value);
+
             return settings;
         }
 
@@ -80,7 +90,7 @@ namespace DiscordBot
             XmlDocument settings = LoadSettings();
 
             var DiscordSettings = settings.DocumentElement["DiscordSocketConfig"].ChildNodes;
-            
+
             var discordSocketConfig =
                 BuildDiscordSocketConfig(DiscordSettings);
             int[] shardId = { Convert.ToInt32(DiscordSettings[2].InnerText) };
@@ -94,7 +104,7 @@ namespace DiscordBot
 
             return Services;
         }
-        
+
         private DiscordSocketConfig BuildDiscordSocketConfig(XmlNodeList settings)
         {
             DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig();
