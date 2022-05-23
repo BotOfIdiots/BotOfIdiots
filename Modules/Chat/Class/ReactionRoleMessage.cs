@@ -61,7 +61,7 @@ namespace DiscordBot.Modules.Chat.Class
                 IRole role = socketGuild.GetRole(GetRole(reaction.Emote, message));
                 SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
 
-                if (!UserHasRole(user, role))
+                if (UserHasRole(user, role))
                 {
                     user.RemoveRoleAsync(role);
                 }
