@@ -24,12 +24,15 @@ namespace DiscordBot.Modules.Logging.Embeds.Messages
 
         private void MessageHasContent()
         {
-            if (_message != null)
+            if (_message.Content != null)
             {
                 WithDescription(_message.Content);
                 AddField("Sent At", _message.Timestamp.ToLocalTime().ToString("HH:mm:ss dd-MM-yyyy"));
             }
-            WithDescription("Could not retrieve message from cache");
+            else
+            {
+                WithDescription("Could not retrieve message from cache");
+            }
         }
     }
 }

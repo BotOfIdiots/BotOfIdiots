@@ -109,7 +109,7 @@ namespace DiscordBot
         {
             DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig();
             discordSocketConfig.AlwaysDownloadUsers = true;
-            discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged;
+            discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences;
 
             foreach (XmlNode node in settings)
             {
