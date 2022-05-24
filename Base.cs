@@ -1,24 +1,26 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Xml;
 using DiscordBot.Database;
-using DiscordBot.DiscordApi;
+using DiscordBot.Discord;
 using DiscordBot.Twitch;
 using Microsoft.Extensions.Configuration;
+
 namespace DiscordBot
 {
     internal static class Base
     {
-        private static readonly string _version = "0.0.5 Twitch Integration";
+        private static readonly string _version = "0.0.7 Twitch Integration";
         
         public static Thread DiscordModule;
         public static Bot DiscordBot;
 
-        private static bool TwitchEnabled;
+        private static bool _twitchEnabled;
         public static Thread TwitchModule;
         public static TwitchIntegration TwitchIntegration;
 
-        public static string WorkingDirectory;
+        public static string WorkingDirectory = Directory.GetCurrentDirectory();
         public static IConfiguration Config;
         public static XmlDocument settings = new XmlDocument();
 
@@ -38,7 +40,7 @@ namespace DiscordBot
             DiscordModule = new Thread(DiscordThread);
             DiscordModule.Start();
             
-            if (TwitchEnabled)
+            if (_twitchEnabled)
             {
                 Thread TwitchModule = new Thread(TwitchThread);
                 TwitchModule.Start();
@@ -53,31 +55,13 @@ namespace DiscordBot
 
         private static void TwitchThread()
         {
-            try
-            {
-                while (true)
-                {
-                    if (Bot.Ready)
-                    {
-                        Console.WriteLine("[Twitch:] Starting Twitch Module");
-                        TwitchIntegration.StartAsync();
-                        break;
-                    }
-                    Console.WriteLine("[Twitch:] Waiting for Discordbot to come online");
-                    Thread.Sleep(10 * 1000);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-            
-
+            Console.WriteLine("[Twitch:] Starting Twitch Module");
+            TwitchIntegration.StartAsync();
         }
         
         private static void _loadModules()
         {
-            TwitchEnabled = Convert.ToBoolean(Config.GetSection("Twitch")["Enabled"]);
+            _twitchEnabled = Convert.ToBoolean(Config.GetSection("Twitch")["Enabled"]);
         }
         
         /// <summary>

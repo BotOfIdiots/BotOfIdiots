@@ -1,4 +1,4 @@
-using DiscordBot.DiscordApi.Modules;
+using DiscordBot.Discord.Modules.Event;
 
 namespace DiscordBot.Twitch
 {
@@ -6,7 +6,7 @@ namespace DiscordBot.Twitch
     {
         public static void SendDebugMessage(string message)
         {
-            EventHandlers.LogDebugMessage(message);
+            //EventHandlers.LogDebugMessage(message);
         }
     }
 }
