@@ -27,7 +27,7 @@ public static class ReactionMessageEvents
 
         if (ReactionRoleMessage.IsReactionMessage(message.Id))
         {
-            ReactionRoleMessage.RemoveRole(reaction, message.Id,textChannel.Guild);
+            ReactionRoleMessage.RemoveRole(reaction, message.Id, textChannel.Guild);
         }
         return Task.CompletedTask;
     }

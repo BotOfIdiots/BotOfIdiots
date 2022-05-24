@@ -10,7 +10,8 @@ namespace DiscordBot.Modules.Chat.Class
 {
     public static class ReactionRoleMessage
     {
-        private static readonly DatabaseService DatabaseService = DiscordBot.Services.GetRequiredService<DatabaseService>();
+        private static readonly DatabaseService DatabaseService =
+            DiscordBot.Services.GetRequiredService<DatabaseService>();
 
         public static bool IsReactionMessage(ulong messageId)
         {
@@ -61,7 +62,7 @@ namespace DiscordBot.Modules.Chat.Class
                 IRole role = socketGuild.GetRole(GetRole(reaction.Emote, message));
                 SocketGuildUser user = socketGuild.GetUser(reaction.UserId);
 
-                if (!UserHasRole(user, role))
+                if (UserHasRole(user, role))
                 {
                     user.RemoveRoleAsync(role);
                 }
@@ -78,32 +79,35 @@ namespace DiscordBot.Modules.Chat.Class
         private static ulong GetRole(IEmote emote, ulong messageId)
         {
             string query =
-                "SELECT RoleSnowflake " +
+                "SELECT RoleSnowflake, Reaction " +
                 "FROM reaction_roles r JOIN reaction_messages m on m.Id = r.ReactionMessage " +
-                "WHERE MessageSnowflake = @Message AND Reaction = @Reaction";
+                "WHERE MessageSnowflake = @Message";
 
-            MySqlParameter message = new MySqlParameter("@Message", MySqlDbType.UInt64) { Value = messageId };
-            MySqlParameter reaction = new MySqlParameter("@Reaction", MySqlDbType.VarChar) { Value = emote.Name };
+            MySqlParameter message = new MySqlParameter("@Message", MySqlDbType.UInt64) { Value = messageId }; ;
 
-            using MySqlDataReader reader = DbOperations.ExecuteReader(DatabaseService, query, message, reaction);
+            using MySqlDataReader reader = DbOperations.ExecuteReader(DatabaseService, query, message);
 
             while (reader.Read())
             {
-                if (reader.GetUInt64("RoleSnowflake") != 0)
+                if (emote.Name.Equals(reader.GetString("Reaction")) || 
+                    emote.Equals(new Emoji(reader.GetString("reaction"))))
                 {
-                    return reader.GetUInt64("RoleSnowflake");
+                    
+                        return reader.GetUInt64("RoleSnowflake");
+                    
                 }
             }
-            
+
             throw new Exception("Role doesn't exist");
         }
-        
+
         private static bool UserHasRole(SocketGuildUser user, IRole role)
         {
             if (user.Roles.Contains(role))
             {
                 return true;
             }
+
             return false;
         }
 
@@ -119,7 +123,6 @@ namespace DiscordBot.Modules.Chat.Class
             {
                 throw new Exception("Couldn't create message");
             }
-
         }
 
         public static void RemoveMessage(ulong messageId, ulong guildId)
@@ -136,7 +139,7 @@ namespace DiscordBot.Modules.Chat.Class
                 if (!reader.IsDBNull(0))
                 {
                     RemoveAllReactions(reader.GetInt32("Id"));
-                    
+
                     query = "DELETE FROM reaction_messages WHERE Id = @Id";
                     MySqlParameter id = new MySqlParameter("@Id", MySqlDbType.UInt32) { Value = reader.GetInt32("Id") };
 
@@ -148,11 +151,11 @@ namespace DiscordBot.Modules.Chat.Class
         public static void AddReaction()
         {
             
+            //TODO Add Type check when inserting an emote or emoji
         }
 
         public static void RemoveReaction()
         {
-            
         }
 
         private static void RemoveAllReactions(int index)
